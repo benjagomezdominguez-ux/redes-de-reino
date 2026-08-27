@@ -6,11 +6,14 @@ Landing page institucional de Redes de Reino (Salta, Argentina). Next.js 16
 ## Requisitos
 
 - Node.js 24+ y npm.
+- Una cuenta de Supabase con acceso al proyecto (para el formulario de
+  contacto/membresía).
 
 ## Desarrollo
 
 ```bash
 npm install
+cp .env.example .env.local   # completar con las credenciales del proyecto Supabase
 npm run dev
 ```
 
@@ -41,9 +44,33 @@ src/
     ui/            # Primitivas reutilizables (Container, Button, SectionHeading)
   lib/
     site-config.ts # Contenido del sitio (nav, pastores, estudios, contacto...)
+    supabase/      # Cliente de Supabase (server-only)
+    actions/       # Server Actions (ej. envío del formulario de contacto)
 public/
   logo.png         # Logo oficial (no modificar proporciones ni colores)
+supabase/
+  migrations/      # Schema versionado (SQL), aplicado con `supabase db push`
 ```
+
+## Backend (Supabase)
+
+El formulario de contacto/membresía (sección "Contacto") persiste en la
+tabla `contact_submissions` de Supabase. Row Level Security está activo:
+el rol público (`anon`) solo puede insertar — nadie puede leer, editar ni
+borrar submissions vía API. Los pastores revisan los mensajes desde el
+Table Editor del dashboard de Supabase con su propia cuenta.
+
+Cambios de schema van como una nueva migración en `supabase/migrations/`
+y se aplican con:
+
+```bash
+npx supabase link --project-ref <project-ref>   # una sola vez
+npx supabase db push
+```
+
+`SUPABASE_SECRET_KEY` está configurada pero sin uso todavía — queda
+reservada para el día que haya un panel de administración que necesite
+saltarse RLS (ver "Administración" en las recomendaciones futuras).
 
 ## Sistema de diseño
 
@@ -72,9 +99,17 @@ Proyecto bajo Git. El último commit en `main` es la última versión estable
 conocida (*last known good version*): para volver a un estado estable,
 `git log` y `git checkout <hash>` o `git revert`.
 
-## Pendiente para producción (fuera del alcance de este repo)
+## Infraestructura
 
-- Dominio y hosting (por ejemplo Vercel) — requiere cuenta y decisión del
-  cliente.
-- Contenido real listado arriba.
+- **GitHub**: `github.com/benjagomezdominguez-ux/redes-de-reino` (privado).
+- **Vercel**: proyecto `redes-de-reino`, deploy automático en cada push a
+  `main` → https://redes-de-reino.vercel.app
+- **Supabase**: proyecto `gwapuryyqhaarmanpvci` (región us-east-2).
+
+## Pendiente para producción
+
+- Contenido real listado arriba (pastores, estudios, actividades,
+  contacto, diezmos).
 - Fotografías profesionales para pastores, hero y actividades.
+- Dominio propio (hoy el sitio vive en el subdominio `.vercel.app`) —
+  requiere que el cliente compre/apunte un dominio.

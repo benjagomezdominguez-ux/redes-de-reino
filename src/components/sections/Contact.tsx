@@ -1,5 +1,6 @@
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { ContactForm } from "@/components/sections/ContactForm";
 import { PENDING, contact } from "@/lib/site-config";
 
 const rows: Array<{ label: string; value: string | null }> = [
@@ -22,16 +23,20 @@ export function Contact() {
           description="Escribinos o visitanos. Nos encantaría conocerte."
         />
 
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-6 rounded-2xl border border-border bg-surface p-8 shadow-soft sm:grid-cols-2">
-          {rows.map((row) => (
-            <div key={row.label} className="flex flex-col gap-1">
-              <dt className="text-sm font-semibold uppercase tracking-wide text-secondary-600">
-                {row.label}
-              </dt>
-              <dd className="text-base text-text">{row.value ?? PENDING}</dd>
-            </div>
-          ))}
-        </dl>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-6 self-start rounded-2xl border border-border bg-surface p-8 shadow-soft sm:grid-cols-2">
+            {rows.map((row) => (
+              <div key={row.label} className="flex flex-col gap-1">
+                <dt className="text-sm font-semibold uppercase tracking-wide text-secondary-600">
+                  {row.label}
+                </dt>
+                <dd className="text-base text-text">{row.value ?? PENDING}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <ContactForm />
+        </div>
       </Container>
     </section>
   );

@@ -10,11 +10,12 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    include: ["src/**/*.test.tsx"],
+    include: ["src/**/*.test.{ts,tsx}"],
   },
   resolve: {
     alias: {
       "@": path.resolve(dirname, "./src"),
+      "server-only": path.resolve(dirname, "./test/server-only-stub.ts"),
     },
   },
 });
