@@ -44,10 +44,11 @@ export type BibleStudy = {
   status: "Inscripciones abiertas" | "Próximamente" | "En curso";
 };
 
-// Contenido provisional — reemplazar por los estudios reales de la iglesia.
+// El resto de cada tarjeta (descripción, profesor, día, horario) sigue
+// pendiente de los datos reales de la iglesia.
 export const bibleStudies: BibleStudy[] = [
   {
-    title: PENDING,
+    title: "Columnas",
     description: "Este espacio mostrará el detalle del estudio bíblico.",
     teacher: PENDING,
     day: PENDING,
@@ -55,7 +56,7 @@ export const bibleStudies: BibleStudy[] = [
     status: "Próximamente",
   },
   {
-    title: PENDING,
+    title: "Bases",
     description: "Este espacio mostrará el detalle del estudio bíblico.",
     teacher: PENDING,
     day: PENDING,
@@ -63,7 +64,7 @@ export const bibleStudies: BibleStudy[] = [
     status: "Próximamente",
   },
   {
-    title: PENDING,
+    title: "Protocolo",
     description: "Este espacio mostrará el detalle del estudio bíblico.",
     teacher: PENDING,
     day: PENDING,
