@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { siteUrl } from "@/lib/site-config";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,6 +40,11 @@ export const metadata: Metadata = {
     description:
       "Redes de Reino — Una comunidad de fe, crecimiento y propósito en Salta, Argentina.",
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Redes de Reino",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -49,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background text-text">
         {children}
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );
