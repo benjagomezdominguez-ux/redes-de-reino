@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -17,12 +18,22 @@ export async function Pastors() {
               key={pastor.name}
               className="flex flex-col items-center gap-4 rounded-2xl bg-surface p-8 text-center shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
             >
-              <div
-                className="flex h-28 w-28 items-center justify-center rounded-full bg-primary-900/5 text-sm text-muted"
-                aria-hidden="true"
-              >
-                {t("photoPlaceholder")}
-              </div>
+              {pastor.photo ? (
+                <Image
+                  src={pastor.photo}
+                  alt={t("photoAlt", { name: pastor.name })}
+                  width={112}
+                  height={112}
+                  className="h-28 w-28 rounded-full object-cover"
+                />
+              ) : (
+                <div
+                  className="flex h-28 w-28 items-center justify-center rounded-full bg-primary-900/5 text-sm text-muted"
+                  aria-hidden="true"
+                >
+                  {t("photoPlaceholder")}
+                </div>
+              )}
               <div>
                 <h3 className="font-display text-xl font-medium text-primary-900">
                   {pastor.name}

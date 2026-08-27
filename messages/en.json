@@ -54,6 +54,7 @@
     "eyebrow": "Pastors",
     "title": "Our Pastors",
     "photoPlaceholder": "Photo",
+    "photoAlt": "Photo of {name}",
     "roles": {
       "pastor": "Pastor",
       "pastora": "Pastor"

@@ -26,12 +26,12 @@ export const pastors = [
   {
     name: "Ariel Gómez",
     roleKey: "pastor",
-    photo: null as string | null,
+    photo: "/pastor-ariel.jpg" as string | null,
   },
   {
     name: "Gabriela de Gómez",
     roleKey: "pastora",
-    photo: null as string | null,
+    photo: "/pastora-gabriela.jpg" as string | null,
   },
 ] as const;
 
