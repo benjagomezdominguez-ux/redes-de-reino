@@ -1,3 +1,4 @@
+import { setRequestLocale } from "next-intl/server";
 import { Navbar } from "@/components/sections/Navbar";
 import { Hero } from "@/components/sections/Hero";
 import { AboutChurch } from "@/components/sections/AboutChurch";
@@ -11,21 +12,27 @@ import { Footer } from "@/components/sections/Footer";
 import { Reveal } from "@/components/ui/Reveal";
 import { site, siteUrl } from "@/lib/site-config";
 
-const churchJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Church",
-  name: site.name,
-  url: siteUrl,
-  logo: `${siteUrl}/logo.png`,
-  image: `${siteUrl}/logo.png`,
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Salta",
-    addressCountry: "AR",
-  },
-};
+export default async function Home({
+  params,
+}: PageProps<"/[locale]">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
 
-export default function Home() {
+  const churchJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Church",
+    name: site.name,
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`,
+    image: `${siteUrl}/logo.png`,
+    inLanguage: locale,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Salta",
+      addressCountry: "AR",
+    },
+  };
+
   return (
     <>
       <script

@@ -4,16 +4,26 @@ import { z } from "zod";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, "Ingresá tu nombre.").max(200),
-  email: z.string().trim().email("Ingresá un email válido.").max(200),
+  name: z.string().trim().min(1).max(200),
+  email: z.string().trim().email().max(200),
   phone: z.string().trim().max(40).optional().or(z.literal("")),
   interest: z.enum(["membresia", "contacto_general"]),
   message: z.string().trim().max(2000).optional().or(z.literal("")),
 });
 
+export type ContactErrorKey =
+  | "nameRequired"
+  | "emailInvalid"
+  | "generic"
+  | "submitFailed"
+  | "rateLimited";
+
 export type ContactFormState = {
   status: "idle" | "success" | "error";
-  message?: string;
+  // A translation key under contact.form.errors, resolved client-side —
+  // keeps this action locale-agnostic instead of guessing the caller's
+  // locale server-side.
+  errorKey?: ContactErrorKey;
 };
 
 export async function submitContactForm(
@@ -35,10 +45,10 @@ export async function submitContactForm(
   });
 
   if (!parsed.success) {
-    return {
-      status: "error",
-      message: parsed.error.issues[0]?.message ?? "Revisá los datos ingresados.",
-    };
+    const field = parsed.error.issues[0]?.path[0];
+    const errorKey: ContactErrorKey =
+      field === "name" ? "nameRequired" : field === "email" ? "emailInvalid" : "generic";
+    return { status: "error", errorKey };
   }
 
   const { name, email, phone, interest, message } = parsed.data;
@@ -52,17 +62,11 @@ export async function submitContactForm(
 
   if (rateLimitError) {
     console.error("can_submit_contact_form failed", rateLimitError);
-    return {
-      status: "error",
-      message: "No pudimos enviar tu mensaje. Probá de nuevo en un momento.",
-    };
+    return { status: "error", errorKey: "submitFailed" };
   }
 
   if (!canSubmit) {
-    return {
-      status: "error",
-      message: "Ya recibimos tu mensaje. Te vamos a contactar pronto — esperá unos minutos antes de volver a enviar.",
-    };
+    return { status: "error", errorKey: "rateLimited" };
   }
 
   const { error } = await supabase.from("contact_submissions").insert({
@@ -75,10 +79,7 @@ export async function submitContactForm(
 
   if (error) {
     console.error("contact_submissions insert failed", error);
-    return {
-      status: "error",
-      message: "No pudimos enviar tu mensaje. Probá de nuevo en un momento.",
-    };
+    return { status: "error", errorKey: "submitFailed" };
   }
 
   return { status: "success" };

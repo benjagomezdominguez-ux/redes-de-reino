@@ -1,10 +1,5 @@
-const CACHE_NAME = "redes-de-reino-v1";
-const CORE_ASSETS = [
-  "/",
-  "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
-];
+const CACHE_NAME = "redes-de-reino-v2";
+const CORE_ASSETS = ["/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -26,10 +21,16 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Network-first: always try to serve the latest version, and only fall
-// back to the cache when the network is unavailable (offline).
+// Navigations (full-page loads, including locale switches) are left
+// completely untouched. Re-dispatching a navigation's fetch from inside
+// the service worker changes how the browser reports it to the server
+// (Sec-Fetch-Dest stops being "document"), which broke next-intl's
+// middleware — it uses that header to decide whether to persist the
+// visitor's language choice in a cookie. Only static assets get the
+// network-first + offline-cache treatment.
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  if (event.request.mode === "navigate") return;
 
   event.respondWith(
     fetch(event.request)

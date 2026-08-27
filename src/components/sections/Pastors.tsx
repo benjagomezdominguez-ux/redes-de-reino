@@ -1,16 +1,15 @@
+import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { pastors } from "@/lib/site-config";
 
-export function Pastors() {
+export async function Pastors() {
+  const t = await getTranslations("pastors");
+
   return (
     <section id="pastores" className="bg-surface-alt py-20 sm:py-28">
       <Container className="flex flex-col gap-12">
-        <SectionHeading
-          align="center"
-          eyebrow="Pastores"
-          title="Nuestros Pastores"
-        />
+        <SectionHeading align="center" eyebrow={t("eyebrow")} title={t("title")} />
 
         <div className="mx-auto grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-2">
           {pastors.map((pastor) => (
@@ -22,14 +21,14 @@ export function Pastors() {
                 className="flex h-28 w-28 items-center justify-center rounded-full bg-primary-900/5 text-sm text-muted"
                 aria-hidden="true"
               >
-                Foto
+                {t("photoPlaceholder")}
               </div>
               <div>
                 <h3 className="font-display text-xl font-medium text-primary-900">
                   {pastor.name}
                 </h3>
                 <p className="text-sm font-medium uppercase tracking-wide text-secondary-600">
-                  {pastor.role}
+                  {t(`roles.${pastor.roleKey}`)}
                 </p>
               </div>
             </div>

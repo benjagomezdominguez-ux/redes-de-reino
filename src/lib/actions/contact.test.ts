@@ -62,8 +62,19 @@ describe("submitContactForm", () => {
     );
 
     expect(result.status).toBe("error");
+    expect(result.errorKey).toBe("emailInvalid");
     expect(rpcMock).not.toHaveBeenCalled();
     expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing name without touching the database", async () => {
+    const result = await submitContactForm(
+      { status: "idle" },
+      buildFormData({ ...validFields, name: "" })
+    );
+
+    expect(result.status).toBe("error");
+    expect(result.errorKey).toBe("nameRequired");
   });
 
   it("silently succeeds when the honeypot field is filled", async () => {
@@ -86,6 +97,7 @@ describe("submitContactForm", () => {
     );
 
     expect(result.status).toBe("error");
+    expect(result.errorKey).toBe("submitFailed");
   });
 
   it("blocks a resubmission within the rate-limit window", async () => {
@@ -97,6 +109,7 @@ describe("submitContactForm", () => {
     );
 
     expect(result.status).toBe("error");
+    expect(result.errorKey).toBe("rateLimited");
     expect(insertMock).not.toHaveBeenCalled();
   });
 
@@ -109,6 +122,7 @@ describe("submitContactForm", () => {
     );
 
     expect(result.status).toBe("error");
+    expect(result.errorKey).toBe("submitFailed");
     expect(insertMock).not.toHaveBeenCalled();
   });
 });

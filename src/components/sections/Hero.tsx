@@ -1,9 +1,12 @@
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { site } from "@/lib/site-config";
 
-export function Hero() {
+export async function Hero() {
+  const t = await getTranslations("hero");
+
   return (
     <section
       id="inicio"
@@ -21,7 +24,7 @@ export function Hero() {
       <Container className="relative flex flex-col items-center gap-10 py-24 text-center sm:py-32">
         <Image
           src="/logo.png"
-          alt={`Emblema de ${site.name}, ${site.location}`}
+          alt={t("logoAlt", { name: site.name, location: site.location })}
           width={128}
           height={128}
           className="h-28 w-28 rounded-full shadow-lifted sm:h-32 sm:w-32"
@@ -36,17 +39,16 @@ export function Hero() {
             {site.name}
           </h1>
           <p className="max-w-xl text-lg text-white/80 text-balance sm:text-xl">
-            Una red de personas creciendo en fe, unidas en comunidad, viviendo
-            con propósito.
+            {t("tagline")}
           </p>
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
           <Button href="#nuestra-iglesia" variant="secondary">
-            Quiero conocer Redes de Reino
+            {t("ctaPrimary")}
           </Button>
           <Button href="#membresia" variant="outline-light">
-            Quiero ser parte
+            {t("ctaSecondary")}
           </Button>
         </div>
       </Container>

@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "title": "Redes de Reino | Church",
+    "description": "Redes de Reino — A community of faith, growth, and purpose in Salta, Argentina."
+  },
+  "nav": {
+    "inicio": "Home",
+    "nuestraIglesia": "Our Church",
+    "pastores": "Pastors",
+    "membresia": "Membership",
+    "estudiosBiblicos": "Bible Studies",
+    "diezmosYOfrendas": "Tithes & Offerings",
+    "contacto": "Contact",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "ariaLabel": "Main navigation"
+  },
+  "languageSwitcher": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English",
+    "pt": "Português"
+  },
+  "hero": {
+    "logoAlt": "{name} emblem, {location}",
+    "tagline": "A network of people growing in faith, united in community, living with purpose.",
+    "ctaPrimary": "Get to know Redes de Reino",
+    "ctaSecondary": "I want to join"
+  },
+  "about": {
+    "eyebrow": "Our Church",
+    "title": "A network of people connected by faith",
+    "description": "Redes de Reino is a Christian community in Salta, Argentina, where families, young people, and people of every age grow together in their relationship with God and serve one another.",
+    "pillars": {
+      "community": {
+        "title": "Community",
+        "description": "A place to be known, supported, and valued."
+      },
+      "faith": {
+        "title": "Faith",
+        "description": "A living relationship with God that transforms every day."
+      },
+      "growth": {
+        "title": "Growth",
+        "description": "Spaces to learn, serve, and mature together."
+      },
+      "purpose": {
+        "title": "Purpose",
+        "description": "Every person has a place and a calling in the Kingdom."
+      }
+    }
+  },
+  "pastors": {
+    "eyebrow": "Pastors",
+    "title": "Our Pastors",
+    "photoPlaceholder": "Photo",
+    "roles": {
+      "pastor": "Pastor",
+      "pastora": "Pastor"
+    }
+  },
+  "membership": {
+    "eyebrow": "Membership",
+    "title": "Become part of Redes de Reino",
+    "description": "Joining the community is a simple path: get to know us, connect, and grow together in faith.",
+    "steps": {
+      "visit": {
+        "title": "Visit us",
+        "description": "Come to a service or activity and meet the community."
+      },
+      "connect": {
+        "title": "Connect",
+        "description": "Join a group or study to grow alongside others."
+      },
+      "join": {
+        "title": "Join",
+        "description": "Take the step to officially become part of the family."
+      }
+    },
+    "cta": "I want to become a member"
+  },
+  "bibleStudies": {
+    "eyebrow": "Bible Studies",
+    "title": "Grow in the Word",
+    "description": "Join a weekly Bible study and deepen your faith alongside others. Here are the groups currently available.",
+    "genericDescription": "This space will show the details of the Bible study.",
+    "teacherLabel": "Teacher",
+    "dayLabel": "Day",
+    "timeLabel": "Time",
+    "viewCta": "View study",
+    "joinCta": "Join",
+    "status": {
+      "proximamente": "Coming soon",
+      "enCurso": "In progress",
+      "inscripcionesAbiertas": "Open enrollment"
+    }
+  },
+  "activities": {
+    "eyebrow": "Activities",
+    "title": "Experience community",
+    "description": "Different spaces to connect with others, wherever you are in life.",
+    "groups": {
+      "reuniones": "Gatherings",
+      "jovenes": "Youth",
+      "familias": "Families",
+      "grupos": "Groups"
+    },
+    "descriptions": {
+      "reuniones": "General gatherings and meetings for the whole congregation.",
+      "jovenes": "A space for young people to grow and connect.",
+      "familias": "Activities designed for families.",
+      "grupos": "Small groups for study and prayer."
+    }
+  },
+  "giving": {
+    "eyebrow": "Tithes & Offerings",
+    "title": "Generosity that sustains the Kingdom",
+    "description": "Tithing and giving is an act of faith and gratitude. Here you'll find, clearly and transparently, how to support the work of Redes de Reino.",
+    "aliasLabel": "Bank alias",
+    "cbuLabel": "Account number (CBU)",
+    "bankLabel": "Bank",
+    "tithCta": "Give your tithe",
+    "offeringCta": "Give an offering"
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "We're here for you",
+    "description": "Write to us or come visit. We'd love to meet you.",
+    "labels": {
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "youtube": "YouTube",
+      "email": "Email",
+      "address": "Address",
+      "schedule": "Service times"
+    },
+    "form": {
+      "nameLabel": "Name",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone (optional)",
+      "interestLabel": "Reason",
+      "interestGeneral": "General inquiry",
+      "interestMembership": "I want to become a member",
+      "messageLabel": "Message (optional)",
+      "submit": "Send message",
+      "submitting": "Sending…",
+      "success": "Thank you! We received your message and will reach out soon.",
+      "errors": {
+        "nameRequired": "Please enter your name.",
+        "emailInvalid": "Please enter a valid email address.",
+        "generic": "Please check the information you entered.",
+        "submitFailed": "We couldn't send your message. Please try again in a moment.",
+        "rateLimited": "We already received your message. We'll be in touch soon — please wait a few minutes before sending another."
+      }
+    }
+  },
+  "footer": {
+    "rights": "All rights reserved."
+  },
+  "common": {
+    "pending": "[CONTENT PENDING]",
+    "logoAlt": "{name} logo"
+  }
+}

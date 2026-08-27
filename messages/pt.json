@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "title": "Redes de Reino | Igreja",
+    "description": "Redes de Reino — Uma comunidade de fé, crescimento e propósito em Salta, Argentina."
+  },
+  "nav": {
+    "inicio": "Início",
+    "nuestraIglesia": "Nossa Igreja",
+    "pastores": "Pastores",
+    "membresia": "Membresia",
+    "estudiosBiblicos": "Estudos Bíblicos",
+    "diezmosYOfrendas": "Dízimos e Ofertas",
+    "contacto": "Contato",
+    "openMenu": "Abrir menu",
+    "closeMenu": "Fechar menu",
+    "ariaLabel": "Navegação principal"
+  },
+  "languageSwitcher": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English",
+    "pt": "Português"
+  },
+  "hero": {
+    "logoAlt": "Emblema da {name}, {location}",
+    "tagline": "Uma rede de pessoas crescendo na fé, unidas em comunidade, vivendo com propósito.",
+    "ctaPrimary": "Conhecer a Redes de Reino",
+    "ctaSecondary": "Quero fazer parte"
+  },
+  "about": {
+    "eyebrow": "Nossa Igreja",
+    "title": "Uma rede de pessoas conectadas pela fé",
+    "description": "Redes de Reino é uma comunidade cristã em Salta, Argentina, onde famílias, jovens e pessoas de todas as idades crescem juntas em sua relação com Deus e se servem mutuamente.",
+    "pillars": {
+      "community": {
+        "title": "Comunidade",
+        "description": "Um lugar para ser conhecido, acompanhado e valorizado."
+      },
+      "faith": {
+        "title": "Fé",
+        "description": "Um relacionamento vivo com Deus que transforma cada dia."
+      },
+      "growth": {
+        "title": "Crescimento",
+        "description": "Espaços para aprender, servir e amadurecer juntos."
+      },
+      "purpose": {
+        "title": "Propósito",
+        "description": "Cada pessoa tem um lugar e um chamado no Reino."
+      }
+    }
+  },
+  "pastors": {
+    "eyebrow": "Pastores",
+    "title": "Nossos Pastores",
+    "photoPlaceholder": "Foto",
+    "roles": {
+      "pastor": "Pastor",
+      "pastora": "Pastora"
+    }
+  },
+  "membership": {
+    "eyebrow": "Membresia",
+    "title": "Faça parte da Redes de Reino",
+    "description": "Fazer parte da comunidade é um caminho simples: conhecer, se conectar e crescer juntos na fé.",
+    "steps": {
+      "visit": {
+        "title": "Visite-nos",
+        "description": "Venha a um culto ou atividade e conheça a comunidade."
+      },
+      "connect": {
+        "title": "Conecte-se",
+        "description": "Participe de um grupo ou estudo para crescer junto com outros."
+      },
+      "join": {
+        "title": "Faça parte",
+        "description": "Dê o passo para se tornar oficialmente parte da família."
+      }
+    },
+    "cta": "Quero ser membro"
+  },
+  "bibleStudies": {
+    "eyebrow": "Estudos Bíblicos",
+    "title": "Cresça na Palavra",
+    "description": "Participe de um estudo bíblico semanal e aprofunde sua fé junto com outros. Estes são os espaços disponíveis.",
+    "genericDescription": "Este espaço vai mostrar os detalhes do estudo bíblico.",
+    "teacherLabel": "Professor",
+    "dayLabel": "Dia",
+    "timeLabel": "Horário",
+    "viewCta": "Ver estudo",
+    "joinCta": "Participar",
+    "status": {
+      "proximamente": "Em breve",
+      "enCurso": "Em andamento",
+      "inscripcionesAbiertas": "Inscrições abertas"
+    }
+  },
+  "activities": {
+    "eyebrow": "Atividades",
+    "title": "Viva a comunidade",
+    "description": "Diferentes espaços para se encontrar com outros, de acordo com o momento da sua vida.",
+    "groups": {
+      "reuniones": "Reuniões",
+      "jovenes": "Jovens",
+      "familias": "Famílias",
+      "grupos": "Grupos"
+    },
+    "descriptions": {
+      "reuniones": "Encontros e reuniões gerais da congregação.",
+      "jovenes": "Espaço de crescimento e comunhão para os jovens.",
+      "familias": "Atividades pensadas para famílias.",
+      "grupos": "Pequenos grupos de estudo e oração."
+    }
+  },
+  "giving": {
+    "eyebrow": "Dízimos e Ofertas",
+    "title": "Generosidade que sustenta o Reino",
+    "description": "Dizimar e ofertar é um ato de fé e gratidão. Aqui você vai encontrar, de forma clara e transparente, como colaborar com a obra da Redes de Reino.",
+    "aliasLabel": "Alias bancário",
+    "cbuLabel": "Número da conta (CBU)",
+    "bankLabel": "Banco",
+    "tithCta": "Dizimar",
+    "offeringCta": "Fazer uma oferta"
+  },
+  "contact": {
+    "eyebrow": "Contato",
+    "title": "Estamos aqui para você",
+    "description": "Escreva para nós ou venha nos visitar. Ficaríamos felizes em conhecer você.",
+    "labels": {
+      "whatsapp": "WhatsApp",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "youtube": "YouTube",
+      "email": "Email",
+      "address": "Endereço",
+      "schedule": "Horários"
+    },
+    "form": {
+      "nameLabel": "Nome",
+      "emailLabel": "Email",
+      "phoneLabel": "Telefone (opcional)",
+      "interestLabel": "Motivo",
+      "interestGeneral": "Dúvida geral",
+      "interestMembership": "Quero ser membro",
+      "messageLabel": "Mensagem (opcional)",
+      "submit": "Enviar mensagem",
+      "submitting": "Enviando…",
+      "success": "Obrigado! Recebemos sua mensagem e entraremos em contato em breve.",
+      "errors": {
+        "nameRequired": "Digite seu nome.",
+        "emailInvalid": "Digite um email válido.",
+        "generic": "Verifique os dados informados.",
+        "submitFailed": "Não conseguimos enviar sua mensagem. Tente novamente em instantes.",
+        "rateLimited": "Já recebemos sua mensagem. Vamos entrar em contato em breve — aguarde alguns minutos antes de enviar novamente."
+      }
+    }
+  },
+  "footer": {
+    "rights": "Todos os direitos reservados."
+  },
+  "common": {
+    "pending": "[CONTEÚDO PENDENTE]",
+    "logoAlt": "Logo da {name}"
+  }
+}

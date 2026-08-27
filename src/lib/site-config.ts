@@ -1,8 +1,6 @@
-// Contenido central del sitio. Los valores marcados como "pendiente" son
-// placeholders intencionales: no se inventa información oficial de la
-// iglesia (dirección, horarios, redes, datos bancarios, biografías).
-
-export const PENDING = "[CONTENIDO PENDIENTE]";
+// Structural/official data only. Everything user-facing and translatable
+// lives in messages/{es,en,pt}.json — see the corresponding *Key fields
+// below, which components resolve via next-intl's t().
 
 // Update this the day a custom domain replaces the Vercel subdomain —
 // it's the single source of truth for absolute URLs (metadata, OG image,
@@ -12,100 +10,63 @@ export const siteUrl = "https://redes-de-reino.vercel.app";
 export const site = {
   name: "Redes de Reino",
   location: "Salta, Argentina",
-  tagline: "Fe, comunidad y propósito",
-  description:
-    "Una comunidad de fe, crecimiento y propósito en Salta, Argentina.",
 };
 
 export const navLinks = [
-  { href: "#inicio", label: "Inicio" },
-  { href: "#nuestra-iglesia", label: "Nuestra Iglesia" },
-  { href: "#pastores", label: "Pastores" },
-  { href: "#membresia", label: "Membresía" },
-  { href: "#estudios-biblicos", label: "Estudios Bíblicos" },
-  { href: "#diezmos-y-ofrendas", label: "Diezmos y Ofrendas" },
-  { href: "#contacto", label: "Contacto" },
-];
+  { href: "#inicio", key: "inicio" },
+  { href: "#nuestra-iglesia", key: "nuestraIglesia" },
+  { href: "#pastores", key: "pastores" },
+  { href: "#membresia", key: "membresia" },
+  { href: "#estudios-biblicos", key: "estudiosBiblicos" },
+  { href: "#diezmos-y-ofrendas", key: "diezmosYOfrendas" },
+  { href: "#contacto", key: "contacto" },
+] as const;
 
 export const pastors = [
   {
     name: "Ariel Gómez",
-    role: "Pastor",
+    roleKey: "pastor",
     photo: null as string | null,
   },
   {
     name: "Gabriela de Gómez",
-    role: "Pastora",
+    roleKey: "pastora",
     photo: null as string | null,
   },
-];
+] as const;
+
+export type BibleStudyStatusKey = "proximamente" | "enCurso" | "inscripcionesAbiertas";
 
 export type BibleStudy = {
+  // Real program name, not translated — see rule 11.
   title: string;
-  description: string;
-  teacher: string;
-  day: string;
-  time: string;
-  status: "Inscripciones abiertas" | "Próximamente" | "En curso";
+  teacher: string | null;
+  day: string | null;
+  time: string | null;
+  statusKey: BibleStudyStatusKey;
 };
 
-// El resto de cada tarjeta (descripción, profesor, día, horario) sigue
-// pendiente de los datos reales de la iglesia.
+// The rest of each card (teacher/day/time) is still pending real data
+// from the church.
 export const bibleStudies: BibleStudy[] = [
-  {
-    title: "Columnas",
-    description: "Este espacio mostrará el detalle del estudio bíblico.",
-    teacher: PENDING,
-    day: PENDING,
-    time: PENDING,
-    status: "Próximamente",
-  },
-  {
-    title: "Bases",
-    description: "Este espacio mostrará el detalle del estudio bíblico.",
-    teacher: PENDING,
-    day: PENDING,
-    time: PENDING,
-    status: "Próximamente",
-  },
-  {
-    title: "Protocolo",
-    description: "Este espacio mostrará el detalle del estudio bíblico.",
-    teacher: PENDING,
-    day: PENDING,
-    time: PENDING,
-    status: "Próximamente",
-  },
+  { title: "Columnas", teacher: null, day: null, time: null, statusKey: "proximamente" },
+  { title: "Bases", teacher: null, day: null, time: null, statusKey: "proximamente" },
+  { title: "Protocolo", teacher: null, day: null, time: null, statusKey: "proximamente" },
 ];
 
+export type ActivityGroupKey = "reuniones" | "jovenes" | "familias" | "grupos";
+
 export type Activity = {
-  title: string;
-  description: string;
-  group: string;
+  // Real activity name — pending from the church.
+  title: string | null;
+  groupKey: ActivityGroupKey;
 };
 
-// Contenido provisional — reemplazar por las actividades reales de la iglesia.
 export const activities: Activity[] = [
-  {
-    title: PENDING,
-    description: "Encuentros y reuniones generales de la congregación.",
-    group: "Reuniones",
-  },
-  {
-    title: PENDING,
-    description: "Espacio de crecimiento y comunión para jóvenes.",
-    group: "Jóvenes",
-  },
-  {
-    title: PENDING,
-    description: "Actividades pensadas para familias.",
-    group: "Familias",
-  },
-  {
-    title: PENDING,
-    description: "Grupos pequeños de estudio y oración.",
-    group: "Grupos",
-  },
+  { title: null, groupKey: "reuniones" },
+  { title: null, groupKey: "jovenes" },
+  { title: null, groupKey: "familias" },
+  { title: null, groupKey: "grupos" },
 ];
 
 export const contact = {

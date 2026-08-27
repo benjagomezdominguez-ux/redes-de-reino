@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { submitContactForm, type ContactFormState } from "@/lib/actions/contact";
 
 const initialState: ContactFormState = { status: "idle" };
@@ -9,6 +10,7 @@ const inputClasses =
   "w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-muted focus-visible:outline-2 focus-visible:outline-secondary-500";
 
 export function ContactForm() {
+  const t = useTranslations("contact.form");
   const [state, formAction, pending] = useActionState(
     submitContactForm,
     initialState
@@ -29,7 +31,7 @@ export function ContactForm() {
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          Nombre
+          {t("nameLabel")}
           <input
             type="text"
             name="name"
@@ -40,7 +42,7 @@ export function ContactForm() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          Email
+          {t("emailLabel")}
           <input
             type="email"
             name="email"
@@ -51,7 +53,7 @@ export function ContactForm() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          Teléfono (opcional)
+          {t("phoneLabel")}
           <input
             type="tel"
             name="phone"
@@ -61,16 +63,16 @@ export function ContactForm() {
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          Motivo
+          {t("interestLabel")}
           <select name="interest" defaultValue="contacto_general" className={inputClasses}>
-            <option value="contacto_general">Consulta general</option>
-            <option value="membresia">Quiero ser miembro</option>
+            <option value="contacto_general">{t("interestGeneral")}</option>
+            <option value="membresia">{t("interestMembership")}</option>
           </select>
         </label>
       </div>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-        Mensaje (opcional)
+        {t("messageLabel")}
         <textarea
           name="message"
           rows={4}
@@ -94,17 +96,17 @@ export function ContactForm() {
         disabled={pending}
         className="inline-flex items-center justify-center rounded-full bg-primary-900 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-800 disabled:opacity-60"
       >
-        {pending ? "Enviando…" : "Enviar mensaje"}
+        {pending ? t("submitting") : t("submit")}
       </button>
 
       <div role="status" aria-live="polite">
         {state.status === "success" ? (
-          <p className="text-sm font-medium text-success">
-            ¡Gracias! Recibimos tu mensaje y te vamos a contactar pronto.
-          </p>
+          <p className="text-sm font-medium text-success">{t("success")}</p>
         ) : null}
-        {state.status === "error" ? (
-          <p className="text-sm font-medium text-error">{state.message}</p>
+        {state.status === "error" && state.errorKey ? (
+          <p className="text-sm font-medium text-error">
+            {t(`errors.${state.errorKey}`)}
+          </p>
         ) : null}
       </div>
     </form>

@@ -1,47 +1,33 @@
+import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 
-const pillars = [
-  {
-    title: "Comunidad",
-    description: "Un lugar donde ser conocido, acompañado y valorado.",
-  },
-  {
-    title: "Fe",
-    description: "Una relación viva con Dios que transforma cada día.",
-  },
-  {
-    title: "Crecimiento",
-    description: "Espacios para aprender, servir y madurar juntos.",
-  },
-  {
-    title: "Propósito",
-    description: "Cada persona tiene un lugar y un llamado en el Reino.",
-  },
-];
+const pillarKeys = ["community", "faith", "growth", "purpose"] as const;
 
-export function AboutChurch() {
+export async function AboutChurch() {
+  const t = await getTranslations("about");
+
   return (
     <section id="nuestra-iglesia" className="py-20 sm:py-28">
       <Container className="flex flex-col gap-12">
         <SectionHeading
-          eyebrow="Nuestra Iglesia"
-          title="Una red de personas conectadas por la fe"
-          description="Redes de Reino es una comunidad cristiana en Salta, Argentina, donde
-          familias, jóvenes y personas de toda edad crecen juntas en su
-          relación con Dios y se sirven mutuamente."
+          eyebrow={t("eyebrow")}
+          title={t("title")}
+          description={t("description")}
         />
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {pillars.map((pillar) => (
+          {pillarKeys.map((key) => (
             <div
-              key={pillar.title}
+              key={key}
               className="rounded-2xl border border-border bg-surface p-6 shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
             >
               <h3 className="font-display text-xl font-medium text-primary-900">
-                {pillar.title}
+                {t(`pillars.${key}.title`)}
               </h3>
-              <p className="mt-2 text-sm text-muted">{pillar.description}</p>
+              <p className="mt-2 text-sm text-muted">
+                {t(`pillars.${key}.description`)}
+              </p>
             </div>
           ))}
         </div>

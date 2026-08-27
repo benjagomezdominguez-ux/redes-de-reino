@@ -1,36 +1,50 @@
+import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ContactForm } from "@/components/sections/ContactForm";
-import { PENDING, contact } from "@/lib/site-config";
+import { contact } from "@/lib/site-config";
 
-const rows: Array<{ label: string; value: string | null }> = [
-  { label: "WhatsApp", value: contact.whatsapp },
-  { label: "Instagram", value: contact.instagram },
-  { label: "Facebook", value: contact.facebook },
-  { label: "YouTube", value: contact.youtube },
-  { label: "Email", value: contact.email },
-  { label: "Dirección", value: contact.address },
-  { label: "Horarios", value: contact.schedule },
-];
+type ContactLabelKey =
+  | "whatsapp"
+  | "instagram"
+  | "facebook"
+  | "youtube"
+  | "email"
+  | "address"
+  | "schedule";
 
-export function Contact() {
+export async function Contact() {
+  const t = await getTranslations("contact");
+  const tCommon = await getTranslations("common");
+  const pending = tCommon("pending");
+
+  const rows: Array<{ key: ContactLabelKey; value: string | null }> = [
+    { key: "whatsapp", value: contact.whatsapp },
+    { key: "instagram", value: contact.instagram },
+    { key: "facebook", value: contact.facebook },
+    { key: "youtube", value: contact.youtube },
+    { key: "email", value: contact.email },
+    { key: "address", value: contact.address },
+    { key: "schedule", value: contact.schedule },
+  ];
+
   return (
     <section id="contacto" className="py-20 sm:py-28">
       <Container className="flex flex-col gap-12">
         <SectionHeading
-          eyebrow="Contacto"
-          title="Estamos para vos"
-          description="Escribinos o visitanos. Nos encantaría conocerte."
+          eyebrow={t("eyebrow")}
+          title={t("title")}
+          description={t("description")}
         />
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <dl className="grid grid-cols-1 gap-x-8 gap-y-6 self-start rounded-2xl border border-border bg-surface p-8 shadow-soft sm:grid-cols-2">
             {rows.map((row) => (
-              <div key={row.label} className="flex flex-col gap-1">
+              <div key={row.key} className="flex flex-col gap-1">
                 <dt className="text-sm font-semibold uppercase tracking-wide text-secondary-600">
-                  {row.label}
+                  {t(`labels.${row.key}`)}
                 </dt>
-                <dd className="text-base text-text">{row.value ?? PENDING}</dd>
+                <dd className="text-base text-text">{row.value ?? pending}</dd>
               </div>
             ))}
           </dl>
