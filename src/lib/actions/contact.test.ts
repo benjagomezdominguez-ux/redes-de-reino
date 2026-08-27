@@ -2,9 +2,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const insertMock = vi.fn();
 const fromMock = vi.fn(() => ({ insert: insertMock }));
+const rpcMock = vi.fn();
 
 vi.mock("@/lib/supabase/server", () => ({
-  getSupabaseServerClient: () => ({ from: fromMock }),
+  getSupabaseServerClient: () => ({ from: fromMock, rpc: rpcMock }),
 }));
 
 const { submitContactForm } = await import("./contact");
@@ -29,7 +30,9 @@ describe("submitContactForm", () => {
   beforeEach(() => {
     insertMock.mockReset();
     fromMock.mockClear();
+    rpcMock.mockReset();
     insertMock.mockResolvedValue({ error: null });
+    rpcMock.mockResolvedValue({ data: true, error: null });
   });
 
   it("inserts a valid submission and reports success", async () => {
@@ -39,6 +42,9 @@ describe("submitContactForm", () => {
     );
 
     expect(result.status).toBe("success");
+    expect(rpcMock).toHaveBeenCalledWith("can_submit_contact_form", {
+      p_email: "maria@example.com",
+    });
     expect(fromMock).toHaveBeenCalledWith("contact_submissions");
     expect(insertMock).toHaveBeenCalledWith({
       name: "María López",
@@ -56,6 +62,7 @@ describe("submitContactForm", () => {
     );
 
     expect(result.status).toBe("error");
+    expect(rpcMock).not.toHaveBeenCalled();
     expect(insertMock).not.toHaveBeenCalled();
   });
 
@@ -66,6 +73,7 @@ describe("submitContactForm", () => {
     const result = await submitContactForm({ status: "idle" }, formData);
 
     expect(result.status).toBe("success");
+    expect(rpcMock).not.toHaveBeenCalled();
     expect(insertMock).not.toHaveBeenCalled();
   });
 
@@ -78,5 +86,29 @@ describe("submitContactForm", () => {
     );
 
     expect(result.status).toBe("error");
+  });
+
+  it("blocks a resubmission within the rate-limit window", async () => {
+    rpcMock.mockResolvedValue({ data: false, error: null });
+
+    const result = await submitContactForm(
+      { status: "idle" },
+      buildFormData(validFields)
+    );
+
+    expect(result.status).toBe("error");
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  it("reports an error when the rate-limit check itself fails", async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: "rpc down" } });
+
+    const result = await submitContactForm(
+      { status: "idle" },
+      buildFormData(validFields)
+    );
+
+    expect(result.status).toBe("error");
+    expect(insertMock).not.toHaveBeenCalled();
   });
 });

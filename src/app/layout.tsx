@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { siteUrl } from "@/lib/site-config";
 import "./globals.css";
 
 const inter = Inter({
@@ -14,8 +15,6 @@ const fraunces = Fraunces({
   display: "swap",
   axes: ["opsz", "SOFT", "WONK"],
 });
-
-const siteUrl = "https://www.redesdereino.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

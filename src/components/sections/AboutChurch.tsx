@@ -36,7 +36,7 @@ export function AboutChurch() {
           {pillars.map((pillar) => (
             <div
               key={pillar.title}
-              className="rounded-2xl border border-border bg-surface p-6 shadow-soft"
+              className="rounded-2xl border border-border bg-surface p-6 shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
             >
               <h3 className="font-display text-xl font-medium text-primary-900">
                 {pillar.title}

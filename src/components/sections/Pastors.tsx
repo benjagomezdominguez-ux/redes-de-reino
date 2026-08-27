@@ -16,7 +16,7 @@ export function Pastors() {
           {pastors.map((pastor) => (
             <div
               key={pastor.name}
-              className="flex flex-col items-center gap-4 rounded-2xl bg-surface p-8 text-center shadow-soft"
+              className="flex flex-col items-center gap-4 rounded-2xl bg-surface p-8 text-center shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
             >
               <div
                 className="flex h-28 w-28 items-center justify-center rounded-full bg-primary-900/5 text-sm text-muted"

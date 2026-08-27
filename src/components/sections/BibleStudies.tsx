@@ -18,7 +18,7 @@ export function BibleStudies() {
           {bibleStudies.map((study, index) => (
             <article
               key={index}
-              className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6 shadow-soft"
+              className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6 shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
             >
               <div className="flex items-start justify-between gap-3">
                 <h3 className="font-display text-xl font-medium text-primary-900">

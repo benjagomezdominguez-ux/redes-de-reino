@@ -4,6 +4,11 @@
 
 export const PENDING = "[CONTENIDO PENDIENTE]";
 
+// Update this the day a custom domain replaces the Vercel subdomain —
+// it's the single source of truth for absolute URLs (metadata, OG image,
+// sitemap, structured data).
+export const siteUrl = "https://redes-de-reino.vercel.app";
+
 export const site = {
   name: "Redes de Reino",
   location: "Salta, Argentina",

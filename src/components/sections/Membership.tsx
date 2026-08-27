@@ -32,7 +32,7 @@ export function Membership() {
           {steps.map((step, index) => (
             <div
               key={step.title}
-              className="rounded-2xl border border-border bg-surface p-6"
+              className="rounded-2xl border border-border bg-surface p-6 transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
             >
               <span className="font-display text-3xl text-secondary-500">
                 {String(index + 1).padStart(2, "0")}

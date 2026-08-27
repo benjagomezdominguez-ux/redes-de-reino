@@ -44,6 +44,27 @@ export async function submitContactForm(
   const { name, email, phone, interest, message } = parsed.data;
 
   const supabase = getSupabaseServerClient();
+
+  const { data: canSubmit, error: rateLimitError } = await supabase.rpc(
+    "can_submit_contact_form",
+    { p_email: email }
+  );
+
+  if (rateLimitError) {
+    console.error("can_submit_contact_form failed", rateLimitError);
+    return {
+      status: "error",
+      message: "No pudimos enviar tu mensaje. Probá de nuevo en un momento.",
+    };
+  }
+
+  if (!canSubmit) {
+    return {
+      status: "error",
+      message: "Ya recibimos tu mensaje. Te vamos a contactar pronto — esperá unos minutos antes de volver a enviar.",
+    };
+  }
+
   const { error } = await supabase.from("contact_submissions").insert({
     name,
     email,

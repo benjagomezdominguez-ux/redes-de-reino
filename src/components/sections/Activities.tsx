@@ -17,7 +17,7 @@ export function Activities() {
           {activities.map((activity, index) => (
             <article
               key={index}
-              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 shadow-soft"
+              className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
             >
               <span className="text-sm font-semibold uppercase tracking-wide text-secondary-600">
                 {activity.group}
