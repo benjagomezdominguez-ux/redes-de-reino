@@ -107,12 +107,11 @@ export type Meeting = {
   description: string | null;
 };
 
-// Order here is display order (rule: sort by weekday, never alphabetical) —
-// once real days are known, just reorder this array Monday → Sunday.
+// Order here is display order, as requested by the church.
 export const meetings: Meeting[] = [
-  { dayKey: null, title: null, time: null, description: null },
-  { dayKey: null, title: null, time: null, description: null },
-  { dayKey: null, title: null, time: null, description: null },
+  { dayKey: "domingo", title: "Reunión General", time: "10:00 AM", description: null },
+  { dayKey: "sabado", title: "Bases", time: "19:00 PM", description: null },
+  { dayKey: "miercoles", title: "Trascender", time: "20:00 PM", description: null },
 ];
 
 export const contact = {

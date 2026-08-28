@@ -21,7 +21,7 @@ export function MeetingSchedule({
           <span className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary-600">
             {meeting.dayKey ? dayLabels[meeting.dayKey] : pendingLabel}
           </span>
-          <h3 className="font-display text-lg font-medium text-primary-900">
+          <h3 className="font-display text-2xl font-medium text-primary-900">
             {meeting.title ?? pendingLabel}
           </h3>
           <p className="font-display text-3xl font-medium text-primary-900">

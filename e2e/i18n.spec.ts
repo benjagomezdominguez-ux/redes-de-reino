@@ -130,8 +130,11 @@ test.describe("structure — Nuestra Iglesia removed, Gallery + Schedule in its 
 
     const schedule = page.locator("#horarios");
     await expect(schedule).toBeVisible();
-    // Pending data still renders as a visible placeholder, not blank/undefined.
-    await expect(schedule.getByText("[CONTENIDO PENDIENTE]").first()).toBeVisible();
+    await expect(schedule.getByText("Reunión General")).toBeVisible();
+    await expect(schedule.getByText("Domingo")).toBeVisible();
+    await expect(schedule.getByText("10:00 AM")).toBeVisible();
+    await expect(schedule.getByText("Bases")).toBeVisible();
+    await expect(schedule.getByText("Trascender")).toBeVisible();
   });
 
   test("the Hero's primary CTA now points at the gallery, not a dead anchor", async ({ page }) => {
