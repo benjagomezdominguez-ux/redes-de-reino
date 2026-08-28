@@ -104,18 +104,23 @@ test.describe("structure — Nuestra Iglesia removed, Gallery + Schedule in its 
     }
   });
 
-  test("the gallery occupies the position right after the hero, with 4 slides", async ({ page }) => {
+  test("the gallery occupies the position right after the hero, with 4 slides, and has no heading text of its own", async ({
+    page,
+  }) => {
     await page.goto("/es");
 
     const gallery = page.locator("#galeria");
     await expect(gallery).toBeVisible();
 
-    // "Right after the hero": the very next heading in DOM order following
-    // the H1 must be the gallery's own heading — i.e. nothing (like the old
-    // Nuestra Iglesia section) sits between them any more.
-    const headings = await page.locator("h1, h2").allTextContents();
-    const heroIndex = headings.indexOf("Redes de Reino");
-    expect(headings[heroIndex + 1]).toBe("Momentos de nuestra comunidad");
+    // "Right after the hero": #galeria (wrapped by the Reveal animation
+    // div) is the hero section's immediate next sibling in the DOM — i.e.
+    // nothing (like the old Nuestra Iglesia section) sits between them.
+    await expect(page.locator("#inicio + div > section#galeria")).toHaveCount(1);
+
+    // The text heading block above the gallery was intentionally removed
+    // — only the photos remain.
+    await expect(gallery.locator("h2")).toHaveCount(0);
+    await expect(page.getByText("Momentos de nuestra comunidad")).toHaveCount(0);
 
     const indicators = gallery.locator('button[aria-current]');
     await expect(indicators).toHaveCount(4);
@@ -124,9 +129,11 @@ test.describe("structure — Nuestra Iglesia removed, Gallery + Schedule in its 
   test("Schedule section exists, right after the gallery, and renders meeting cards", async ({ page }) => {
     await page.goto("/es");
 
-    const headings = await page.locator("h1, h2").allTextContents();
-    const galleryIndex = headings.indexOf("Momentos de nuestra comunidad");
-    expect(headings[galleryIndex + 1]).toBe("Horarios de Reuniones");
+    // "Right after the gallery": #horarios's Reveal wrapper is the
+    // immediate next sibling of #galeria's Reveal wrapper.
+    await expect(
+      page.locator("div:has(> section#galeria) + div > section#horarios")
+    ).toHaveCount(1);
 
     const schedule = page.locator("#horarios");
     await expect(schedule).toBeVisible();

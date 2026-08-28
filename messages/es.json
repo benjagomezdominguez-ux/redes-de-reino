@@ -106,9 +106,6 @@
     }
   },
   "gallery": {
-    "eyebrow": "Galería",
-    "title": "Momentos de nuestra comunidad",
-    "description": "Un vistazo a lo que vivimos juntos como familia de fe.",
     "imageAlt": "Fotografía {index} de la comunidad de {name}",
     "goToSlide": "Ir a la fotografía {index}",
     "pending": "Fotografía próximamente"

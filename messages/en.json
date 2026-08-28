@@ -106,9 +106,6 @@
     }
   },
   "gallery": {
-    "eyebrow": "Gallery",
-    "title": "Moments from our community",
-    "description": "A glimpse of what we experience together as a family of faith.",
     "imageAlt": "Photo {index} of the {name} community",
     "goToSlide": "Go to photo {index}",
     "pending": "Photo coming soon"

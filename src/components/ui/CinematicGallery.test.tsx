@@ -80,11 +80,11 @@ describe("CinematicGallery", () => {
     expect(screen.getAllByText("Fotografía próximamente").length).toBeGreaterThan(0);
   });
 
-  it("uses a responsive aspect-ratio container instead of a fixed width, avoiding horizontal overflow", () => {
+  it("uses a full-width, viewport-height-based container instead of a fixed pixel width, avoiding horizontal overflow", () => {
     const { container } = renderGallery(fourImages);
     const root = container.firstElementChild as HTMLElement;
     expect(root.className).toMatch(/w-full/);
-    expect(root.className).toMatch(/aspect-\[16\/7\]/);
+    expect(root.className).toMatch(/h-\[70vh\]/);
   });
 
   it("disables the crossfade transition under prefers-reduced-motion while still cycling images", () => {

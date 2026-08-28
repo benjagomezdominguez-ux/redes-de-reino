@@ -33,7 +33,7 @@ export function CinematicGallery({ images }: { images: GalleryImage[] }) {
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
-      className="relative aspect-[16/7] w-full overflow-hidden rounded-2xl bg-primary-900 shadow-lifted sm:aspect-[16/6]"
+      className="relative h-[70vh] max-h-[820px] min-h-[420px] w-full overflow-hidden rounded-2xl bg-primary-900 shadow-lifted"
     >
       {images.map((image, index) => {
         const isActive = index === activeIndex;
@@ -53,7 +53,7 @@ export function CinematicGallery({ images }: { images: GalleryImage[] }) {
                 src={image.src}
                 alt={t("imageAlt", { index: index + 1, name: site.name })}
                 fill
-                sizes="(min-width: 1024px) 1152px, 100vw"
+                sizes="100vw"
                 priority={index === 0}
                 className="object-cover"
                 style={{ objectPosition: image.objectPosition ?? "center" }}
