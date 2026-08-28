@@ -113,6 +113,14 @@
       "grupos": "Pequenos grupos de estudo e oração."
     }
   },
+  "gallery": {
+    "eyebrow": "Galeria",
+    "title": "Momentos da nossa comunidade",
+    "description": "Um vislumbre do que vivemos juntos como família de fé.",
+    "imageAlt": "Fotografia {index} da comunidade da {name}",
+    "goToSlide": "Ir para a fotografia {index}",
+    "pending": "Fotografia em breve"
+  },
   "giving": {
     "eyebrow": "Dízimos e Ofertas",
     "title": "Generosidade que sustenta o Reino",

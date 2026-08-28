@@ -113,6 +113,14 @@
       "grupos": "Small groups for study and prayer."
     }
   },
+  "gallery": {
+    "eyebrow": "Gallery",
+    "title": "Moments from our community",
+    "description": "A glimpse of what we experience together as a family of faith.",
+    "imageAlt": "Photo {index} of the {name} community",
+    "goToSlide": "Go to photo {index}",
+    "pending": "Photo coming soon"
+  },
   "giving": {
     "eyebrow": "Tithes & Offerings",
     "title": "Generosity that sustains the Kingdom",
