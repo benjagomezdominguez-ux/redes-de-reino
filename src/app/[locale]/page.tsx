@@ -1,13 +1,13 @@
 import { setRequestLocale } from "next-intl/server";
 import { Navbar } from "@/components/sections/Navbar";
 import { Hero } from "@/components/sections/Hero";
-import { AboutChurch } from "@/components/sections/AboutChurch";
+import { Gallery } from "@/components/sections/Gallery";
+import { Schedule } from "@/components/sections/Schedule";
 import { Pastors } from "@/components/sections/Pastors";
 import { Membership } from "@/components/sections/Membership";
 import { Giving } from "@/components/sections/Giving";
 import { BibleStudies } from "@/components/sections/BibleStudies";
 import { Activities } from "@/components/sections/Activities";
-import { Gallery } from "@/components/sections/Gallery";
 import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
 import { Reveal } from "@/components/ui/Reveal";
@@ -44,7 +44,10 @@ export default async function Home({
       <main className="flex flex-col">
         <Hero />
         <Reveal>
-          <AboutChurch />
+          <Gallery />
+        </Reveal>
+        <Reveal>
+          <Schedule />
         </Reveal>
         <Reveal>
           <Pastors />
@@ -57,9 +60,6 @@ export default async function Home({
         </Reveal>
         <Reveal>
           <Activities />
-        </Reveal>
-        <Reveal>
-          <Gallery />
         </Reveal>
         <Reveal>
           <Giving />

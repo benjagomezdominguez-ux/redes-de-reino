@@ -14,7 +14,8 @@ export const site = {
 
 export const navLinks = [
   { href: "#inicio", key: "inicio" },
-  { href: "#nuestra-iglesia", key: "nuestraIglesia" },
+  { href: "#galeria", key: "galeria" },
+  { href: "#horarios", key: "horarios" },
   { href: "#pastores", key: "pastores" },
   { href: "#membresia", key: "membresia" },
   { href: "#estudios-biblicos", key: "estudiosBiblicos" },
@@ -83,6 +84,35 @@ export const galleryImages: GalleryImage[] = [
   { src: null },
   { src: null },
   { src: null },
+];
+
+export type WeekdayKey =
+  | "lunes"
+  | "martes"
+  | "miercoles"
+  | "jueves"
+  | "viernes"
+  | "sabado"
+  | "domingo";
+
+export type Meeting = {
+  // Which weekday this meets on — translated via messages.schedule.days.
+  // Pending until the church confirms real meeting days.
+  dayKey: WeekdayKey | null;
+  // Real meeting name (e.g. "Reunión General") — not translated, same
+  // reasoning as bibleStudies titles: official content, not UI chrome.
+  title: string | null;
+  // Display string as-is (e.g. "19:00 hs") — pending real data.
+  time: string | null;
+  description: string | null;
+};
+
+// Order here is display order (rule: sort by weekday, never alphabetical) —
+// once real days are known, just reorder this array Monday → Sunday.
+export const meetings: Meeting[] = [
+  { dayKey: null, title: null, time: null, description: null },
+  { dayKey: null, title: null, time: null, description: null },
+  { dayKey: null, title: null, time: null, description: null },
 ];
 
 export const contact = {

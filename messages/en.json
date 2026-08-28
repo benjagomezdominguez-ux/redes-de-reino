@@ -5,7 +5,8 @@
   },
   "nav": {
     "inicio": "Home",
-    "nuestraIglesia": "Our Church",
+    "galeria": "Gallery",
+    "horarios": "Schedule",
     "pastores": "Pastors",
     "membresia": "Membership",
     "estudiosBiblicos": "Bible Studies",
@@ -27,27 +28,18 @@
     "ctaPrimary": "Get to know Redes de Reino",
     "ctaSecondary": "I want to join"
   },
-  "about": {
-    "eyebrow": "Our Church",
-    "title": "A network of people connected by faith",
-    "description": "Redes de Reino is a Christian community in Salta, Argentina, where families, young people, and people of every age grow together in their relationship with God and serve one another.",
-    "pillars": {
-      "community": {
-        "title": "Community",
-        "description": "A place to be known, supported, and valued."
-      },
-      "faith": {
-        "title": "Faith",
-        "description": "A living relationship with God that transforms every day."
-      },
-      "growth": {
-        "title": "Growth",
-        "description": "Spaces to learn, serve, and mature together."
-      },
-      "purpose": {
-        "title": "Purpose",
-        "description": "Every person has a place and a calling in the Kingdom."
-      }
+  "schedule": {
+    "eyebrow": "Schedule",
+    "title": "Meeting Times",
+    "description": "Join us at any of these gatherings.",
+    "days": {
+      "lunes": "Monday",
+      "martes": "Tuesday",
+      "miercoles": "Wednesday",
+      "jueves": "Thursday",
+      "viernes": "Friday",
+      "sabado": "Saturday",
+      "domingo": "Sunday"
     }
   },
   "pastors": {

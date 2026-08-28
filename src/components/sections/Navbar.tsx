@@ -16,9 +16,13 @@ export function Navbar() {
     <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur">
       <nav
         aria-label={t("ariaLabel")}
-        className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-3 sm:px-8"
+        className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-6 py-3 sm:px-8"
       >
-        <Link href="#inicio" className="flex items-center gap-3" onClick={() => setOpen(false)}>
+        <Link
+          href="#inicio"
+          className="flex shrink-0 items-center gap-3 whitespace-nowrap"
+          onClick={() => setOpen(false)}
+        >
           <Image
             src="/logo.png"
             alt={tCommon("logoAlt", { name: site.name })}
@@ -32,13 +36,13 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="hidden items-center gap-8 lg:flex">
-          <ul className="flex items-center gap-8">
+        <div className="hidden items-center gap-5 lg:flex xl:gap-7">
+          <ul className="flex items-center gap-4 xl:gap-6">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="text-sm font-medium text-primary-900/80 transition-colors hover:text-primary-900"
+                  className="whitespace-nowrap text-sm font-medium text-primary-900/80 transition-colors hover:text-primary-900"
                 >
                   {t(link.key)}
                 </Link>

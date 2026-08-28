@@ -46,10 +46,10 @@ src/
     robots.ts, sitemap.ts, manifest.ts, icon*, opengraph-image.jpg
                    # recursos globales, no dependen del idioma
   components/
-    sections/     # Navbar, Hero, AboutChurch, Pastors, Membership,
+    sections/     # Navbar, Hero, Gallery, Schedule, Pastors, Membership,
                    # BibleStudies, Activities, Giving, Contact, Footer
     ui/            # Primitivas reutilizables (Container, Button, SectionHeading,
-                   # LanguageSwitcher, Reveal)
+                   # LanguageSwitcher, Reveal, CinematicGallery, MeetingSchedule)
   i18n/
     routing.ts     # locales soportados, default, prefijo de URL
     request.ts     # carga de mensajes + fallback a español
@@ -135,9 +135,13 @@ Por regla del proyecto, no se inventa información oficial. Todo lo marcado
 con `[CONTENIDO PENDIENTE]` en `src/lib/site-config.ts` debe completarse
 con datos reales antes de producción:
 
-- Fotos y biografías de los pastores (`pastors`).
-- Estudios bíblicos reales: título, profesor, día, horario (`bibleStudies`).
+- Biografías de los pastores (fotos ya cargadas) (`pastors`).
+- Estudios bíblicos reales: profesor, día, horario (títulos ya definidos)
+  (`bibleStudies`).
 - Actividades reales de la iglesia (`activities`).
+- Horarios de reuniones reales: día, nombre y horario de cada encuentro
+  (`meetings`).
+- Las 4 fotos de la galería cinematográfica (`galleryImages`).
 - Datos de contacto: WhatsApp, Instagram, Facebook, YouTube, email,
   dirección, horarios (`contact`).
 - Datos de diezmos y ofrendas: alias, CBU, banco (`giving`).

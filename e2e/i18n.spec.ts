@@ -13,7 +13,8 @@ test.describe("i18n — Spanish (default)", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(page.getByRole("heading", { name: "Redes de Reino", level: 1 })).toBeVisible();
     await expect(page.getByText("Quiero conocer Redes de Reino")).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Nuestra Iglesia" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Galería" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Horarios" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Estudios Bíblicos" })).toBeVisible();
   });
 
@@ -45,7 +46,8 @@ test.describe("i18n — English", () => {
 
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(nav(page).getByRole("link", { name: "Home" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Our Church" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Gallery" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Schedule" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Pastors" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Membership" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Bible Studies" })).toBeVisible();
@@ -53,6 +55,9 @@ test.describe("i18n — English", () => {
     await expect(nav(page).getByRole("link", { name: "Contact" })).toBeVisible();
     await expect(page.getByText("Get to know Redes de Reino")).toBeVisible();
     await expect(page.getByText("I want to join")).toBeVisible();
+
+    await nav(page).getByRole("link", { name: "Schedule" }).click();
+    await expect(page.getByRole("heading", { name: "Meeting Times" })).toBeVisible();
 
     await nav(page).getByRole("link", { name: "Pastors" }).click();
     await expect(page.getByRole("heading", { name: "Our Pastors" })).toBeVisible();
@@ -71,15 +76,68 @@ test.describe("i18n — Portuguese", () => {
 
     await expect(page.locator("html")).toHaveAttribute("lang", "pt");
     await expect(nav(page).getByRole("link", { name: "Início" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Nossa Igreja" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Galeria" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Horários" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Membresia" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Estudos Bíblicos" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Dízimos e Ofertas" })).toBeVisible();
     await expect(page.getByText("Conhecer a Redes de Reino")).toBeVisible();
 
+    await nav(page).getByRole("link", { name: "Horários" }).click();
+    await expect(page.getByRole("heading", { name: "Horários das Reuniões" })).toBeVisible();
+
     await nav(page).getByRole("link", { name: "Estudos Bíblicos" }).click();
     await expect(page.getByRole("heading", { name: "Cresça na Palavra" })).toBeVisible();
     await expect(page.getByText("Em breve").first()).toBeVisible();
+  });
+});
+
+test.describe("structure — Nuestra Iglesia removed, Gallery + Schedule in its place", () => {
+  test("'Nuestra Iglesia' no longer exists anywhere on the page, in any locale", async ({ page }) => {
+    for (const [locale, phrase] of [
+      ["es", "Nuestra Iglesia"],
+      ["en", "Our Church"],
+      ["pt", "Nossa Igreja"],
+    ] as const) {
+      await page.goto(`/${locale}`);
+      await expect(page.locator("body")).not.toContainText(phrase);
+    }
+  });
+
+  test("the gallery occupies the position right after the hero, with 4 slides", async ({ page }) => {
+    await page.goto("/es");
+
+    const gallery = page.locator("#galeria");
+    await expect(gallery).toBeVisible();
+
+    // "Right after the hero": the very next heading in DOM order following
+    // the H1 must be the gallery's own heading — i.e. nothing (like the old
+    // Nuestra Iglesia section) sits between them any more.
+    const headings = await page.locator("h1, h2").allTextContents();
+    const heroIndex = headings.indexOf("Redes de Reino");
+    expect(headings[heroIndex + 1]).toBe("Momentos de nuestra comunidad");
+
+    const indicators = gallery.locator('button[aria-current]');
+    await expect(indicators).toHaveCount(4);
+  });
+
+  test("Schedule section exists, right after the gallery, and renders meeting cards", async ({ page }) => {
+    await page.goto("/es");
+
+    const headings = await page.locator("h1, h2").allTextContents();
+    const galleryIndex = headings.indexOf("Momentos de nuestra comunidad");
+    expect(headings[galleryIndex + 1]).toBe("Horarios de Reuniones");
+
+    const schedule = page.locator("#horarios");
+    await expect(schedule).toBeVisible();
+    // Pending data still renders as a visible placeholder, not blank/undefined.
+    await expect(schedule.getByText("[CONTENIDO PENDIENTE]").first()).toBeVisible();
+  });
+
+  test("the Hero's primary CTA now points at the gallery, not a dead anchor", async ({ page }) => {
+    await page.goto("/es");
+    await page.getByText("Quiero conocer Redes de Reino").click();
+    await expect(page.locator("#galeria")).toBeInViewport();
   });
 });
 

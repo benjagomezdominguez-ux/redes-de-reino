@@ -5,7 +5,8 @@
   },
   "nav": {
     "inicio": "Inicio",
-    "nuestraIglesia": "Nuestra Iglesia",
+    "galeria": "Galería",
+    "horarios": "Horarios",
     "pastores": "Pastores",
     "membresia": "Membresía",
     "estudiosBiblicos": "Estudios Bíblicos",
@@ -27,27 +28,18 @@
     "ctaPrimary": "Quiero conocer Redes de Reino",
     "ctaSecondary": "Quiero ser parte"
   },
-  "about": {
-    "eyebrow": "Nuestra Iglesia",
-    "title": "Una red de personas conectadas por la fe",
-    "description": "Redes de Reino es una comunidad cristiana en Salta, Argentina, donde familias, jóvenes y personas de toda edad crecen juntas en su relación con Dios y se sirven mutuamente.",
-    "pillars": {
-      "community": {
-        "title": "Comunidad",
-        "description": "Un lugar donde ser conocido, acompañado y valorado."
-      },
-      "faith": {
-        "title": "Fe",
-        "description": "Una relación viva con Dios que transforma cada día."
-      },
-      "growth": {
-        "title": "Crecimiento",
-        "description": "Espacios para aprender, servir y madurar juntos."
-      },
-      "purpose": {
-        "title": "Propósito",
-        "description": "Cada persona tiene un lugar y un llamado en el Reino."
-      }
+  "schedule": {
+    "eyebrow": "Horarios",
+    "title": "Horarios de Reuniones",
+    "description": "Encontranos en cualquiera de estos encuentros.",
+    "days": {
+      "lunes": "Lunes",
+      "martes": "Martes",
+      "miercoles": "Miércoles",
+      "jueves": "Jueves",
+      "viernes": "Viernes",
+      "sabado": "Sábado",
+      "domingo": "Domingo"
     }
   },
   "pastors": {

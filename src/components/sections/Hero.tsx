@@ -44,7 +44,7 @@ export async function Hero() {
         </div>
 
         <div className="flex flex-col gap-4 sm:flex-row">
-          <Button href="#nuestra-iglesia" variant="secondary">
+          <Button href="#galeria" variant="secondary">
             {t("ctaPrimary")}
           </Button>
           <Button href="#membresia" variant="outline-light">
