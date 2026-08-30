@@ -15,6 +15,7 @@ test.describe("i18n — Spanish (default)", () => {
     await expect(page.getByText("Quiero conocer Redes de Reino")).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Galería" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Horarios" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Libros" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Estudios Bíblicos" })).toBeVisible();
   });
 
@@ -49,7 +50,7 @@ test.describe("i18n — English", () => {
     await expect(nav(page).getByRole("link", { name: "Gallery" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Schedule" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Pastors" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Membership" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Books" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Bible Studies" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Tithes & Offerings" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Contact" })).toBeVisible();
@@ -78,7 +79,7 @@ test.describe("i18n — Portuguese", () => {
     await expect(nav(page).getByRole("link", { name: "Início" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Galeria" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Horários" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Membresia" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Livros" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Estudos Bíblicos" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Dízimos e Ofertas" })).toBeVisible();
     await expect(page.getByText("Conhecer a Redes de Reino")).toBeVisible();
@@ -181,6 +182,37 @@ test.describe("i18n — language switcher", () => {
     await mobileMenu.getByRole("link", { name: "Português" }).click();
     await expect(page).toHaveURL(/\/pt$/);
     await expect(page.getByText("Conhecer a Redes de Reino")).toBeVisible();
+  });
+});
+
+test.describe("structure — Membresía replaced by Libros (books store)", () => {
+  test("'Membresía' no longer exists anywhere on the page, in any locale", async ({ page }) => {
+    for (const [locale, phrase] of [
+      ["es", "Membresía"],
+      ["en", "Membership"],
+      ["pt", "Membresia"],
+    ] as const) {
+      await page.goto(`/${locale}`);
+      await expect(page.locator("body")).not.toContainText(phrase);
+    }
+  });
+
+  test("the Libros section sits where Membresía used to and the nav link points at it", async ({ page }) => {
+    await page.goto("/es");
+
+    const libros = page.locator("#libros");
+    await expect(libros).toBeVisible();
+    await expect(libros.getByRole("heading", { name: "Libros de Redes de Reino" })).toBeVisible();
+
+    await nav(page).getByRole("link", { name: "Libros" }).click();
+    await expect(page.locator("#libros")).toBeInViewport();
+  });
+
+  test("with no products published yet, the catalog shows an empty-state message instead of breaking", async ({
+    page,
+  }) => {
+    await page.goto("/es");
+    await expect(page.getByText("Todavía no hay libros publicados. Volvé pronto.")).toBeVisible();
   });
 });
 

@@ -1,10 +1,10 @@
 import { setRequestLocale } from "next-intl/server";
-import { Navbar } from "@/components/sections/Navbar";
+import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Hero } from "@/components/sections/Hero";
 import { Gallery } from "@/components/sections/Gallery";
 import { Schedule } from "@/components/sections/Schedule";
 import { Pastors } from "@/components/sections/Pastors";
-import { Membership } from "@/components/sections/Membership";
+import { Books } from "@/components/sections/Books";
 import { Giving } from "@/components/sections/Giving";
 import { BibleStudies } from "@/components/sections/BibleStudies";
 import { Activities } from "@/components/sections/Activities";
@@ -40,7 +40,7 @@ export default async function Home({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(churchJsonLd) }}
       />
-      <Navbar />
+      <NavbarWithAuth />
       <main className="flex flex-col">
         <Hero />
         <Reveal>
@@ -53,7 +53,7 @@ export default async function Home({
           <Pastors />
         </Reveal>
         <Reveal>
-          <Membership />
+          <Books />
         </Reveal>
         <Reveal>
           <BibleStudies />

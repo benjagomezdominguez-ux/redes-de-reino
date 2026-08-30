@@ -8,7 +8,7 @@
     "galeria": "Gallery",
     "horarios": "Schedule",
     "pastores": "Pastors",
-    "membresia": "Membership",
+    "libros": "Books",
     "estudiosBiblicos": "Bible Studies",
     "diezmosYOfrendas": "Tithes & Offerings",
     "contacto": "Contact",
@@ -52,25 +52,108 @@
       "pastora": "Pastor"
     }
   },
-  "membership": {
-    "eyebrow": "Membership",
-    "title": "Become part of Redes de Reino",
-    "description": "Joining the community is a simple path: get to know us, connect, and grow together in faith.",
-    "steps": {
-      "visit": {
-        "title": "Visit us",
-        "description": "Come to a service or activity and meet the community."
-      },
-      "connect": {
-        "title": "Connect",
-        "description": "Join a group or study to grow alongside others."
-      },
-      "join": {
-        "title": "Join",
-        "description": "Take the step to officially become part of the family."
+  "books": {
+    "eyebrow": "Books",
+    "title": "Redes de Reino Books",
+    "description": "Resources to grow in faith — available as digital downloads and physical copies.",
+    "digital": "Digital",
+    "physical": "Physical",
+    "digitalPhysical": "Digital + Physical",
+    "priceFrom": "From",
+    "digitalPrice": "Digital",
+    "physicalPrice": "Physical",
+    "buy": "Buy",
+    "outOfStock": "Out of stock",
+    "comingSoon": "Coming soon",
+    "pendingField": "[PENDING CONFIGURATION]",
+    "emptyCatalog": "No books published yet. Check back soon.",
+    "cart": {
+      "title": "Cart",
+      "empty": "Your cart is empty.",
+      "modality": "Format",
+      "quantity": "Quantity",
+      "remove": "Remove",
+      "subtotal": "Subtotal",
+      "continueShopping": "Keep browsing",
+      "checkout": "Go to checkout"
+    },
+    "checkout": {
+      "title": "Checkout",
+      "loginRequired": "You need to sign in to buy.",
+      "loginCta": "Sign in",
+      "buyerInfo": "Your details",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone",
+      "shippingAddress": "Shipping address",
+      "country": "Country",
+      "state": "State/Province",
+      "city": "City",
+      "postalCode": "Postal code",
+      "street": "Street",
+      "number": "Number",
+      "floorUnit": "Floor/Unit (optional)",
+      "notes": "Delivery notes (optional)",
+      "shippingCost": "Shipping",
+      "shippingPending": "[PENDING CONFIGURATION]",
+      "summary": "Order summary",
+      "total": "Total",
+      "paymentPendingTitle": "Payment isn't set up yet",
+      "paymentPendingBody": "Your order was recorded as pending. Once we enable a payment method, we'll reach out to complete it.",
+      "placeOrder": "Confirm order",
+      "placingOrder": "Processing…",
+      "orderCreated": "Order placed!",
+      "orderNumber": "Order number",
+      "errors": {
+        "outOfStock": "That book is out of stock.",
+        "notAvailable": "That book isn't available.",
+        "generic": "We couldn't place your order. Please try again in a moment.",
+        "required": "This field is required."
       }
     },
-    "cta": "I want to become a member"
+    "library": {
+      "title": "My Library",
+      "empty": "You don't have any digital books yet.",
+      "purchased": "Purchased",
+      "access": "Open book",
+      "loginRequired": "Sign in to see your library."
+    },
+    "orders": {
+      "title": "My Orders",
+      "empty": "You haven't placed any orders yet.",
+      "orderNumber": "Order",
+      "status": {
+        "pending": "Pending",
+        "payment_processing": "Processing payment",
+        "paid": "Paid",
+        "processing": "Preparing",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "failed": "Failed"
+      }
+    }
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "signupTitle": "Create account",
+    "checkEmail": "Almost there! We sent you an email to confirm your account — open it and click the link before signing in.",
+    "email": "Email",
+    "password": "Password",
+    "loginCta": "Sign in",
+    "signupCta": "Create account",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "signupLink": "Create one",
+    "loginLink": "Sign in",
+    "logout": "Sign out",
+    "errors": {
+      "invalidCredentials": "Incorrect email or password.",
+      "emailInUse": "That email already has an account.",
+      "generic": "Something went wrong. Please try again."
+    }
   },
   "bibleStudies": {
     "eyebrow": "Bible Studies",

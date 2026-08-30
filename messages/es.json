@@ -8,7 +8,7 @@
     "galeria": "Galería",
     "horarios": "Horarios",
     "pastores": "Pastores",
-    "membresia": "Membresía",
+    "libros": "Libros",
     "estudiosBiblicos": "Estudios Bíblicos",
     "diezmosYOfrendas": "Diezmos y Ofrendas",
     "contacto": "Contacto",
@@ -52,25 +52,108 @@
       "pastora": "Pastora"
     }
   },
-  "membership": {
-    "eyebrow": "Membresía",
-    "title": "Sé parte de Redes de Reino",
-    "description": "Formar parte de la comunidad es un camino simple: conocerse, conectarse y crecer juntos en fe.",
-    "steps": {
-      "visit": {
-        "title": "Visitanos",
-        "description": "Acercate a un servicio o actividad y conocé la comunidad."
-      },
-      "connect": {
-        "title": "Conectate",
-        "description": "Sumate a un grupo o estudio para crecer junto a otros."
-      },
-      "join": {
-        "title": "Sé parte",
-        "description": "Da el paso de formar parte oficialmente de la familia."
+  "books": {
+    "eyebrow": "Libros",
+    "title": "Libros de Redes de Reino",
+    "description": "Materiales para crecer en la fe — disponibles en formato digital y físico.",
+    "digital": "Digital",
+    "physical": "Físico",
+    "digitalPhysical": "Digital + Físico",
+    "priceFrom": "Desde",
+    "digitalPrice": "Digital",
+    "physicalPrice": "Físico",
+    "buy": "Comprar",
+    "outOfStock": "Sin stock",
+    "comingSoon": "Próximamente",
+    "pendingField": "[PENDIENTE DE CONFIGURACIÓN]",
+    "emptyCatalog": "Todavía no hay libros publicados. Volvé pronto.",
+    "cart": {
+      "title": "Carrito",
+      "empty": "Tu carrito está vacío.",
+      "modality": "Modalidad",
+      "quantity": "Cantidad",
+      "remove": "Quitar",
+      "subtotal": "Subtotal",
+      "continueShopping": "Seguir viendo libros",
+      "checkout": "Ir a pagar"
+    },
+    "checkout": {
+      "title": "Finalizar compra",
+      "loginRequired": "Necesitás iniciar sesión para comprar.",
+      "loginCta": "Iniciar sesión",
+      "buyerInfo": "Tus datos",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Email",
+      "phone": "Teléfono",
+      "shippingAddress": "Dirección de envío",
+      "country": "País",
+      "state": "Provincia",
+      "city": "Ciudad",
+      "postalCode": "Código postal",
+      "street": "Calle",
+      "number": "Número",
+      "floorUnit": "Piso / depto (opcional)",
+      "notes": "Referencia de entrega (opcional)",
+      "shippingCost": "Envío",
+      "shippingPending": "[PENDIENTE DE CONFIGURACIÓN]",
+      "summary": "Resumen de compra",
+      "total": "Total",
+      "paymentPendingTitle": "El pago todavía no está configurado",
+      "paymentPendingBody": "Tu pedido quedó registrado como pendiente. En cuanto habilitemos el medio de pago, te vamos a contactar para completarlo.",
+      "placeOrder": "Confirmar pedido",
+      "placingOrder": "Procesando…",
+      "orderCreated": "¡Pedido registrado!",
+      "orderNumber": "Número de pedido",
+      "errors": {
+        "outOfStock": "Ese libro ya no tiene stock disponible.",
+        "notAvailable": "Ese libro no está disponible.",
+        "generic": "No pudimos registrar tu pedido. Probá de nuevo en un momento.",
+        "required": "Completá este campo."
       }
     },
-    "cta": "Quiero ser miembro"
+    "library": {
+      "title": "Mi Biblioteca",
+      "empty": "Todavía no tenés libros digitales.",
+      "purchased": "Comprado",
+      "access": "Acceder al libro",
+      "loginRequired": "Iniciá sesión para ver tu biblioteca."
+    },
+    "orders": {
+      "title": "Mis Pedidos",
+      "empty": "Todavía no hiciste ningún pedido.",
+      "orderNumber": "Pedido",
+      "status": {
+        "pending": "Pendiente",
+        "payment_processing": "Procesando pago",
+        "paid": "Pagado",
+        "processing": "Preparando",
+        "shipped": "Enviado",
+        "delivered": "Entregado",
+        "cancelled": "Cancelado",
+        "refunded": "Reembolsado",
+        "failed": "Fallido"
+      }
+    }
+  },
+  "auth": {
+    "loginTitle": "Iniciar sesión",
+    "signupTitle": "Crear cuenta",
+    "checkEmail": "¡Ya casi! Te enviamos un email para confirmar tu cuenta — abrilo y hacé clic en el enlace antes de iniciar sesión.",
+    "email": "Email",
+    "password": "Contraseña",
+    "loginCta": "Ingresar",
+    "signupCta": "Crear cuenta",
+    "noAccount": "¿No tenés cuenta?",
+    "haveAccount": "¿Ya tenés cuenta?",
+    "signupLink": "Creá una",
+    "loginLink": "Iniciá sesión",
+    "logout": "Cerrar sesión",
+    "errors": {
+      "invalidCredentials": "Email o contraseña incorrectos.",
+      "emailInUse": "Ese email ya tiene una cuenta.",
+      "generic": "Algo salió mal. Probá de nuevo."
+    }
   },
   "bibleStudies": {
     "eyebrow": "Estudios Bíblicos",

@@ -17,7 +17,7 @@ export const navLinks = [
   { href: "#galeria", key: "galeria" },
   { href: "#horarios", key: "horarios" },
   { href: "#pastores", key: "pastores" },
-  { href: "#membresia", key: "membresia" },
+  { href: "#libros", key: "libros" },
   { href: "#estudios-biblicos", key: "estudiosBiblicos" },
   { href: "#diezmos-y-ofrendas", key: "diezmosYOfrendas" },
   { href: "#contacto", key: "contacto" },

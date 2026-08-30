@@ -1,14 +1,25 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import esMessages from "../../../messages/es.json";
+import { CartProvider } from "@/lib/cart/CartContext";
 import { Navbar } from "./Navbar";
+
+// Navbar imports the signOut server action for the account menu's logout
+// form. In real Next.js the client bundle only gets a reference to it, but
+// Vitest has no "use server" transform, so it would otherwise pull in the
+// real module (and, transitively, next/navigation) into this jsdom test.
+vi.mock("@/lib/actions/auth", () => ({
+  signOut: async () => {},
+}));
 
 function renderNavbar() {
   return render(
     <NextIntlClientProvider locale="es" messages={esMessages}>
-      <Navbar />
+      <CartProvider>
+        <Navbar />
+      </CartProvider>
     </NextIntlClientProvider>
   );
 }

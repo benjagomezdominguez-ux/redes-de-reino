@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { siteUrl, site } from "@/lib/site-config";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { CartProvider } from "@/lib/cart/CartContext";
 import "../globals.css";
 
 const inter = Inter({
@@ -95,8 +96,10 @@ export default async function LocaleLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-text">
         <NextIntlClientProvider messages={messages}>
-          {children}
-          <ServiceWorkerRegistration />
+          <CartProvider>
+            {children}
+            <ServiceWorkerRegistration />
+          </CartProvider>
         </NextIntlClientProvider>
       </body>
     </html>
