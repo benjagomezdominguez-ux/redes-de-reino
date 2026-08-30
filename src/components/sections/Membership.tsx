@@ -3,7 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Button } from "@/components/ui/Button";
 
-const stepKeys = ["visit", "connect", "join"] as const;
+const stepKeys = ["connect", "join", "visit"] as const;
 
 export async function Membership() {
   const t = await getTranslations("membership");
