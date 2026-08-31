@@ -88,7 +88,8 @@ src/
                    # exige sesión activa. Adentro: account, biblioteca,
                    # pedidos, libros/checkout
     [locale]/admin/           # su layout exige sesión + rol admin.
-                   # admin, admin/users, admin/orders, admin/orders/[id]
+                   # admin, admin/books(+/new, /[id]/edit), admin/users,
+                   # admin/orders(+/[id])
     [locale]/login, [locale]/signup, [locale]/forgot-password,
     [locale]/reset-password, [locale]/403
                    # autenticación (Supabase Auth) y control de acceso
@@ -98,6 +99,9 @@ src/
                    # real — fuera de [locale] a propósito, ver middleware.ts
     api/books/[productId]/download
                    # única puerta de acceso a un archivo digital comprado
+    api/webhooks/payments/route.ts
+                   # esqueleto del webhook de pago online — 503 hasta que
+                   # haya un proveedor configurado, nunca un 200 falso
     robots.ts, sitemap.ts, manifest.ts, icon*, opengraph-image.jpg
                    # recursos globales, no dependen del idioma
   components/
@@ -105,7 +109,9 @@ src/
     ui/            # Primitivas reutilizables (Container, Button, SectionHeading,
                    # LanguageSwitcher, Reveal, CinematicGallery, MeetingSchedule,
                    # BookCard, AddToCartButton, CartView, CheckoutView, AuthForm,
-                   # ForgotPasswordForm, ResetPasswordForm, AdminPagination)
+                   # ForgotPasswordForm, ResetPasswordForm, AdminPagination,
+                   # BookForm, BookStatusButtons, TransferProofForm,
+                   # AdminPaymentReviewActions)
   i18n/
     routing.ts     # locales soportados, default, prefijo de URL
     request.ts     # carga de mensajes + fallback a español
@@ -114,15 +120,18 @@ src/
     site-config.ts # Datos estructurales/nombres propios (NO textos traducibles)
     supabase/      # Clientes de Supabase + guards — ver "Autenticación" abajo
     security/      # safeRedirectPath() — evita open-redirects en `next`
-    actions/       # Server Actions (auth, checkout)
+    actions/       # Server Actions (auth, checkout, payments, admin-books, admin-payments)
     cart/          # Carrito de compra (React Context + localStorage)
     books/         # Queries de catálogo + resolución de acceso digital
+    checkout/      # Lista de países para el selector de facturación
+    payments/      # Interfaz PaymentProvider — ver "Tienda de libros"
     admin/         # Queries del panel de administración (via cliente de sesión + RLS)
 messages/
   es.json, en.json, pt.json   # Todo el texto traducible de la UI
 e2e/
   i18n.spec.ts     # Tests E2E multidioma (Playwright)
-  auth.spec.ts     # Tests E2E de rutas protegidas, login/signup/recuperación
+  auth.spec.ts     # Tests E2E de rutas protegidas, login/signup/recuperación,
+                   # y que el webhook de pagos nunca finge estar configurado
 public/
   logo.png         # Logo oficial (no modificar proporciones ni colores)
 supabase/
@@ -309,38 +318,81 @@ inventarla violaría la regla de no inventar contenido.
 ## Tienda de libros
 
 La sección "Membresía" fue reemplazada por "Libros" (`#libros`, misma
-posición en la página). Es la base de una tienda digital+física real, no
-una maqueta: catálogo en base de datos, carrito, checkout adaptativo,
-autenticación, y descarga de archivos digitales protegida contra acceso
-cruzado entre usuarios.
+posición en la página). Es una tienda digital+física real: catálogo
+gestionado por admins, carrito, checkout con impuestos calculados en
+servidor, dos métodos de pago (transferencia bancaria — funcional hoy —
+y pago online — arquitectura lista, sin proveedor conectado), y descarga
+de archivos digitales que solo se desbloquea cuando el pago fue
+verificado de verdad, nunca porque el comprador lo dijo.
 
-**Catálogo**: tabla `products` en Supabase (portada, título, autor,
-descripción, precio digital, precio físico, stock, tipo de producto
-`digital` / `fisico` / `digital_fisico`, disponibilidad). Se administra
-directamente en el Table Editor de Supabase — no hay contenido hardcodeado
-en el código, así que agregar/editar un libro no requiere un deploy. Hoy el
-catálogo está vacío a propósito (regla del proyecto: no inventar libros,
-precios ni stock); `Books.tsx` muestra un estado vacío en vez de romperse.
+**Catálogo y su administración** (`/admin/books`): los administradores
+crean/editan libros desde una UI real (`BookForm.tsx` + las Server
+Actions en `lib/actions/admin-books.ts`) — título, autor, categoría,
+descripción, idioma, tipo (`digital` / `fisico` / `digital_fisico`),
+precio en USD, stock, portada y archivo digital. La portada se sube al
+bucket público `book-covers`; el archivo digital, al bucket privado
+`book-files`. Publicar/despublicar es un toggle. Nada de esto está
+hardcodeado — el catálogo vive en la tabla `products`, hoy vacío a
+propósito (regla del proyecto: no inventar libros, precios ni stock).
+Reemplazar el archivo o la portada de un libro ya publicado no rompe las
+compras existentes — la relación de la compra sigue siendo con el mismo
+`product_id`.
 
 **Carrito**: `lib/cart/CartContext.tsx`, React Context + `localStorage`,
 sin tabla en el servidor — el precio que se ve ahí es solo para mostrar,
 nunca se envía al servidor como fuente de verdad.
 
-**Checkout** (`libros/checkout`): adaptativo — pide dirección física solo
-si el carrito tiene algo `fisico` o `digital_fisico`; para compras
-puramente digitales nunca se pregunta. Requiere estar autenticado. El flujo
-completo: producto → modalidad → carrito → datos del comprador → dirección
-(si aplica) → resumen → confirmación.
+**Checkout** (`libros/checkout`): pide país de facturación siempre
+(hasta para una compra puramente digital, porque de ahí sale el cálculo
+de impuestos) y dirección física solo si el carrito tiene algo `fisico`
+o `digital_fisico`. Elegís método de pago — transferencia bancaria o
+pago online — y el resumen muestra subtotal, impuestos y total antes de
+confirmar. Requiere estar autenticado.
 
-**Seguridad de precio y stock (la regla más importante)**: el cliente
-nunca envía un precio. `checkout.ts` solo manda `product_id` + `modality` +
-`quantity` a la función Postgres `create_order()` (`SECURITY DEFINER`),
-que bloquea la fila del producto (`for update`), vuelve a leer el precio
-desde `products`, y descuenta stock de forma atómica — así una compra
-concurrente de la última unidad no puede dejar el stock en negativo ni
-vender dos veces lo mismo. Verificado en
-`lib/actions/checkout.test.ts` (incluye un test que confirma que ni un
-payload con un precio forjado logra llegar al RPC).
+**Precio e impuestos, calculados en servidor (la regla más importante)**:
+el cliente nunca envía un precio, un total ni un impuesto. `checkout.ts`
+solo manda `product_id` + `modality` + `quantity` + `payment_method` +
+`billing_country` a la función Postgres `create_order()`
+(`SECURITY DEFINER`), que bloquea la fila del producto (`for update`),
+vuelve a leer el precio desde `products`, calcula impuestos contra la
+tabla `tax_rules` (país + tasa; sin regla configurada = 0%, nunca una
+tasa inventada — ver "Contenido pendiente"), descuenta stock de forma
+atómica, y genera la referencia legible del pedido (`RR-2026-000123`).
+Verificado en `lib/actions/checkout.test.ts` (incluye un test que
+confirma que ni un payload con un precio forjado logra llegar al RPC) y
+en vivo contra el proyecto real.
+
+**Transferencia bancaria — funciona de verdad hoy**: el checkout muestra
+el CBU, el monto exacto y la referencia del pedido. El comprador puede
+declarar opcionalmente el número de operación, el monto y adjuntar un
+comprobante (`payment-proofs`, bucket privado) — eso queda registrado,
+pero **nunca confirma el pago por sí solo** (rule 21). El pedido queda
+`pending` hasta que un administrador lo revisa en `/admin/orders/[id]` y
+llama a `admin_confirm_bank_transfer()`, que:
+- verifica que quien llama sea admin (`is_admin(auth.uid())`, no un
+  botón oculto en el frontend);
+- rechaza confirmar si el monto que el comprador declaró es menor al
+  monto adeudado (rule 23) — un admin no puede aprobar por error un pago
+  incompleto;
+- recién ahí marca el pedido `paid` y llama a `grant_digital_access()`.
+
+`admin_reject_bank_transfer()` existe para el caso contrario. Ambas
+funciones son idempotentes: revisar el mismo pago dos veces la segunda
+vez falla con "Payment already reviewed" — verificado en vivo.
+
+**Pago online — arquitectura lista, sin proveedor conectado**: no existe
+ninguna integración de pagos configurada en este proyecto (no hay
+Mercado Pago, Stripe, ni ninguna otra) — por regla del proyecto, no se
+inventó una. `lib/payments/provider.ts` define la interfaz
+`PaymentProvider` (crear checkout, verificar webhook) de la que dependería
+el resto del sistema, y `isOnlinePaymentConfigured()` — hoy siempre
+`false` — es lo que hace que el checkout muestre "Pagar online" como
+deshabilitado ("Próximamente") en vez de simular un pago que no existe.
+`src/app/api/webhooks/payments/route.ts` ya está el esqueleto del
+webhook (idempotencia vía `payment_events`, nunca confía en el monto que
+manda el webhook sin comparar contra el pedido) pero devuelve `503`
+mientras no haya provider — verificado con un test e2e que específicamente
+comprueba que nunca miente con un `200`.
 
 **Acceso a archivos digitales**: nunca son públicos. El bucket de Storage
 `book-files` es privado (`public: false`). `lib/books/digital-access.ts`
@@ -349,33 +401,47 @@ fila en `digital_entitlements` para ese usuario y ese producto (consultada
 con el cliente de sesión, con RLS activo, a propósito — así ni un bug de
 la app puede filtrar acceso entre usuarios) → recién ahí firma una URL
 temporal (60 segundos) con el cliente admin. `digital_entitlements` es el
-registro explícito de "quién compró qué", no una inferencia. Se otorga vía
-`grant_digital_access()`, pensada para llamarse solo después de que un
-pago quede confirmado (webhook), nunca porque el usuario volvió al sitio.
+registro explícito de "quién compró qué" — incluye `payment_id`, así que
+queda trazable exactamente qué pago desbloqueó qué acceso — no una
+inferencia. Se otorga vía `grant_digital_access()`, llamada solo por
+`admin_confirm_bank_transfer()` o (una vez configurado) el webhook de
+pago — nunca porque el usuario volvió al sitio o pulsó "Ya pagué".
 
 Test de seguridad crítico (`digital-access.test.ts`, 6/6 verde): un usuario
 autenticado que no compró el producto — o cuyo pago nunca se confirmó —
 recibe `no_entitlement` y jamás llega a pedirle una URL al Storage.
+Verificado además en vivo, de punta a punta, contra el proyecto real: un
+libro creado y publicado por un admin real, comprado por un comprador
+real vía transferencia, con el archivo denegado (403) hasta que un admin
+real lo confirmó — y con un segundo usuario real confirmando que nunca
+tuvo acceso a nada de esto.
 
 **Pedidos y biblioteca**: `Mis Pedidos` (`/pedidos`) lista los pedidos del
-usuario con su estado (`pending`, `payment_processing`, `paid`,
-`processing`, `shipped`, `delivered`, `cancelled`, `refunded`, `failed`).
-`Mi Biblioteca` (`/biblioteca`) solo muestra los libros digitales donde el
-usuario tiene una entitlement `granted` — nunca el catálogo completo.
+usuario — referencia, método de pago, subtotal/impuestos/total, estado
+(`pending`, `payment_processing`, `paid`, `processing`, `shipped`,
+`delivered`, `cancelled`, `refunded`, `failed`). `Mi Biblioteca`
+(`/biblioteca`) muestra los libros con entitlement `granted`, y además
+una tarjeta atenuada de "Tu pago está siendo verificado" para libros
+digitales de pedidos todavía no confirmados — nunca el archivo en sí.
+
+**Auditoría**: tabla `audit_log` — quién, qué acción, sobre qué recurso,
+cuándo. Se registra: creación/edición/publicación de libros, creación de
+pedidos, transferencias declaradas por el comprador, y confirmación o
+rechazo de pagos por un admin. Nunca se registran secretos, contraseñas
+ni datos de tarjetas.
 
 **Qué falta (deliberadamente, ver "Pendiente para producción")**:
 
-- No hay ningún proveedor de pago conectado todavía. El pedido se crea en
-  estado `pending` y ahí termina el flujo implementado — no existía
-  definición de qué proveedor usar (Mercado Pago, Stripe, etc.) ni
-  credenciales, así que no se inventó ninguno. `create_order()` y el
-  estado del pedido ya están listos para que un webhook de pago llame a
-  `grant_digital_access()` / actualice el estado sin cambiar el schema.
+- El pago online necesita un proveedor real configurado (`PAYMENT_PROVIDER`
+  y sus credenciales) — no existía definición de cuál usar, así que no se
+  inventó ninguno.
+- Impuestos: la tabla `tax_rules` está vacía — no se inventó ninguna tasa
+  para ningún país. Agregar una fila ahí (país + tasa) alcanza para que
+  `create_order()` empiece a cobrarla, sin tocar código.
 - Envío: costo, zonas, transportista y tracking quedan
   `[PENDIENTE DE CONFIGURACIÓN]` — no se inventó ningún costo de envío.
-- Emails transaccionales, facturación y panel de administración: el schema
-  (`orders`, `order_items`, `shipments`, `digital_entitlements`) ya soporta
-  construirlos después sin re-diseñar nada, pero no están implementados.
+- Emails transaccionales y facturación: el schema ya soporta construirlos
+  después sin re-diseñar nada, pero no están implementados.
 
 ## Sistema de diseño
 
@@ -421,11 +487,15 @@ conocida (*last known good version*): para volver a un estado estable,
   Pago) — requiere una decisión de negocio y credenciales que no existían
   al construir esta base.
 - Tienda de libros: costos y zonas de envío reales, y un transportista.
+- Tienda de libros: tasas de impuestos reales por país en `tax_rules` —
+  hoy la tabla está vacía a propósito, así que todo cobra 0% de impuesto
+  hasta que se cargue una regla real.
 - Tienda de libros (opcional, no bloqueante): proveedor de email
   transaccional para confirmaciones de compra.
-- Autenticación: crear el primer administrador real — correr el `UPDATE`
-  de bootstrap de la sección de arriba con el email verdadero de quien
-  vaya a administrar el sitio (no se inventó ni asignó ningún admin).
+- Autenticación: ya existe un primer administrador real
+  (`benjagomezdominguez@gmail.com`, asignado con el `UPDATE` de bootstrap
+  de la sección de arriba) — repetir ese mismo paso para cualquier otra
+  cuenta que también deba administrar el sitio.
 - Autenticación: confirmar en el dashboard de Supabase (Auth → URL
   Configuration) que `https://redes-de-reino.vercel.app/auth/callback`
   esté en la lista de Redirect URLs — si no está, los links de

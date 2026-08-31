@@ -17,6 +17,8 @@ const PROTECTED_PATHS = [
   "/es/admin",
   "/es/admin/users",
   "/es/admin/orders",
+  "/es/admin/books",
+  "/es/admin/books/new",
 ];
 
 test.describe("route protection — unauthenticated visitor", () => {
@@ -125,5 +127,18 @@ test.describe("admin routes are not indexable", () => {
     const response = await page.goto("/robots.txt");
     const body = await response!.text();
     expect(body).toContain("Disallow: /es/admin");
+  });
+});
+
+test.describe("payments webhook — honest about not being configured", () => {
+  test("returns 503, never a fake success, when no payment provider is configured", async ({ request }) => {
+    // Rule 51: never invent a payment integration. No PAYMENT_PROVIDER is
+    // set in this project, so this must stay a real, explicit "not
+    // configured" response — not a silent 200 that would look like a
+    // working webhook to whoever eventually points a real gateway at it.
+    const response = await request.post("/api/webhooks/payments", { data: {} });
+    expect(response.status()).toBe(503);
+    const body = await response.json();
+    expect(body.error).toBe("no_payment_provider_configured");
   });
 });

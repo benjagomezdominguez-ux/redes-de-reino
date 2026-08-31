@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { getOrderDetail } from "@/lib/admin/queries";
+import { getOrderDetail, getPaymentProofSignedUrl } from "@/lib/admin/queries";
 import { Link } from "@/i18n/navigation";
+import { AdminPaymentReviewActions } from "@/components/ui/AdminPaymentReviewActions";
 
 function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(cents / 100);
 }
 
@@ -29,7 +30,10 @@ export default async function AdminOrderDetailPage({
   const detail = await getOrderDetail(id);
   if (!detail) notFound();
 
-  const { order, items, shipping } = detail;
+  const { order, items, shipping, payment } = detail;
+  const proofUrl = payment?.proof_storage_path
+    ? await getPaymentProofSignedUrl(payment.proof_storage_path)
+    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -39,9 +43,14 @@ export default async function AdminOrderDetailPage({
 
       <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-6 shadow-soft sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-mono text-sm text-muted">{tOrders("columns.orderNumber")}: {order.id}</p>
+          <p className="font-mono text-sm text-muted">
+            {tOrders("columns.orderNumber")}: {order.reference ?? order.id}
+          </p>
           <p className="text-sm text-muted">{order.email}</p>
           <p className="text-sm text-muted">{new Date(order.created_at).toLocaleString(locale)}</p>
+          <p className="text-sm text-muted">
+            {t("paymentMethod")}: {tBooks(`checkout.method.${order.payment_method}`)}
+          </p>
         </div>
         <span className="w-fit rounded-full bg-secondary-300/60 px-3 py-1 text-xs font-semibold text-secondary-700">
           {tOrders(`status.${order.status}`)}
@@ -79,9 +88,13 @@ export default async function AdminOrderDetailPage({
           </tbody>
         </table>
         <dl className="grid grid-cols-2 gap-2 border-t border-border p-6 text-sm sm:w-64 sm:justify-self-end">
-          <dt className="text-muted">{tBooks("checkout.total")}</dt>
+          <dt className="text-muted">{tBooks("checkout.subtotal")}</dt>
           <dd className="text-right font-medium text-primary-900">
             {formatPrice(order.subtotal_cents, order.currency)}
+          </dd>
+          <dt className="text-muted">{tBooks("checkout.tax")}</dt>
+          <dd className="text-right font-medium text-primary-900">
+            {formatPrice(order.tax_cents, order.currency)}
           </dd>
           <dt className="text-muted">{tBooks("checkout.shippingCost")}</dt>
           <dd className="text-right font-medium text-primary-900">
@@ -93,6 +106,75 @@ export default async function AdminOrderDetailPage({
           </dd>
         </dl>
       </div>
+
+      {payment ? (
+        <div className="rounded-2xl border border-border bg-surface p-6 shadow-soft">
+          <h2 className="mb-4 font-display text-lg font-medium text-primary-900">
+            {t("payment.title")}
+          </h2>
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                {t("payment.statusLabel")}
+              </dt>
+              <dd className="text-text">{t(`payment.status.${payment.status}`)}</dd>
+            </div>
+            {payment.method === "bank_transfer" ? (
+              <>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    {t("payment.declaredOperation")}
+                  </dt>
+                  <dd className="text-text">{payment.declared_operation_number ?? "—"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    {t("payment.declaredAmount")}
+                  </dt>
+                  <dd className="text-text">
+                    {payment.declared_amount_cents != null
+                      ? formatPrice(payment.declared_amount_cents, payment.currency)
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    {t("payment.declaredDate")}
+                  </dt>
+                  <dd className="text-text">{payment.declared_at ?? "—"}</dd>
+                </div>
+                {proofUrl ? (
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      {t("payment.proof")}
+                    </dt>
+                    <dd>
+                      <a href={proofUrl} target="_blank" rel="noopener noreferrer" className="text-primary-900 underline">
+                        {t("payment.viewProof")}
+                      </a>
+                    </dd>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+            {payment.reviewed_at ? (
+              <div className="sm:col-span-2">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  {t("payment.reviewedAt")}
+                </dt>
+                <dd className="text-text">
+                  {new Date(payment.reviewed_at).toLocaleString(locale)}
+                  {payment.review_notes ? ` — ${payment.review_notes}` : ""}
+                </dd>
+              </div>
+            ) : null}
+          </dl>
+
+          {payment.method === "bank_transfer" && payment.status === "pending" ? (
+            <AdminPaymentReviewActions paymentId={payment.id} />
+          ) : null}
+        </div>
+      ) : null}
 
       {order.requires_shipping && shipping ? (
         <div className="rounded-2xl border border-border bg-surface p-6 shadow-soft">

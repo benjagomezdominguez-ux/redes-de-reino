@@ -6,10 +6,10 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart/CartContext";
 
 function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(cents / 100);
 }
 

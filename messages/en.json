@@ -81,6 +81,7 @@
       "lastName": "Last name",
       "email": "Email",
       "phone": "Phone",
+      "billingCountry": "Billing country",
       "shippingAddress": "Shipping address",
       "country": "Country",
       "state": "State/Province",
@@ -93,7 +94,33 @@
       "shippingCost": "Shipping",
       "shippingPending": "[PENDING CONFIGURATION]",
       "summary": "Order summary",
+      "subtotal": "Subtotal",
+      "tax": "Tax",
+      "taxCalculatedNext": "Calculated when you confirm",
       "total": "Total",
+      "paymentMethod": "Payment method",
+      "method": {
+        "bank_transfer": "Bank transfer",
+        "online": "Pay online",
+        "bankTransferHint": "You'll get transfer details and we'll confirm your payment by hand.",
+        "onlineHint": "Pay with a card or other digital methods.",
+        "onlineComingSoon": "Coming soon"
+      },
+      "transfer": {
+        "instructionsTitle": "Transfer details",
+        "amount": "Amount to transfer",
+        "reference": "Your order reference",
+        "instructionsBody": "Use this reference in the transfer's description. Once we confirm the payment, your book will show up in My Library.",
+        "proofIntro": "If you already made the transfer, tell us the details to speed up verification (optional).",
+        "operationNumber": "Operation number",
+        "declaredAmount": "Amount transferred",
+        "declaredDate": "Transfer date",
+        "proofFile": "Proof (image or PDF)",
+        "proofError": "We couldn't save this. Please try again.",
+        "submitProof": "Submit details",
+        "submittingProof": "Submitting…",
+        "proofSubmitted": "Thanks! We'll verify your transfer and confirm here."
+      },
       "paymentPendingTitle": "Payment isn't set up yet",
       "paymentPendingBody": "Your order was recorded as pending. Once we enable a payment method, we'll reach out to complete it.",
       "placeOrder": "Confirm order",
@@ -111,7 +138,8 @@
       "title": "My Library",
       "empty": "You don't have any digital books yet.",
       "purchased": "Purchased",
-      "access": "Open book"
+      "access": "Open book",
+      "pendingVerification": "Your payment is being verified."
     },
     "orders": {
       "title": "My Orders",
@@ -180,6 +208,7 @@
     "navLabel": "Admin navigation",
     "nav": {
       "dashboard": "Dashboard",
+      "books": "Books",
       "users": "Users",
       "orders": "Orders"
     },
@@ -188,6 +217,54 @@
       "purchases": "Purchases",
       "pendingOrders": "Pending orders",
       "booksSold": "Books sold"
+    },
+    "books": {
+      "count": "{count, plural, =1 {1 book} other {# books}}",
+      "addNew": "Add book",
+      "empty": "You haven't added any books yet.",
+      "backToList": "Back to books",
+      "salesSummary": "{units} sold · {revenue} in confirmed revenue",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "columns": {
+        "cover": "Cover",
+        "title": "Title",
+        "author": "Author",
+        "price": "Price",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Draft",
+        "active": "Published",
+        "inactive": "Unpublished"
+      },
+      "form": {
+        "title": "Title",
+        "author": "Author",
+        "category": "Category",
+        "description": "Description",
+        "language": "Language",
+        "productType": "Product type",
+        "typeDigital": "Digital only",
+        "typePhysical": "Physical only",
+        "typeBoth": "Digital + physical",
+        "digitalPrice": "Digital price (USD)",
+        "physicalPrice": "Physical price (USD)",
+        "stock": "Stock",
+        "cover": "Cover (JPG, PNG, or WEBP)",
+        "coverCurrent": "There's already a cover — upload another to replace it.",
+        "file": "Digital file (PDF)",
+        "fileCurrent": "There's already a file — upload another to replace it.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved successfully.",
+        "errors": {
+          "generic": "We couldn't save the book. Please try again.",
+          "required": "Please fill in the required fields.",
+          "invalidFile": "The book was saved, but a file couldn't be uploaded — try again from Edit."
+        }
+      }
     },
     "users": {
       "empty": "No registered users yet.",
@@ -211,7 +288,15 @@
         "items": "Items",
         "total": "Total",
         "date": "Date",
-        "status": "Status"
+        "status": "Status",
+        "payment": "Payment"
+      },
+      "payment": {
+        "needsReview": "Needs review",
+        "method": {
+          "online": "Online",
+          "bank_transfer": "Transfer"
+        }
       },
       "status": {
         "pending": "Pending",
@@ -227,12 +312,36 @@
     },
     "orderDetail": {
       "backToList": "Back to orders",
+      "paymentMethod": "Payment method",
       "product": "Product",
       "modality": "Format",
       "quantity": "Quantity",
       "unitPrice": "Unit price",
       "orderTotal": "Order total",
-      "shippingInfo": "Shipping details"
+      "shippingInfo": "Shipping details",
+      "payment": {
+        "title": "Payment",
+        "statusLabel": "Payment status",
+        "status": {
+          "pending": "Pending review",
+          "confirmed": "Confirmed",
+          "rejected": "Rejected",
+          "refunded": "Refunded"
+        },
+        "declaredOperation": "Declared operation number",
+        "declaredAmount": "Declared amount",
+        "declaredDate": "Declared date",
+        "proof": "Proof",
+        "viewProof": "View proof",
+        "reviewedAt": "Reviewed",
+        "reviewTitle": "Review transfer",
+        "notesPlaceholder": "Notes (optional)",
+        "confirm": "Confirm payment",
+        "confirming": "Confirming…",
+        "reject": "Reject",
+        "rejecting": "Rejecting…",
+        "actionError": "We couldn't complete the action. Please try again."
+      }
     },
     "pagination": {
       "label": "Pagination",

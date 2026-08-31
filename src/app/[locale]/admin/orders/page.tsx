@@ -6,10 +6,10 @@ import { Link } from "@/i18n/navigation";
 const PAGE_SIZE = 20;
 
 function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(cents / 100);
 }
 
@@ -42,6 +42,7 @@ export default async function AdminOrdersPage({
                 <th className="px-6 py-4">{t("columns.total")}</th>
                 <th className="px-6 py-4">{t("columns.date")}</th>
                 <th className="px-6 py-4">{t("columns.status")}</th>
+                <th className="px-6 py-4">{t("columns.payment")}</th>
               </tr>
             </thead>
             <tbody>
@@ -52,7 +53,7 @@ export default async function AdminOrdersPage({
                       href={`/admin/orders/${row.id}`}
                       className="font-mono text-primary-900 underline"
                     >
-                      {row.id.slice(0, 8)}
+                      {row.reference ?? row.id.slice(0, 8)}
                     </Link>
                   </td>
                   <td className="px-6 py-4 text-muted">{row.email}</td>
@@ -67,6 +68,17 @@ export default async function AdminOrdersPage({
                     <span className="rounded-full bg-secondary-300/60 px-3 py-1 text-xs font-semibold text-secondary-700">
                       {t(`status.${row.status}`)}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {row.payment_method === "bank_transfer" && row.payment_status === "pending" ? (
+                      <span className="rounded-full bg-warning/20 px-3 py-1 text-xs font-semibold text-warning">
+                        {t("payment.needsReview")}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted">
+                        {t(`payment.method.${row.payment_method}`)}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

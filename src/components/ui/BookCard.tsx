@@ -5,10 +5,10 @@ import type { Product } from "@/lib/books/types";
 
 function formatPrice(cents: number | null, currency: string) {
   if (cents === null) return null;
-  return new Intl.NumberFormat("es-AR", {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(cents / 100);
 }
 

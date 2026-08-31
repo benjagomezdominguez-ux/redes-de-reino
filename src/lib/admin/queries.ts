@@ -1,5 +1,6 @@
 import "server-only";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // All of these run through the session client (not the admin/service-role
 // client) on purpose: access is granted by the "Admins can view all ..."
@@ -86,6 +87,9 @@ export type OrderListRow = {
   total_cents: number;
   currency: string;
   item_count: number;
+  payment_method: string;
+  reference: string | null;
+  payment_status: string | null;
 };
 
 export async function listOrders(page: number, pageSize = 20): Promise<Paginated<OrderListRow>> {
@@ -95,9 +99,10 @@ export async function listOrders(page: number, pageSize = 20): Promise<Paginated
 
   const { data, count } = await supabase
     .from("orders")
-    .select("id, email, created_at, status, total_cents, currency, order_items(count)", {
-      count: "exact",
-    })
+    .select(
+      "id, email, created_at, status, total_cents, currency, payment_method, reference, order_items(count), payments(status)",
+      { count: "exact" }
+    )
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -108,7 +113,10 @@ export async function listOrders(page: number, pageSize = 20): Promise<Paginated
     status: string;
     total_cents: number;
     currency: string;
+    payment_method: string;
+    reference: string | null;
     order_items: { count: number }[];
+    payments: { status: string }[];
   };
 
   const rows = ((data ?? []) as unknown as RawRow[]).map((row) => ({
@@ -119,9 +127,47 @@ export async function listOrders(page: number, pageSize = 20): Promise<Paginated
     total_cents: row.total_cents,
     currency: row.currency,
     item_count: row.order_items?.[0]?.count ?? 0,
+    payment_method: row.payment_method,
+    reference: row.reference,
+    payment_status: row.payments?.[0]?.status ?? null,
   }));
 
   return { rows, total: count ?? 0, page, pageSize };
+}
+
+export async function listPendingTransfers(): Promise<
+  { payment_id: string; order_id: string; reference: string | null; email: string; amount_cents: number; currency: string; created_at: string }[]
+> {
+  const supabase = await getSupabaseSessionClient();
+  const { data } = await supabase
+    .from("payments")
+    .select("id, order_id, bank_reference, amount_cents, currency, created_at, orders(email)")
+    .eq("method", "bank_transfer")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  type RawRow = {
+    id: string;
+    order_id: string;
+    bank_reference: string | null;
+    amount_cents: number;
+    currency: string;
+    created_at: string;
+    orders: { email: string } | { email: string }[] | null;
+  };
+
+  return ((data ?? []) as unknown as RawRow[]).map((row) => {
+    const order = Array.isArray(row.orders) ? row.orders[0] : row.orders;
+    return {
+      payment_id: row.id,
+      order_id: row.order_id,
+      reference: row.bank_reference,
+      email: order?.email ?? "",
+      amount_cents: row.amount_cents,
+      currency: row.currency,
+      created_at: row.created_at,
+    };
+  });
 }
 
 export type OrderItemRow = {
@@ -148,6 +194,23 @@ export type ShippingAddressRow = {
   notes: string | null;
 };
 
+export type PaymentRow = {
+  id: string;
+  method: string;
+  provider: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  bank_reference: string | null;
+  proof_storage_path: string | null;
+  declared_operation_number: string | null;
+  declared_amount_cents: number | null;
+  declared_at: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
+};
+
 export type OrderDetail = {
   order: {
     id: string;
@@ -157,12 +220,17 @@ export type OrderDetail = {
     status: string;
     currency: string;
     subtotal_cents: number;
+    tax_cents: number;
     shipping_cents: number;
     total_cents: number;
     requires_shipping: boolean;
+    payment_method: string;
+    reference: string | null;
+    billing_country: string | null;
   };
   items: OrderItemRow[];
   shipping: ShippingAddressRow | null;
+  payment: PaymentRow | null;
 };
 
 export async function getOrderDetail(orderId: string): Promise<OrderDetail | null> {
@@ -171,7 +239,7 @@ export async function getOrderDetail(orderId: string): Promise<OrderDetail | nul
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, email, user_id, created_at, status, currency, subtotal_cents, shipping_cents, total_cents, requires_shipping"
+      "id, email, user_id, created_at, status, currency, subtotal_cents, tax_cents, shipping_cents, total_cents, requires_shipping, payment_method, reference, billing_country"
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -191,9 +259,29 @@ export async function getOrderDetail(orderId: string): Promise<OrderDetail | nul
     .eq("order_id", orderId)
     .maybeSingle();
 
+  const { data: payment } = await supabase
+    .from("payments")
+    .select(
+      "id, method, provider, amount_cents, currency, status, bank_reference, proof_storage_path, declared_operation_number, declared_amount_cents, declared_at, reviewed_by, reviewed_at, review_notes"
+    )
+    .eq("order_id", orderId)
+    .maybeSingle();
+
   return {
     order: order as OrderDetail["order"],
     items: (items ?? []) as OrderItemRow[],
     shipping: (shipping as ShippingAddressRow | null) ?? null,
+    payment: (payment as PaymentRow | null) ?? null,
   };
+}
+
+// The proof lives in a private bucket with zero storage.objects policies
+// — only the admin/service-role client can ever read it. Safe to call
+// here because every caller is already behind requireAdmin() at the
+// /admin layout level.
+export async function getPaymentProofSignedUrl(storagePath: string): Promise<string | null> {
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin.storage.from("payment-proofs").createSignedUrl(storagePath, 300);
+  if (error || !data) return null;
+  return data.signedUrl;
 }

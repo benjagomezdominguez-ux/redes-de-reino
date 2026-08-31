@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
+import { isOnlinePaymentConfigured } from "@/lib/payments/provider";
 
 const itemSchema = z.object({
   productId: z.string().uuid(),
@@ -27,12 +28,19 @@ export type CheckoutState = {
   status: "idle" | "error" | "success";
   errorKey?: "outOfStock" | "notAvailable" | "generic" | "required";
   orderId?: string;
+  reference?: string;
+  subtotalCents?: number;
+  taxCents?: number;
+  totalCents?: number;
+  currency?: string;
+  paymentMethod?: "online" | "bank_transfer";
 };
 
-// Note: this only ever creates a PENDING order. It intentionally does not
-// mark anything as paid — the server-confirmed payment status (once a
-// provider is configured) is the only thing that ever does that. See
-// grant_digital_access() in the books-store migration.
+// Note: this only ever creates a PENDING order, whichever payment method
+// was chosen. It intentionally never marks anything paid itself — see
+// admin_confirm_bank_transfer() (bank_transfer) and
+// src/app/api/webhooks/payments/route.ts (online, once a provider is
+// configured), which are the only two things that ever do that.
 export async function createOrder(
   _prevState: CheckoutState,
   formData: FormData
@@ -57,6 +65,20 @@ export async function createOrder(
   const lastName = formData.get("last_name");
   if (!firstName || !lastName) {
     return { status: "error", errorKey: "required" };
+  }
+
+  const billingCountry = formData.get("billing_country");
+  if (!billingCountry || typeof billingCountry !== "string") {
+    return { status: "error", errorKey: "required" };
+  }
+
+  // The client can only ever pick between the two real methods, and
+  // "online" is rejected server-side too when nothing is configured —
+  // never just a disabled button relying on the UI to enforce this.
+  const paymentMethodRaw = formData.get("payment_method");
+  const paymentMethod = paymentMethodRaw === "online" ? "online" : "bank_transfer";
+  if (paymentMethod === "online" && !isOnlinePaymentConfigured()) {
+    return { status: "error", errorKey: "notAvailable" };
   }
 
   const requiresShipping = formData.get("requiresShipping") === "true";
@@ -91,6 +113,8 @@ export async function createOrder(
       quantity: i.quantity,
     })),
     p_shipping: shipping,
+    p_payment_method: paymentMethod,
+    p_billing_country: billingCountry,
   });
 
   if (error) {
@@ -105,5 +129,24 @@ export async function createOrder(
     return { status: "error", errorKey: "generic" };
   }
 
-  return { status: "success", orderId: data as string };
+  const result = data as {
+    order_id: string;
+    reference: string;
+    subtotal_cents: number;
+    tax_cents: number;
+    total_cents: number;
+    currency: string;
+    payment_method: "online" | "bank_transfer";
+  };
+
+  return {
+    status: "success",
+    orderId: result.order_id,
+    reference: result.reference,
+    subtotalCents: result.subtotal_cents,
+    taxCents: result.tax_cents,
+    totalCents: result.total_cents,
+    currency: result.currency,
+    paymentMethod: result.payment_method,
+  };
 }

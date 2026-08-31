@@ -19,6 +19,7 @@ export default async function LibraryPage({
     products: { title: string | null; author: string | null; cover_url: string | null } | null;
   };
   let entitlements: LibraryEntry[] = [];
+  let pending: LibraryEntry[] = [];
 
   const { data: granted } = await supabase
     .from("digital_entitlements")
@@ -39,6 +40,33 @@ export default async function LibraryPage({
     }));
   }
 
+  // Digital items on the buyer's own orders that are still awaiting
+  // payment confirmation — never the file itself, just a status card
+  // (rule 26: "Tu pago está siendo verificado.").
+  const { data: pendingOrders } = await supabase
+    .from("orders")
+    .select("id, order_items(product_id, modality)")
+    .eq("status", "pending");
+
+  type PendingOrderRow = { id: string; order_items: { product_id: string; modality: string }[] };
+  const pendingProductIds = ((pendingOrders ?? []) as unknown as PendingOrderRow[])
+    .flatMap((o) => o.order_items)
+    .filter((i) => i.modality === "digital" || i.modality === "digital_fisico")
+    .map((i) => i.product_id)
+    .filter((id) => !productIds.includes(id));
+
+  if (pendingProductIds.length > 0) {
+    const { data: pendingProducts } = await supabase
+      .from("products")
+      .select("id, title, author, cover_url")
+      .in("id", [...new Set(pendingProductIds)]);
+
+    pending = [...new Set(pendingProductIds)].map((productId) => ({
+      product_id: productId,
+      products: pendingProducts?.find((p) => p.id === productId) ?? null,
+    }));
+  }
+
   return (
     <>
       <NavbarWithAuth />
@@ -48,7 +76,7 @@ export default async function LibraryPage({
             {t("title")}
           </h1>
 
-          {entitlements.length === 0 ? (
+          {entitlements.length === 0 && pending.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-10 text-center text-muted">
               {t("empty")}
             </p>
@@ -82,6 +110,31 @@ export default async function LibraryPage({
                   >
                     {t("access")}
                   </a>
+                </div>
+              ))}
+
+              {pending.map((entry) => (
+                <div
+                  key={entry.product_id}
+                  className="flex flex-col gap-3 rounded-2xl border border-dashed border-border bg-surface-alt p-6 opacity-80"
+                >
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface">
+                    {entry.products?.cover_url ? (
+                      <Image
+                        src={entry.products.cover_url}
+                        alt={entry.products.title ?? ""}
+                        fill
+                        className="object-cover grayscale"
+                      />
+                    ) : null}
+                  </div>
+                  <h3 className="font-display text-base font-medium text-primary-900">
+                    {entry.products?.title}
+                  </h3>
+                  <p className="text-sm text-muted">{entry.products?.author}</p>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-warning">
+                    {t("pendingVerification")}
+                  </span>
                 </div>
               ))}
             </div>

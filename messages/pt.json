@@ -81,6 +81,7 @@
       "lastName": "Sobrenome",
       "email": "Email",
       "phone": "Telefone",
+      "billingCountry": "País de faturamento",
       "shippingAddress": "Endereço de entrega",
       "country": "País",
       "state": "Estado/Província",
@@ -93,7 +94,33 @@
       "shippingCost": "Frete",
       "shippingPending": "[PENDENTE DE CONFIGURAÇÃO]",
       "summary": "Resumo da compra",
+      "subtotal": "Subtotal",
+      "tax": "Impostos",
+      "taxCalculatedNext": "Calculado ao confirmar",
       "total": "Total",
+      "paymentMethod": "Forma de pagamento",
+      "method": {
+        "bank_transfer": "Transferência bancária",
+        "online": "Pagar online",
+        "bankTransferHint": "Você vai receber os dados para transferir e confirmamos seu pagamento manualmente.",
+        "onlineHint": "Pague com cartão ou outros meios digitais.",
+        "onlineComingSoon": "Em breve"
+      },
+      "transfer": {
+        "instructionsTitle": "Dados para transferência",
+        "amount": "Valor a transferir",
+        "reference": "Referência do seu pedido",
+        "instructionsBody": "Use essa referência na descrição da transferência. Assim que confirmarmos o pagamento, seu livro vai aparecer em Minha Biblioteca.",
+        "proofIntro": "Se você já fez a transferência, conte os detalhes para agilizar a verificação (opcional).",
+        "operationNumber": "Número da operação",
+        "declaredAmount": "Valor transferido",
+        "declaredDate": "Data da transferência",
+        "proofFile": "Comprovante (imagem ou PDF)",
+        "proofError": "Não conseguimos salvar esses dados. Tente novamente.",
+        "submitProof": "Enviar dados",
+        "submittingProof": "Enviando…",
+        "proofSubmitted": "Obrigado! Vamos verificar sua transferência e confirmar por aqui."
+      },
       "paymentPendingTitle": "O pagamento ainda não está configurado",
       "paymentPendingBody": "Seu pedido ficou registrado como pendente. Assim que habilitarmos o pagamento, vamos entrar em contato para concluir.",
       "placeOrder": "Confirmar pedido",
@@ -111,7 +138,8 @@
       "title": "Minha Biblioteca",
       "empty": "Você ainda não tem livros digitais.",
       "purchased": "Comprado",
-      "access": "Acessar o livro"
+      "access": "Acessar o livro",
+      "pendingVerification": "Seu pagamento está sendo verificado."
     },
     "orders": {
       "title": "Meus Pedidos",
@@ -180,6 +208,7 @@
     "navLabel": "Navegação de administração",
     "nav": {
       "dashboard": "Painel",
+      "books": "Livros",
       "users": "Usuários",
       "orders": "Pedidos"
     },
@@ -188,6 +217,54 @@
       "purchases": "Compras",
       "pendingOrders": "Pedidos pendentes",
       "booksSold": "Livros vendidos"
+    },
+    "books": {
+      "count": "{count, plural, =1 {1 livro} other {# livros}}",
+      "addNew": "Adicionar livro",
+      "empty": "Você ainda não cadastrou nenhum livro.",
+      "backToList": "Voltar aos livros",
+      "salesSummary": "{units} vendidos · {revenue} em receita confirmada",
+      "publish": "Publicar",
+      "unpublish": "Despublicar",
+      "columns": {
+        "cover": "Capa",
+        "title": "Título",
+        "author": "Autor",
+        "price": "Preço",
+        "status": "Estado",
+        "actions": "Ações"
+      },
+      "status": {
+        "draft": "Rascunho",
+        "active": "Publicado",
+        "inactive": "Despublicado"
+      },
+      "form": {
+        "title": "Título",
+        "author": "Autor",
+        "category": "Categoria",
+        "description": "Descrição",
+        "language": "Idioma",
+        "productType": "Tipo de produto",
+        "typeDigital": "Somente digital",
+        "typePhysical": "Somente físico",
+        "typeBoth": "Digital + físico",
+        "digitalPrice": "Preço digital (USD)",
+        "physicalPrice": "Preço físico (USD)",
+        "stock": "Estoque",
+        "cover": "Capa (JPG, PNG ou WEBP)",
+        "coverCurrent": "Já existe uma capa cadastrada — envie outra para substituí-la.",
+        "file": "Arquivo digital (PDF)",
+        "fileCurrent": "Já existe um arquivo cadastrado — envie outro para substituí-lo.",
+        "save": "Salvar",
+        "saving": "Salvando…",
+        "saved": "Salvo com sucesso.",
+        "errors": {
+          "generic": "Não conseguimos salvar o livro. Tente novamente.",
+          "required": "Preencha os campos obrigatórios.",
+          "invalidFile": "O livro foi salvo, mas um arquivo não pôde ser enviado — tente novamente em Editar."
+        }
+      }
     },
     "users": {
       "empty": "Ainda não há usuários registrados.",
@@ -211,7 +288,15 @@
         "items": "Itens",
         "total": "Total",
         "date": "Data",
-        "status": "Estado"
+        "status": "Estado",
+        "payment": "Pagamento"
+      },
+      "payment": {
+        "needsReview": "Precisa de revisão",
+        "method": {
+          "online": "Online",
+          "bank_transfer": "Transferência"
+        }
       },
       "status": {
         "pending": "Pendente",
@@ -227,12 +312,36 @@
     },
     "orderDetail": {
       "backToList": "Voltar aos pedidos",
+      "paymentMethod": "Forma de pagamento",
       "product": "Produto",
       "modality": "Formato",
       "quantity": "Quantidade",
       "unitPrice": "Preço unitário",
       "orderTotal": "Total do pedido",
-      "shippingInfo": "Dados de envio"
+      "shippingInfo": "Dados de envio",
+      "payment": {
+        "title": "Pagamento",
+        "statusLabel": "Estado do pagamento",
+        "status": {
+          "pending": "Pendente de revisão",
+          "confirmed": "Confirmado",
+          "rejected": "Rejeitado",
+          "refunded": "Reembolsado"
+        },
+        "declaredOperation": "Número de operação declarado",
+        "declaredAmount": "Valor declarado",
+        "declaredDate": "Data declarada",
+        "proof": "Comprovante",
+        "viewProof": "Ver comprovante",
+        "reviewedAt": "Revisado",
+        "reviewTitle": "Revisar transferência",
+        "notesPlaceholder": "Notas (opcional)",
+        "confirm": "Confirmar pagamento",
+        "confirming": "Confirmando…",
+        "reject": "Rejeitar",
+        "rejecting": "Rejeitando…",
+        "actionError": "Não conseguimos concluir a ação. Tente novamente."
+      }
     },
     "pagination": {
       "label": "Paginação",

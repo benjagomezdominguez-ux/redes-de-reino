@@ -30,12 +30,18 @@ export default async function AdminLayout({
             <h1 className="font-display text-2xl font-medium text-primary-900 sm:text-3xl">
               {t("title")}
             </h1>
-            <nav aria-label={t("navLabel")} className="flex gap-2">
+            <nav aria-label={t("navLabel")} className="flex flex-wrap gap-2">
               <Link
                 href="/admin"
                 className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
               >
                 {t("nav.dashboard")}
+              </Link>
+              <Link
+                href="/admin/books"
+                className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
+              >
+                {t("nav.books")}
               </Link>
               <Link
                 href="/admin/users"

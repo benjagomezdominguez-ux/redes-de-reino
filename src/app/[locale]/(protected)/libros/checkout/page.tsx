@@ -3,6 +3,7 @@ import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
 import { CheckoutView } from "@/components/ui/CheckoutView";
+import { isOnlinePaymentConfigured } from "@/lib/payments/provider";
 
 export default async function CheckoutPage({
   params,
@@ -19,7 +20,7 @@ export default async function CheckoutPage({
           <h1 className="mb-10 font-display text-3xl font-medium text-primary-900">
             {t("title")}
           </h1>
-          <CheckoutView />
+          <CheckoutView onlinePaymentAvailable={isOnlinePaymentConfigured()} />
         </Container>
       </main>
       <Footer />
