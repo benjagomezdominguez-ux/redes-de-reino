@@ -210,7 +210,8 @@
       "dashboard": "Dashboard",
       "books": "Books",
       "users": "Users",
-      "orders": "Orders"
+      "orders": "Orders",
+      "whatsapp": "WhatsApp"
     },
     "dashboard": {
       "registeredUsers": "Registered users",
@@ -348,6 +349,120 @@
       "previous": "Previous",
       "next": "Next",
       "pageOf": "Page {page} of {totalPages}"
+    },
+    "whatsapp": {
+      "nav": {
+        "groups": "Groups"
+      },
+      "dashboard": {
+        "addGroup": "Add group",
+        "notConfiguredWarning": "The official WhatsApp integration (Meta Cloud API) isn't configured yet — campaigns can't be activated until it is. See the setup notes in the README.",
+        "emailNotConfiguredWarning": "No email provider is configured — the \"5 days before\" alert won't be able to send until one is set up (see README).",
+        "activeGroups": "Active groups",
+        "activeCampaigns": "Active campaigns",
+        "nextMessage": "Next message",
+        "nextAlert": "Next alert"
+      },
+      "groups": {
+        "count": "{count, plural, =1 {1 group} other {# groups}}",
+        "addNew": "Add group",
+        "empty": "You haven't created any groups yet.",
+        "backToList": "Back to groups",
+        "columns": {
+          "name": "Name",
+          "contacts": "Contacts",
+          "campaign": "Campaign",
+          "status": "Status",
+          "endDate": "Cycle end"
+        },
+        "status": {
+          "active": "Active",
+          "inactive": "Inactive"
+        }
+      },
+      "groupForm": {
+        "name": "Internal group name",
+        "error": "We couldn't create the group. Please try again.",
+        "saving": "Saving…",
+        "save": "Create group"
+      },
+      "groupDetail": {
+        "contacts": "Contacts",
+        "campaigns": "Campaigns",
+        "newCampaign": "Create campaign",
+        "noCampaigns": "This group doesn't have any campaigns yet.",
+        "noContacts": "This group doesn't have any contacts yet.",
+        "removeContact": "Remove",
+        "activate": "Activate group",
+        "deactivate": "Deactivate group",
+        "backToGroup": "Back to {name}"
+      },
+      "contactForm": {
+        "phone": "Phone (international format, e.g. +5491122334455)",
+        "displayName": "Name (optional)",
+        "add": "Add contact",
+        "saving": "Adding…",
+        "errors": {
+          "generic": "We couldn't add the contact. Please try again.",
+          "required": "Enter a phone number.",
+          "invalidPhone": "The phone number must be in international format, e.g. +5491122334455.",
+          "duplicatePhone": "That number is already in this group."
+        }
+      },
+      "campaignForm": {
+        "name": "Campaign name",
+        "startDate": "Start date",
+        "cycleDurationDays": "Cycle duration (days)",
+        "timezone": "Timezone",
+        "error": "We couldn't create the campaign. Please try again.",
+        "saving": "Saving…",
+        "save": "Create campaign"
+      },
+      "campaignStatus": {
+        "draft": "Draft",
+        "scheduled": "Scheduled",
+        "active": "Active",
+        "paused": "Paused",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "campaignControls": {
+        "activate": "Activate campaign",
+        "pause": "Pause",
+        "resume": "Resume",
+        "cancel": "Cancel campaign",
+        "cancelReason": "Reason (optional)",
+        "confirmCancel": "Confirm cancellation",
+        "activateErrors": {
+          "notConfigured": "Can't activate: the official WhatsApp integration isn't configured yet.",
+          "incomplete": "Can't activate: all 4 messages (title, text, image, and schedule) must be complete in positions 1 to 4.",
+          "noContacts": "Can't activate: this group has no contacts.",
+          "generic": "We couldn't activate the campaign."
+        }
+      },
+      "messageForm": {
+        "position": "Message {position}",
+        "title": "Internal title",
+        "bodyText": "Message text",
+        "scheduledDate": "Scheduled date",
+        "scheduledTime": "Scheduled time",
+        "templateName": "Approved template name (Meta)",
+        "templateLanguage": "Template language",
+        "templateHint": "Outside a 24h session with the contact, WhatsApp requires a Meta-approved template to send — enter the exact template name approved in Meta Business Manager. If left empty, sending will only work inside that 24h window.",
+        "image": "Image (JPG, PNG or WEBP)",
+        "save": "Save message",
+        "saving": "Saving…",
+        "error": "We couldn't save the message. Please try again.",
+        "saved": "Saved successfully.",
+        "status": {
+          "scheduled": "Scheduled",
+          "processing": "Sending",
+          "sent": "Sent",
+          "failed": "Failed",
+          "cancelled": "Cancelled"
+        },
+        "deliveryProgress": "{sent} of {total} sent · {failed} failed"
+      }
     }
   },
   "gallery": {

@@ -55,6 +55,12 @@ export default async function AdminLayout({
               >
                 {t("nav.orders")}
               </Link>
+              <Link
+                href="/admin/whatsapp"
+                className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
+              >
+                {t("nav.whatsapp")}
+              </Link>
             </nav>
           </div>
           {children}

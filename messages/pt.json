@@ -210,7 +210,8 @@
       "dashboard": "Painel",
       "books": "Livros",
       "users": "Usuários",
-      "orders": "Pedidos"
+      "orders": "Pedidos",
+      "whatsapp": "WhatsApp"
     },
     "dashboard": {
       "registeredUsers": "Usuários registrados",
@@ -348,6 +349,120 @@
       "previous": "Anterior",
       "next": "Próxima",
       "pageOf": "Página {page} de {totalPages}"
+    },
+    "whatsapp": {
+      "nav": {
+        "groups": "Grupos"
+      },
+      "dashboard": {
+        "addGroup": "Adicionar grupo",
+        "notConfiguredWarning": "A integração oficial do WhatsApp (Meta Cloud API) ainda não está configurada — as campanhas não podem ser ativadas até que esteja. Veja as notas de configuração no README.",
+        "emailNotConfiguredWarning": "Nenhum provedor de email está configurado — o alerta de \"5 dias antes\" não poderá ser enviado até que um seja configurado (veja o README).",
+        "activeGroups": "Grupos ativos",
+        "activeCampaigns": "Campanhas ativas",
+        "nextMessage": "Próxima mensagem",
+        "nextAlert": "Próximo alerta"
+      },
+      "groups": {
+        "count": "{count, plural, =1 {1 grupo} other {# grupos}}",
+        "addNew": "Adicionar grupo",
+        "empty": "Você ainda não criou nenhum grupo.",
+        "backToList": "Voltar aos grupos",
+        "columns": {
+          "name": "Nome",
+          "contacts": "Contatos",
+          "campaign": "Campanha",
+          "status": "Status",
+          "endDate": "Fim do ciclo"
+        },
+        "status": {
+          "active": "Ativo",
+          "inactive": "Inativo"
+        }
+      },
+      "groupForm": {
+        "name": "Nome interno do grupo",
+        "error": "Não conseguimos criar o grupo. Tente novamente.",
+        "saving": "Salvando…",
+        "save": "Criar grupo"
+      },
+      "groupDetail": {
+        "contacts": "Contatos",
+        "campaigns": "Campanhas",
+        "newCampaign": "Criar campanha",
+        "noCampaigns": "Este grupo ainda não tem campanhas.",
+        "noContacts": "Este grupo ainda não tem contatos.",
+        "removeContact": "Remover",
+        "activate": "Ativar grupo",
+        "deactivate": "Desativar grupo",
+        "backToGroup": "Voltar para {name}"
+      },
+      "contactForm": {
+        "phone": "Telefone (formato internacional, ex. +5491122334455)",
+        "displayName": "Nome (opcional)",
+        "add": "Adicionar contato",
+        "saving": "Adicionando…",
+        "errors": {
+          "generic": "Não conseguimos adicionar o contato. Tente novamente.",
+          "required": "Informe o telefone.",
+          "invalidPhone": "O telefone deve estar em formato internacional, ex. +5491122334455.",
+          "duplicatePhone": "Esse número já está neste grupo."
+        }
+      },
+      "campaignForm": {
+        "name": "Nome da campanha",
+        "startDate": "Data de início",
+        "cycleDurationDays": "Duração do ciclo (dias)",
+        "timezone": "Fuso horário",
+        "error": "Não conseguimos criar a campanha. Tente novamente.",
+        "saving": "Salvando…",
+        "save": "Criar campanha"
+      },
+      "campaignStatus": {
+        "draft": "Rascunho",
+        "scheduled": "Agendada",
+        "active": "Ativa",
+        "paused": "Pausada",
+        "completed": "Concluída",
+        "cancelled": "Cancelada"
+      },
+      "campaignControls": {
+        "activate": "Ativar campanha",
+        "pause": "Pausar",
+        "resume": "Retomar",
+        "cancel": "Cancelar campanha",
+        "cancelReason": "Motivo (opcional)",
+        "confirmCancel": "Confirmar cancelamento",
+        "activateErrors": {
+          "notConfigured": "Não é possível ativar: a integração oficial do WhatsApp ainda não está configurada.",
+          "incomplete": "Não é possível ativar: as 4 mensagens completas (título, texto, imagem e horário) devem existir nas posições 1 a 4.",
+          "noContacts": "Não é possível ativar: o grupo não tem contatos.",
+          "generic": "Não conseguimos ativar a campanha."
+        }
+      },
+      "messageForm": {
+        "position": "Mensagem {position}",
+        "title": "Título interno",
+        "bodyText": "Texto da mensagem",
+        "scheduledDate": "Data programada",
+        "scheduledTime": "Hora programada",
+        "templateName": "Nome do modelo aprovado (Meta)",
+        "templateLanguage": "Idioma do modelo",
+        "templateHint": "Fora de uma sessão de 24h com o contato, o WhatsApp exige um modelo aprovado pela Meta para enviar — informe o nome exato do modelo aprovado no Meta Business Manager. Se deixado vazio, o envio só funcionará dentro dessa janela de 24h.",
+        "image": "Imagem (JPG, PNG ou WEBP)",
+        "save": "Salvar mensagem",
+        "saving": "Salvando…",
+        "error": "Não conseguimos salvar a mensagem. Tente novamente.",
+        "saved": "Salvo com sucesso.",
+        "status": {
+          "scheduled": "Agendado",
+          "processing": "Enviando",
+          "sent": "Enviado",
+          "failed": "Falhou",
+          "cancelled": "Cancelado"
+        },
+        "deliveryProgress": "{sent} de {total} enviados · {failed} falharam"
+      }
     }
   },
   "gallery": {

@@ -19,6 +19,9 @@ const PROTECTED_PATHS = [
   "/es/admin/orders",
   "/es/admin/books",
   "/es/admin/books/new",
+  "/es/admin/whatsapp",
+  "/es/admin/whatsapp/groups",
+  "/es/admin/whatsapp/groups/new",
 ];
 
 test.describe("route protection — unauthenticated visitor", () => {
@@ -140,5 +143,19 @@ test.describe("payments webhook — honest about not being configured", () => {
     expect(response.status()).toBe(503);
     const body = await response.json();
     expect(body.error).toBe("no_payment_provider_configured");
+  });
+});
+
+test.describe("whatsapp cron endpoint — never triggerable by an outsider", () => {
+  test("refuses a request without the cron secret", async ({ request }) => {
+    const response = await request.get("/api/cron/whatsapp");
+    expect([401, 503]).toContain(response.status());
+  });
+
+  test("refuses a request with the wrong bearer token", async ({ request }) => {
+    const response = await request.get("/api/cron/whatsapp", {
+      headers: { authorization: "Bearer not-the-real-secret" },
+    });
+    expect([401, 503]).toContain(response.status());
   });
 });

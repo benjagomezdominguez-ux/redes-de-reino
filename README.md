@@ -89,7 +89,8 @@ src/
                    # pedidos, libros/checkout
     [locale]/admin/           # su layout exige sesión + rol admin.
                    # admin, admin/books(+/new, /[id]/edit), admin/users,
-                   # admin/orders(+/[id])
+                   # admin/orders(+/[id]), admin/whatsapp(+/groups,
+                   # /groups/[id], /groups/new, /campaigns/new, /campaigns/[id])
     [locale]/login, [locale]/signup, [locale]/forgot-password,
     [locale]/reset-password, [locale]/403
                    # autenticación (Supabase Auth) y control de acceso
@@ -102,6 +103,8 @@ src/
     api/webhooks/payments/route.ts
                    # esqueleto del webhook de pago online — 503 hasta que
                    # haya un proveedor configurado, nunca un 200 falso
+    api/cron/whatsapp/route.ts
+                   # scheduler de campañas de WhatsApp — ver "WhatsApp" abajo
     robots.ts, sitemap.ts, manifest.ts, icon*, opengraph-image.jpg
                    # recursos globales, no dependen del idioma
   components/
@@ -111,7 +114,9 @@ src/
                    # BookCard, AddToCartButton, CartView, CheckoutView, AuthForm,
                    # ForgotPasswordForm, ResetPasswordForm, AdminPagination,
                    # BookForm, BookStatusButtons, TransferProofForm,
-                   # AdminPaymentReviewActions)
+                   # AdminPaymentReviewActions, WhatsAppGroupForm,
+                   # WhatsAppContactForm/List, WhatsAppCampaignForm,
+                   # WhatsAppMessageForm, WhatsAppCampaignControls)
   i18n/
     routing.ts     # locales soportados, default, prefijo de URL
     request.ts     # carga de mensajes + fallback a español
@@ -120,18 +125,23 @@ src/
     site-config.ts # Datos estructurales/nombres propios (NO textos traducibles)
     supabase/      # Clientes de Supabase + guards — ver "Autenticación" abajo
     security/      # safeRedirectPath() — evita open-redirects en `next`
-    actions/       # Server Actions (auth, checkout, payments, admin-books, admin-payments)
+    actions/       # Server Actions (auth, checkout, payments, admin-books,
+                   # admin-payments, admin-whatsapp)
     cart/          # Carrito de compra (React Context + localStorage)
     books/         # Queries de catálogo + resolución de acceso digital
     checkout/      # Lista de países para el selector de facturación
     payments/      # Interfaz PaymentProvider — ver "Tienda de libros"
+    email/         # Interfaz EmailProvider + implementación real de Resend
+    whatsapp/      # Interfaz WhatsAppProvider + Meta Cloud API + scheduler
+                   # — ver "WhatsApp"
     admin/         # Queries del panel de administración (via cliente de sesión + RLS)
 messages/
   es.json, en.json, pt.json   # Todo el texto traducible de la UI
 e2e/
   i18n.spec.ts     # Tests E2E multidioma (Playwright)
   auth.spec.ts     # Tests E2E de rutas protegidas, login/signup/recuperación,
-                   # y que el webhook de pagos nunca finge estar configurado
+                   # y que el webhook de pagos + el cron de WhatsApp nunca
+                   # fingen estar configurados
 public/
   logo.png         # Logo oficial (no modificar proporciones ni colores)
 supabase/
@@ -464,6 +474,132 @@ ni datos de tarjetas.
 - Emails transaccionales y facturación: el schema ya soporta construirlos
   después sin re-diseñar nada, pero no están implementados.
 
+## WhatsApp — mensajes automáticos (`/admin/whatsapp`)
+
+Sistema de campañas de WhatsApp integrado al mismo panel de administración
+(misma autenticación, mismo Supabase, mismo proyecto — no hay una app
+separada). Un admin crea **grupos** (listas de contactos), les asocia una
+**campaña** de 4 mensajes con texto+imagen y fecha/hora programada cada
+uno, y el sistema los envía automáticamente, uno por vez, durante
+aproximadamente un mes.
+
+**Por qué "grupo" es una lista de contactos y no un grupo real de
+WhatsApp**: la plataforma oficial de WhatsApp Business (Meta Cloud API) no
+tiene ningún mecanismo para publicar dentro de un chat de Grupo — esa
+capacidad no está expuesta a ningún partner de la Business API, en ningún
+plan. Las únicas formas de publicar en un Grupo real son automatizar
+WhatsApp Web o librerías no oficiales, ambas explícitamente prohibidas por
+este proyecto. La solución honesta, dentro de esa restricción: "grupo" acá
+es una lista de contactos (teléfonos en formato E.164), y el envío real es
+uno por uno, individual, vía la API oficial — funcionalmente le llega el
+mismo mensaje a todo el grupo, pero técnicamente son N envíos
+individuales, no un post a un chat grupal.
+
+**Modelo de datos** (`20260901000000_create_whatsapp_system.sql`):
+`whatsapp_groups` → `whatsapp_contacts` (N contactos por grupo) y
+`whatsapp_campaigns` (ciclo de ~30 días, configurable, con
+`end_date` calculada automáticamente) → `whatsapp_messages` (4 mensajes,
+posición 1 a 4, cada uno con texto, imagen, plantilla y fecha/hora
+programada) → `whatsapp_message_deliveries` (una fila por mensaje×contacto
+— la unidad real de envío) y `whatsapp_notifications` (registro de la
+alerta de 5 días, para no duplicarla). RLS: solo admins
+(`is_admin(auth.uid())`) pueden leer o escribir cualquiera de estas
+tablas — un usuario normal no tiene ninguna policy, así que cualquier
+consulta suya devuelve vacío/denegado, verificado en
+`admin-whatsapp.test.ts` (cada acción exige `requireAdmin()` antes de
+tocar la base) y en `e2e/auth.spec.ts` (`/admin/whatsapp` y sus subrutas
+redirigen a `/login` sin sesión, igual que el resto de `/admin`).
+
+**Imágenes**: mismo mecanismo de subida directa a Storage con URL firmada
+que libros y comprobantes de transferencia (`lib/supabase/browser.ts` +
+`uploadToSignedUrl`) — nunca pasan por el body de una Server Action.
+Bucket privado `whatsapp-media`, tamaño/tipo validados en el bucket mismo
+(5MB, JPG/PNG/WEBP).
+
+**Envío — WhatsApp Business Platform (Meta Cloud API)**:
+`lib/whatsapp/meta-provider.ts` implementa las llamadas reales a la API
+oficial de Meta (`graph.facebook.com`) — sube la imagen al endpoint de
+Media para obtener un `media_id` (nunca manda una URL externa) y después
+envía el mensaje. Fuera de una ventana de 24hs en la que el contacto le
+escribió primero a la cuenta, Meta exige una **plantilla aprobada**
+("Message Template") para poder enviar — no se puede mandar texto libre a
+un contacto frío de forma automática, es una restricción de la
+plataforma, no de este código. Por eso cada mensaje tiene un campo
+opcional "nombre de la plantilla aprobada en Meta Business Manager": si
+se completa, el envío usa esa plantilla (con el texto como variable del
+cuerpo y la imagen como header); si se deja vacío, intenta un envío libre
+que Meta solo va a aceptar dentro de esa ventana de 24hs.
+
+**Scheduler — backend, no depende de ningún navegador abierto**:
+`GET /api/cron/whatsapp` (protegido con `CRON_SECRET`, que Vercel manda
+automáticamente como `Authorization: Bearer` cuando la variable existe —
+ya configurada en producción) llama a `runWhatsappScheduler()`
+(`lib/whatsapp/scheduler.ts`), programado en `vercel.json` para correr una
+vez por día (límite del plan Hobby de Vercel; si se necesita más
+frecuencia/precisión horaria, requiere plan Pro o un cron externo pegándole
+a esta misma ruta con el secreto correcto).
+
+Cada corrida: por cada campaña `active`, busca el primer mensaje no
+terminal (respeta el orden 1→2→3→4 estrictamente — nunca toca el mensaje
+2 mientras el 1 no esté resuelto), y si ya llegó su fecha/hora programada
+(en la zona horaria de la campaña), lo manda a cada contacto del grupo.
+Reintentos: hasta 3 intentos por contacto (configurable vía
+`WHATSAPP_MAX_RETRY_ATTEMPTS`) — el propio cron diario funciona como
+backoff entre intentos; agotados los 3, esa entrega queda `FAILED`
+permanente y no vuelve a intentarse. Idempotencia: cada entrega es una
+fila única por (mensaje, contacto) — correr el scheduler dos veces nunca
+manda el mismo mensaje dos veces a nadie, verificado explícitamente en
+`scheduler.test.ts`. Cuando los 4 mensajes de una campaña quedan
+resueltos (enviados o fallidos), la campaña pasa a `COMPLETED`
+automáticamente y no se vuelve a mandar nada por su cuenta — hace falta
+crear un ciclo nuevo a mano.
+
+**Alerta de 5 días antes**: cada corrida también revisa si a alguna
+campaña activa le quedan 5 días o menos para terminar. Si es así y todavía
+no se mandó la alerta para esa campaña (`whatsapp_notifications`, con una
+restricción `unique` por campaña que es lo que realmente impide
+duplicarla, no solo la lógica de la app — verificado en
+`scheduler.test.ts`), busca al admin en la tabla real `profiles`
+(`first_name` empieza con "benjam", `last_name` contiene "gomez", rol
+admin activo) y le manda un email — nunca un correo hardcodeado. Si no hay
+un proveedor de email configurado, no se manda nada (y no se marca como
+enviada) — se sigue reintentando cada día hasta que se configure uno,
+nunca se finge un envío que no ocurrió.
+
+**Email — arquitectura lista, sin proveedor conectado por defecto**:
+`lib/email/provider.ts` sigue el mismo patrón que
+`lib/payments/provider.ts` — sin `EMAIL_PROVIDER`/`RESEND_API_KEY`
+configurados, `isEmailConfigured()` es `false` y no se manda nada.
+`lib/email/resend-provider.ts` ya tiene la llamada real a la API de Resend
+implementada (una sola función `fetch`, sin SDK) — alcanza con configurar
+las variables de entorno para que funcione, sin tocar código.
+
+**Panel**: `/admin/whatsapp` (dashboard: grupos/campañas activas, próximo
+mensaje, próxima alerta) → `/admin/whatsapp/groups` (listado, crear grupo)
+→ `/admin/whatsapp/groups/[id]` (contactos, campañas del grupo, activar
+grupo) → `/admin/whatsapp/campaigns/[id]` (los 4 mensajes, cada uno
+editable con su imagen, y los controles de ciclo de vida: activar,
+pausar, reanudar, cancelar). **Activar una campaña** (rule 39) se rechaza
+explícitamente — nunca queda en `ACTIVE` sin poder mandar de verdad — si
+falta la integración de WhatsApp, si el grupo no tiene contactos, o si no
+están los 4 mensajes completos (título, texto, imagen y horario en las
+posiciones 1 a 4); verificado en `admin-whatsapp.test.ts`.
+
+**Variables de entorno necesarias** (ninguna existe hoy en este
+proyecto):
+
+- `WHATSAPP_CLOUD_API_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
+  `WHATSAPP_BUSINESS_ACCOUNT_ID` — de un WhatsApp Business Platform / Meta
+  Cloud API real (Meta for Developers → WhatsApp → API Setup). Sin esto,
+  `isWhatsAppConfigured()` es `false` y ninguna campaña puede activarse.
+- Al menos una plantilla de mensaje aprobada en Meta Business Manager, por
+  cada mensaje que se vaya a enviar fuera de la ventana de 24hs (el caso
+  normal de una campaña programada).
+- `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — para
+  que la alerta de 5 días le llegue de verdad a Benjamín Gómez por email.
+- `CRON_SECRET` — ya configurado en producción (Vercel), es lo que
+  autoriza al cron diario a llamar a `/api/cron/whatsapp`.
+
 ## Sistema de diseño
 
 Los tokens de color en `src/app/globals.css` (`--color-primary-*`,
@@ -522,3 +658,12 @@ conocida (*last known good version*): para volver a un estado estable,
   esté en la lista de Redirect URLs — si no está, los links de
   confirmación de cuenta y recuperación de contraseña no van a funcionar
   en producción.
+- WhatsApp: configurar un WhatsApp Business Platform / Meta Cloud API real
+  (`WHATSAPP_CLOUD_API_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
+  `WHATSAPP_BUSINESS_ACCOUNT_ID`) y al menos una plantilla de mensaje
+  aprobada en Meta Business Manager — sin esto ninguna campaña puede
+  activarse (bloqueado explícitamente, no falla en silencio).
+- WhatsApp: configurar un proveedor de email (`EMAIL_PROVIDER=resend`,
+  `RESEND_API_KEY`, `RESEND_FROM_EMAIL`) para que la alerta de "5 días
+  antes" le llegue de verdad a Benjamín Gómez — sin esto, el sistema seguí
+  detectando la condición todos los días pero no manda nada.
