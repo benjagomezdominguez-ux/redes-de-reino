@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { navLinks, site } from "@/lib/site-config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
@@ -165,6 +165,7 @@ function AccountMenuMobile({ user }: { user: NavbarUser }) {
 export function Navbar({ user = null }: { user?: NavbarUser }) {
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const { itemCount } = useCart();
   const [open, setOpen] = useState(false);
 
@@ -175,7 +176,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
         className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-6 py-3 sm:px-8"
       >
         <Link
-          href="#inicio"
+          href={`/${locale}#inicio`}
           className="flex shrink-0 items-center gap-3 whitespace-nowrap"
           onClick={() => setOpen(false)}
         >
@@ -197,7 +198,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
-                  href={link.href}
+                  href={`/${locale}${link.href}`}
                   className="whitespace-nowrap text-sm font-medium text-primary-900/80 transition-colors hover:text-primary-900"
                 >
                   {t(link.key)}
@@ -251,7 +252,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
-                  href={link.href}
+                  href={`/${locale}${link.href}`}
                   onClick={() => setOpen(false)}
                   className="block rounded-md px-3 py-3 text-base font-medium text-primary-900 hover:bg-primary-900/5"
                 >

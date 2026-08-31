@@ -236,6 +236,30 @@ test.describe("structure — Estudios Bíblicos, Actividades, Diezmos y Ofrendas
   });
 });
 
+test.describe("structure — nav links work from any page, not just the home page", () => {
+  test("clicking a section link (e.g. Horarios) from a non-home page navigates to the home page and scrolls there", async ({
+    page,
+  }) => {
+    // /es/403 is a real, public, non-home page that shares the same
+    // Navbar. These links used to be bare "#horarios" anchors, which only
+    // ever worked when already on the home page — from anywhere else,
+    // clicking did nothing (no navigation, since a fragment-only href
+    // never leaves the current page).
+    await page.goto("/es/403");
+    await nav(page).getByRole("link", { name: "Horarios" }).click();
+    await expect(page).toHaveURL(/\/es#horarios$/);
+    await expect(page.locator("#horarios")).toBeInViewport();
+  });
+
+  test("the logo link also returns to the home page from a non-home page", async ({ page }) => {
+    await page.goto("/es/403");
+    // The logo is the nav's first link, regardless of its exact
+    // accessible name (image alt + site name combined).
+    await nav(page).getByRole("link").first().click();
+    await expect(page).toHaveURL(/\/es#inicio$/);
+  });
+});
+
 test.describe("i18n — fallback safety", () => {
   test("an unsupported locale path 404s cleanly instead of crashing", async ({ page }) => {
     const response = await page.goto("/fr");
