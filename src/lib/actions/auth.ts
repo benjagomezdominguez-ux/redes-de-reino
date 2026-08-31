@@ -5,7 +5,7 @@ import { getSupabaseSessionClient } from "@/lib/supabase/session";
 import { redirect } from "@/i18n/navigation";
 import { getLocale } from "next-intl/server";
 import { safeRedirectPath } from "@/lib/security/safe-redirect";
-import { siteUrl } from "@/lib/site-config";
+import { getRequestOrigin } from "@/lib/security/request-origin";
 
 const credentialsSchema = z.object({
   email: z.string().trim().email(),
@@ -74,13 +74,14 @@ export async function signUp(
   }
 
   const locale = await getLocale();
+  const origin = await getRequestOrigin();
   const supabase = await getSupabaseSessionClient();
   const { error, data } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
       data: { first_name: parsed.data.firstName, last_name: parsed.data.lastName },
-      emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(`/${locale}`)}`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(`/${locale}`)}`,
     },
   });
 
@@ -130,9 +131,10 @@ export async function requestPasswordReset(
   }
 
   const locale = await getLocale();
+  const origin = await getRequestOrigin();
   const supabase = await getSupabaseSessionClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(`/${locale}/reset-password`)}`,
+    redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(`/${locale}/reset-password`)}`,
   });
 
   return { status: "success" };

@@ -1,0 +1,132 @@
+# Declarative Supabase Auth configuration — committed so the fix for
+# "email confirmation/recovery links point at localhost" is permanent and
+# reviewable in git, not a one-off dashboard click nobody remembers making.
+# Apply with `npx supabase config push` after linking the project.
+#
+# IMPORTANT: `config push` replaces the ENTIRE remote [auth] section with
+# what's declared here — any field left out reverts to the CLI's own
+# schema default, which does NOT necessarily match what's live. Every
+# field below is pinned to the project's actual prior value (confirmed via
+# the diff `config push` printed before this file existed) except
+# site_url/additional_redirect_urls, which are the actual fix. Do not
+# trim this file down to "just the part you're changing" — that's exactly
+# what silently disabled email confirmation and MFA the first time.
+project_id = "gwapuryyqhaarmanpvci"
+
+[auth]
+enabled = true
+# The fix: was "http://localhost:3000" — an email link built from this
+# only ever worked if the *reader* also happened to be at the Mac's own
+# localhost. Production is the only sane single default; every other
+# real origin (Mac, phone-reachable LAN address) is covered by
+# additional_redirect_urls below, and the app builds emailRedirectTo /
+# redirectTo from the actual request origin (see
+# src/lib/security/request-origin.ts), not from this value — this is
+# only the fallback Supabase itself uses if a request's redirectTo isn't
+# in the allow-list.
+site_url = "https://redes-de-reino.vercel.app"
+# Every origin the app can legitimately send someone back to after an
+# email link: production, localhost (Mac), and any machine's mDNS/Bonjour
+# hostname (e.g. "my-mac.local") for phone-on-Wi-Fi testing.
+#
+# NOT a raw LAN IP (e.g. "192.168.1.23") — verified live with
+# admin.generateLink() that Supabase's redirect allow-list silently
+# rejects bare IP-literal hosts (other than 127.0.0.1, which is
+# special-cased) no matter how they're glob-matched here, and falls back
+# to site_url instead. A "*.local" hostname is not an IP literal, doesn't
+# change when DHCP hands out a new address, and is exactly what rule 3
+# asks for ("no asumir una IP fija") — so it's used instead of an IP for
+# this, everywhere in the app and in this allow-list.
+additional_redirect_urls = [
+  "https://redes-de-reino.vercel.app/**",
+  "http://localhost:3000/**",
+  "http://127.0.0.1:3000/**",
+  "http://*.local:3000/**",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_signup = true
+enable_anonymous_sign_ins = false
+enable_manual_linking = false
+minimum_password_length = 6
+password_requirements = ""
+
+[auth.rate_limit]
+email_sent = 2
+sms_sent = 30
+anonymous_users = 30
+token_refresh = 150
+sign_in_sign_ups = 30
+token_verifications = 30
+web3 = 30
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+# Unchanged — required behavior this whole project relies on (signUp()
+# only ever returns a "check your email" state, never an active session,
+# specifically because this is true). Left declared explicitly so a
+# future config push can never silently flip it off again.
+enable_confirmations = true
+secure_password_change = false
+max_frequency = "1m0s"
+otp_length = 8
+otp_expiry = 3600
+
+[auth.sms]
+enable_signup = false
+enable_confirmations = false
+template = "Your code is {{ .Code }}"
+max_frequency = "5s"
+
+[auth.sms.twilio]
+enabled = false
+account_sid = ""
+message_service_sid = ""
+auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
+
+[auth.mfa]
+max_enrolled_factors = 10
+
+# Unchanged from the project's prior (enabled) state — declared explicitly
+# for the same reason as enable_confirmations above.
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
+otp_length = 6
+template = "Your code is {{ .Code }}"
+max_frequency = "5s"
+
+[auth.external.apple]
+enabled = false
+client_id = ""
+secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+redirect_uri = ""
+url = ""
+skip_nonce_check = false
+email_optional = false
+
+[auth.web3.solana]
+enabled = false
+
+[auth.third_party.firebase]
+enabled = false
+
+[auth.third_party.auth0]
+enabled = false
+
+[auth.third_party.aws_cognito]
+enabled = false
+
+[auth.third_party.clerk]
+enabled = false
+
+[auth.oauth_server]
+enabled = false
+authorization_url_path = "/oauth/consent"
+allow_dynamic_registration = false

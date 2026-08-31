@@ -25,6 +25,10 @@ vi.mock("next-intl/server", () => ({
   getLocale: async () => "es",
 }));
 
+vi.mock("@/lib/security/request-origin", () => ({
+  getRequestOrigin: async () => "http://localhost:3000",
+}));
+
 const { signIn, signUp, requestPasswordReset, updatePassword } = await import("./auth");
 
 function buildFormData(fields: Record<string, string>) {

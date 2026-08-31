@@ -19,6 +19,47 @@ npm run dev
 
 Abrir [http://localhost:3000](http://localhost:3000).
 
+## Probar desde el celular (misma Wi-Fi)
+
+`next dev` ya escucha en todas las interfaces de red por defecto en esta
+versión de Next.js (lo confirma su propio banner al arrancar, línea
+`Network:`) — no hace falta ningún flag ni tocar `npm run dev` para eso.
+
+Para abrir el sitio desde un iPhone/Android conectado a la misma red Wi-Fi
+que la Mac, **usar el hostname mDNS de la Mac, no su IP**:
+
+```
+http://<nombre-de-tu-mac>.local:3000
+```
+
+El nombre exacto es el que muestra `scutil --get LocalHostName`, o
+Configuración del Sistema → General → Uso compartido, campo "Nombre local".
+
+**Por qué el hostname `.local` y no la IP (ej. `192.168.1.23:3000`)**:
+la IP cambia según la red/router, así que nunca se puede hardcodear (regla
+del proyecto). Pero además — esto se verificó en vivo contra el proyecto
+real con `admin.generateLink()` — Supabase Auth **rechaza silenciosamente
+cualquier IP-literal como host de redirect** (salvo `127.0.0.1`, que tiene
+una excepción especial) y cae de vuelta al `site_url` por defecto, aunque
+esa IP esté en `additional_redirect_urls`. Un hostname `.local` no es un
+literal de IP, no cambia con la red, y sí es aceptado — por eso todo el
+código (`src/lib/security/request-origin.ts`) y la config de Supabase
+(`supabase/config.toml`) usan ese mecanismo en vez de una IP.
+
+Dos cosas más hacían falta para que esto funcionara de punta a punta,
+ambas ya resueltas en el código:
+
+- **`next.config.ts`**: `allowedDevOrigins: ["*.local"]` — en modo
+  desarrollo, Next.js bloquea con 403 cualquier Server Action (login,
+  registro, etc.) que llegue desde un origen que no sea `localhost` a
+  menos que esté explícitamente permitido acá. No tiene efecto en
+  producción.
+- **`src/lib/security/request-origin.ts`**: los links de confirmación de
+  cuenta / recuperación de contraseña se construyen a partir del header
+  `Host` de la request real (nunca de una constante fija), así que
+  apuntan de vuelta a lo que sea que el visitante esté usando —
+  `localhost`, el hostname `.local`, o el dominio de producción.
+
 ## Scripts
 
 | Script              | Qué hace                                        |
@@ -104,6 +145,17 @@ npx supabase link --project-ref <project-ref>   # una sola vez
 npx supabase db push
 ```
 
+La configuración de Auth (Site URL, Redirect URLs, y todo lo demás bajo
+`[auth]`) también vive como código en `supabase/config.toml` y se aplica
+con `npx supabase config push`. **Importante**: ese comando reemplaza la
+sección `[auth]` completa en el proyecto remoto — un campo que falte en
+el archivo vuelve al default del propio CLI, no se queda como estaba en
+el dashboard (esto pasó de verdad: un primer push con un archivo
+incompleto desactivó sin querer la confirmación de email y el MFA que ya
+estaban activos). Por eso el archivo declara explícitamente cada campo de
+`[auth]`, no solo el que se está cambiando — si se edita, mantener esa
+misma disciplina.
+
 Hay tres formas de hablarle a Supabase desde el servidor, cada una con un
 propósito distinto — usar la que no corresponde es el tipo de error que
 rompe el aislamiento entre usuarios:
@@ -132,6 +184,28 @@ adivinar qué emails están registrados. El registro pide nombre/apellido
 además de email/contraseña y nunca deja repetir un email (lo rechaza
 Supabase Auth). Requiere confirmar el email antes de poder iniciar sesión
 (configuración por defecto del proyecto).
+
+**A dónde apuntan los links de email (confirmación de cuenta, recuperar
+contraseña)**: nunca a una URL fija. `signUp()` y `requestPasswordReset()`
+(`src/lib/actions/auth.ts`) construyen `emailRedirectTo`/`redirectTo` a
+partir de `getRequestOrigin()` (`src/lib/security/request-origin.ts`),
+que lee el header `Host` real de la request — así el link vuelve a
+`localhost`, al hostname `.local` de la Mac, o al dominio de producción,
+según desde dónde se haya pedido, nunca a un valor hardcodeado. `/auth/callback`
+hace lo mismo para su propio redirect (no confiar en el `origin` que da
+`new URL(request.url)` en una Route Handler — Next.js lo normaliza a la
+dirección interna del server en vez de conservar el `Host` real que mandó
+el cliente; esto se detectó en vivo y es la causa exacta de por qué los
+links de confirmación terminaban en `localhost` sin importar desde dónde
+se los abriera).
+
+Para que Supabase efectivamente acepte esas URLs (si no, las reemplaza
+en silencio por el `site_url` por defecto — ver `supabase/config.toml`,
+que declara `site_url` y `additional_redirect_urls` como código y se
+aplica con `npx supabase config push`), production/localhost/`*.local`
+tienen que estar en la lista de Redirect URLs — ver "Probar desde el
+celular" más arriba para el detalle completo de por qué se usa un
+hostname `.local` en vez de una IP ahí también.
 
 **Sesión**: cookies HttpOnly manejadas por `@supabase/ssr` — nunca
 localStorage, nunca un token armado a mano. `middleware.ts` refresca la
