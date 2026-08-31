@@ -43,12 +43,18 @@ src/
   app/
     [locale]/     # layout.tsx (html/body real) + page.tsx — todo lo visible
                    # vive acá, parametrizado por idioma
-    [locale]/libros/carrito, [locale]/libros/checkout
-                   # carrito y checkout de la tienda de libros
-    [locale]/biblioteca, [locale]/pedidos
-                   # biblioteca digital y pedidos del usuario autenticado
-    [locale]/login, [locale]/signup
-                   # autenticación (Supabase Auth)
+    [locale]/(protected)/     # route group (no aparece en la URL) — su layout
+                   # exige sesión activa. Adentro: account, biblioteca,
+                   # pedidos, libros/checkout
+    [locale]/admin/           # su layout exige sesión + rol admin.
+                   # admin, admin/users, admin/orders, admin/orders/[id]
+    [locale]/login, [locale]/signup, [locale]/forgot-password,
+    [locale]/reset-password, [locale]/403
+                   # autenticación (Supabase Auth) y control de acceso
+    auth/callback/route.ts
+                   # intercambia el código de un link de email (confirmación
+                   # de cuenta o recuperación de contraseña) por una sesión
+                   # real — fuera de [locale] a propósito, ver middleware.ts
     api/books/[productId]/download
                    # única puerta de acceso a un archivo digital comprado
     robots.ts, sitemap.ts, manifest.ts, icon*, opengraph-image.jpg
@@ -57,21 +63,25 @@ src/
     sections/     # Navbar, Hero, Gallery, Schedule, Pastors, Books, Footer
     ui/            # Primitivas reutilizables (Container, Button, SectionHeading,
                    # LanguageSwitcher, Reveal, CinematicGallery, MeetingSchedule,
-                   # BookCard, AddToCartButton, CartView, CheckoutView, AuthForm)
+                   # BookCard, AddToCartButton, CartView, CheckoutView, AuthForm,
+                   # ForgotPasswordForm, ResetPasswordForm, AdminPagination)
   i18n/
     routing.ts     # locales soportados, default, prefijo de URL
     request.ts     # carga de mensajes + fallback a español
     navigation.ts  # helpers de next-intl (redirect localizado tras login/signup)
   lib/
     site-config.ts # Datos estructurales/nombres propios (NO textos traducibles)
-    supabase/      # Clientes de Supabase — ver "Tienda de libros" abajo
+    supabase/      # Clientes de Supabase + guards — ver "Autenticación" abajo
+    security/      # safeRedirectPath() — evita open-redirects en `next`
     actions/       # Server Actions (auth, checkout)
     cart/          # Carrito de compra (React Context + localStorage)
     books/         # Queries de catálogo + resolución de acceso digital
+    admin/         # Queries del panel de administración (via cliente de sesión + RLS)
 messages/
   es.json, en.json, pt.json   # Todo el texto traducible de la UI
 e2e/
   i18n.spec.ts     # Tests E2E multidioma (Playwright)
+  auth.spec.ts     # Tests E2E de rutas protegidas, login/signup/recuperación
 public/
   logo.png         # Logo oficial (no modificar proporciones ni colores)
 supabase/
@@ -107,6 +117,88 @@ rompe el aislamiento entre usuarios:
 `SUPABASE_SERVICE_ROLE_KEY` debe ser el JWT legacy de `service_role`
 (Project Settings → API), no la key nueva formato `sb_secret_...` — en este
 proyecto esa key nueva no tiene privilegio de bypass de RLS.
+
+## Autenticación, roles y panel de administración
+
+"Iniciar sesión" es un sistema real (Supabase Auth), no solo visual. Hay
+tres niveles de acceso: público, usuario autenticado, y administrador.
+
+**Login/registro** (`/login`, `/signup`): email + contraseña, con
+mostrar/ocultar contraseña, y un flujo de recuperación completo
+(`/forgot-password` → email → `/auth/callback` intercambia el código del
+link por una sesión real → `/reset-password`). `/forgot-password` siempre
+muestra el mismo mensaje de éxito exista o no esa cuenta — nunca permite
+adivinar qué emails están registrados. El registro pide nombre/apellido
+además de email/contraseña y nunca deja repetir un email (lo rechaza
+Supabase Auth). Requiere confirmar el email antes de poder iniciar sesión
+(configuración por defecto del proyecto).
+
+**Sesión**: cookies HttpOnly manejadas por `@supabase/ssr` — nunca
+localStorage, nunca un token armado a mano. `middleware.ts` refresca la
+sesión en cada request.
+
+**Rutas protegidas**: `src/app/[locale]/(protected)/` agrupa `/account`,
+`/biblioteca`, `/pedidos` y `/libros/checkout` bajo un único layout que
+llama a `requireUser()` — sin sesión activa, redirige a `/login?next=...`.
+`middleware.ts` hace la misma redirección más rápido (solo mirando la
+cookie), pero es una mejora de UX, no el control real: aunque se la
+saltee, el layout server-side igual bloquea. `/account` ("Mi Cuenta")
+muestra nombre, apellido, email, y enlaces a Mis Pedidos / Mi Biblioteca —
+nunca datos administrativos.
+
+**Roles**: tabla `profiles` (1:1 con `auth.users`, creada automáticamente
+por un trigger en el signup) con `role` (`user` | `admin`) y `status`
+(`active` | `inactive`). Un usuario **no puede** cambiarse el rol a sí
+mismo: además de que la Server Action de perfil nunca expone ese campo, un
+trigger en Postgres (`protect_profile_privileges_trigger`) revierte
+cualquier intento de `UPDATE profiles SET role = ...` que llegue de un
+usuario autenticado normal por la API — verificado en vivo con una cuenta
+de prueba real intentando exactamente ese `UPDATE` (ver "Tests" abajo).
+
+**Cómo se crea un administrador** (rule 14 — nunca vía `/signup`): no hay
+ningún mecanismo en la interfaz para auto-asignarse `admin`. Se hace a
+mano, una vez, desde el SQL Editor de Supabase (contexto ya privilegiado,
+el único que el trigger deja pasar):
+
+```sql
+update public.profiles set role = 'admin' where email = 'el-email-real@ejemplo.com';
+```
+
+**Panel admin** (`/admin`, layout con `requireAdmin()` — sesión + rol
+`admin`, si no redirige a `/403`): dashboard con usuarios registrados,
+compras confirmadas, pedidos pendientes y libros vendidos — todo calculado
+en vivo desde la base de datos, nunca hardcodeado. `/admin/users` lista
+usuarios (nombre, email, fecha de registro, estado), paginado de a 20.
+`/admin/orders` lista pedidos (email del comprador, cantidad de ítems,
+total, fecha, estado), también paginado; `/admin/orders/[id]` muestra el
+detalle completo — productos, precios, y la dirección de envío cuando el
+pedido la tiene. Nunca muestra contraseñas, tokens ni datos de pago.
+`/admin/*` lleva `noindex` (metadata + `robots.txt`) para no quedar
+indexado por buscadores.
+
+Las queries de `/admin/*` corren con el cliente de sesión (no el admin/
+service-role) — el acceso lo dan políticas RLS nuevas ("Admins can view
+all ...") condicionadas a `is_admin(auth.uid())`, así que incluso un bug
+en `requireAdmin()` no alcanzaría para leer datos ajenos: Postgres
+revalida el rol en cada query, no solo la página.
+
+**Base de datos**: migración `20260831000000_add_profiles_and_roles.sql`
+agrega `profiles`, la función `is_admin()` (`SECURITY DEFINER`, patrón
+recomendado por Supabase para chequeos de rol sin recursión de RLS), el
+trigger anti-escalada, el trigger que crea el perfil al registrarse, y las
+policies de lectura para admins sobre `orders`/`order_items`/
+`shipping_addresses`.
+
+**Tests de seguridad ejecutados en vivo** (cuentas reales creadas y
+borradas en el mismo proceso, contra el proyecto de Supabase real):
+1. Usuario normal intenta `UPDATE profiles SET role='admin'` en su propia
+   fila vía REST, con su propio JWT → el trigger lo revierte, el rol en la
+   base sigue siendo `user`. **PASS**.
+2. Usuario normal autenticado navega a `/admin` y a `/admin/users` en un
+   browser real → termina en `/403` en ambos casos. **PASS**.
+3. Cuenta promovida a `admin` (vía el `UPDATE` de bootstrap de arriba)
+   navega a `/admin` → llega al dashboard, con conteos reales, y ve a
+   ambos usuarios de prueba en `/admin/users`. **PASS**.
 
 ## Idiomas (i18n)
 
@@ -257,3 +349,11 @@ conocida (*last known good version*): para volver a un estado estable,
 - Tienda de libros: costos y zonas de envío reales, y un transportista.
 - Tienda de libros (opcional, no bloqueante): proveedor de email
   transaccional para confirmaciones de compra.
+- Autenticación: crear el primer administrador real — correr el `UPDATE`
+  de bootstrap de la sección de arriba con el email verdadero de quien
+  vaya a administrar el sitio (no se inventó ni asignó ningún admin).
+- Autenticación: confirmar en el dashboard de Supabase (Auth → URL
+  Configuration) que `https://redes-de-reino.vercel.app/auth/callback`
+  esté en la lista de Redirect URLs — si no está, los links de
+  confirmación de cuenta y recuperación de contraseña no van a funcionar
+  en producción.

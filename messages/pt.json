@@ -76,8 +76,6 @@
     },
     "checkout": {
       "title": "Finalizar compra",
-      "loginRequired": "Você precisa entrar na sua conta para comprar.",
-      "loginCta": "Entrar",
       "buyerInfo": "Seus dados",
       "firstName": "Nome",
       "lastName": "Sobrenome",
@@ -113,8 +111,7 @@
       "title": "Minha Biblioteca",
       "empty": "Você ainda não tem livros digitais.",
       "purchased": "Comprado",
-      "access": "Acessar o livro",
-      "loginRequired": "Entre na sua conta para ver sua biblioteca."
+      "access": "Acessar o livro"
     },
     "orders": {
       "title": "Meus Pedidos",
@@ -137,8 +134,13 @@
     "loginTitle": "Entrar",
     "signupTitle": "Criar conta",
     "checkEmail": "Quase lá! Enviamos um email para confirmar sua conta — abra e clique no link antes de entrar.",
+    "firstName": "Nome",
+    "lastName": "Sobrenome",
     "email": "Email",
     "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
     "loginCta": "Entrar",
     "signupCta": "Criar conta",
     "noAccount": "Não tem uma conta?",
@@ -146,10 +148,97 @@
     "signupLink": "Criar uma",
     "loginLink": "Entrar",
     "logout": "Sair",
+    "forgotPasswordLink": "Esqueceu sua senha?",
+    "forgotPasswordTitle": "Recuperar senha",
+    "forgotPasswordCta": "Enviar instruções",
+    "forgotPasswordSuccess": "Se esse email tiver uma conta, enviamos instruções para recuperar sua senha.",
+    "resetPasswordTitle": "Escolher nova senha",
+    "newPassword": "Nova senha",
+    "confirmNewPassword": "Confirmar nova senha",
+    "resetPasswordCta": "Salvar nova senha",
+    "resetPasswordSuccess": "Sua senha foi atualizada com sucesso.",
+    "resetPasswordExpired": "Este link não é mais válido ou expirou. Peça um novo.",
     "errors": {
       "invalidCredentials": "Email ou senha incorretos.",
       "emailInUse": "Esse email já tem uma conta.",
+      "passwordMismatch": "As senhas não coincidem.",
+      "required": "Preencha todos os campos.",
       "generic": "Algo deu errado. Tente novamente."
+    }
+  },
+  "account": {
+    "title": "Minha Conta",
+    "firstName": "Nome",
+    "lastName": "Sobrenome",
+    "email": "Email",
+    "notSet": "—",
+    "ordersLink": "Meus Pedidos",
+    "libraryLink": "Minha Biblioteca"
+  },
+  "admin": {
+    "title": "Administração",
+    "navLabel": "Navegação de administração",
+    "nav": {
+      "dashboard": "Painel",
+      "users": "Usuários",
+      "orders": "Pedidos"
+    },
+    "dashboard": {
+      "registeredUsers": "Usuários registrados",
+      "purchases": "Compras",
+      "pendingOrders": "Pedidos pendentes",
+      "booksSold": "Livros vendidos"
+    },
+    "users": {
+      "empty": "Ainda não há usuários registrados.",
+      "adminBadge": "Admin",
+      "columns": {
+        "user": "Usuário",
+        "email": "Email",
+        "registered": "Registro",
+        "status": "Estado"
+      },
+      "status": {
+        "active": "Ativo",
+        "inactive": "Inativo"
+      }
+    },
+    "orders": {
+      "empty": "Ainda não há pedidos.",
+      "columns": {
+        "orderNumber": "Pedido",
+        "email": "Email",
+        "items": "Itens",
+        "total": "Total",
+        "date": "Data",
+        "status": "Estado"
+      },
+      "status": {
+        "pending": "Pendente",
+        "payment_processing": "Processando pagamento",
+        "paid": "Pago",
+        "processing": "Preparando",
+        "shipped": "Enviado",
+        "delivered": "Entregue",
+        "cancelled": "Cancelado",
+        "refunded": "Reembolsado",
+        "failed": "Falhou"
+      }
+    },
+    "orderDetail": {
+      "backToList": "Voltar aos pedidos",
+      "product": "Produto",
+      "modality": "Formato",
+      "quantity": "Quantidade",
+      "unitPrice": "Preço unitário",
+      "orderTotal": "Total do pedido",
+      "shippingInfo": "Dados de envio"
+    },
+    "pagination": {
+      "label": "Paginação",
+      "previous": "Anterior",
+      "next": "Próxima",
+      "pageOf": "Página {page} de {totalPages}"
     }
   },
   "gallery": {
@@ -159,6 +248,13 @@
   },
   "footer": {
     "rights": "Todos os direitos reservados."
+  },
+  "errors": {
+    "forbidden": {
+      "title": "Acesso negado",
+      "body": "Você não tem permissão para ver esta página.",
+      "cta": "Voltar ao início"
+    }
   },
   "common": {
     "pending": "[CONTEÚDO PENDENTE]",

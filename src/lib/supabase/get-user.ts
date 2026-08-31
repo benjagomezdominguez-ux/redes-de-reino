@@ -1,10 +1,10 @@
 import "server-only";
-import { getSupabaseSessionClient } from "@/lib/supabase/session";
+import { getAuthProfile } from "./get-profile";
 
+// Thin wrapper kept for callers (the Navbar) that only need identity +
+// role, not the full profile shape.
 export async function getAuthUser() {
-  const supabase = await getSupabaseSessionClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user ? { id: user.id, email: user.email ?? null } : null;
+  const profile = await getAuthProfile();
+  if (!profile) return null;
+  return { id: profile.id, email: profile.email, role: profile.role };
 }

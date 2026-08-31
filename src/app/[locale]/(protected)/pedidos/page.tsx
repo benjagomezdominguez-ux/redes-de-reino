@@ -2,7 +2,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
-import { Link } from "@/i18n/navigation";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
 
 function formatPrice(cents: number, currency: string) {
@@ -21,9 +20,6 @@ export default async function OrdersPage({
   const t = await getTranslations("books.orders");
 
   const supabase = await getSupabaseSessionClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   type OrderRow = {
     id: string;
@@ -32,15 +28,11 @@ export default async function OrdersPage({
     total_cents: number;
     currency: string;
   };
-  let orders: OrderRow[] = [];
-
-  if (user) {
-    const { data } = await supabase
-      .from("orders")
-      .select("id, created_at, status, total_cents, currency")
-      .order("created_at", { ascending: false });
-    orders = data ?? [];
-  }
+  const { data } = await supabase
+    .from("orders")
+    .select("id, created_at, status, total_cents, currency")
+    .order("created_at", { ascending: false });
+  const orders: OrderRow[] = data ?? [];
 
   return (
     <>
@@ -51,16 +43,7 @@ export default async function OrdersPage({
             {t("title")}
           </h1>
 
-          {!user ? (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border p-12 text-center">
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-full bg-primary-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-800"
-              >
-                {t("title")}
-              </Link>
-            </div>
-          ) : orders.length === 0 ? (
+          {orders.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-10 text-center text-muted">
               {t("empty")}
             </p>

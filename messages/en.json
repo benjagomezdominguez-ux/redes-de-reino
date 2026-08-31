@@ -76,8 +76,6 @@
     },
     "checkout": {
       "title": "Checkout",
-      "loginRequired": "You need to sign in to buy.",
-      "loginCta": "Sign in",
       "buyerInfo": "Your details",
       "firstName": "First name",
       "lastName": "Last name",
@@ -113,8 +111,7 @@
       "title": "My Library",
       "empty": "You don't have any digital books yet.",
       "purchased": "Purchased",
-      "access": "Open book",
-      "loginRequired": "Sign in to see your library."
+      "access": "Open book"
     },
     "orders": {
       "title": "My Orders",
@@ -137,8 +134,13 @@
     "loginTitle": "Sign in",
     "signupTitle": "Create account",
     "checkEmail": "Almost there! We sent you an email to confirm your account — open it and click the link before signing in.",
+    "firstName": "First name",
+    "lastName": "Last name",
     "email": "Email",
     "password": "Password",
+    "confirmPassword": "Confirm password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "loginCta": "Sign in",
     "signupCta": "Create account",
     "noAccount": "Don't have an account?",
@@ -146,10 +148,97 @@
     "signupLink": "Create one",
     "loginLink": "Sign in",
     "logout": "Sign out",
+    "forgotPasswordLink": "Forgot your password?",
+    "forgotPasswordTitle": "Reset password",
+    "forgotPasswordCta": "Send instructions",
+    "forgotPasswordSuccess": "If that email has an account, we sent instructions to reset your password.",
+    "resetPasswordTitle": "Choose a new password",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "resetPasswordCta": "Save new password",
+    "resetPasswordSuccess": "Your password was updated successfully.",
+    "resetPasswordExpired": "This link is no longer valid or has expired. Request a new one.",
     "errors": {
       "invalidCredentials": "Incorrect email or password.",
       "emailInUse": "That email already has an account.",
+      "passwordMismatch": "Passwords don't match.",
+      "required": "Please fill in every field.",
       "generic": "Something went wrong. Please try again."
+    }
+  },
+  "account": {
+    "title": "My Account",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "notSet": "—",
+    "ordersLink": "My Orders",
+    "libraryLink": "My Library"
+  },
+  "admin": {
+    "title": "Administration",
+    "navLabel": "Admin navigation",
+    "nav": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "orders": "Orders"
+    },
+    "dashboard": {
+      "registeredUsers": "Registered users",
+      "purchases": "Purchases",
+      "pendingOrders": "Pending orders",
+      "booksSold": "Books sold"
+    },
+    "users": {
+      "empty": "No registered users yet.",
+      "adminBadge": "Admin",
+      "columns": {
+        "user": "User",
+        "email": "Email",
+        "registered": "Registered",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      }
+    },
+    "orders": {
+      "empty": "No orders yet.",
+      "columns": {
+        "orderNumber": "Order",
+        "email": "Email",
+        "items": "Items",
+        "total": "Total",
+        "date": "Date",
+        "status": "Status"
+      },
+      "status": {
+        "pending": "Pending",
+        "payment_processing": "Processing payment",
+        "paid": "Paid",
+        "processing": "Preparing",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled",
+        "refunded": "Refunded",
+        "failed": "Failed"
+      }
+    },
+    "orderDetail": {
+      "backToList": "Back to orders",
+      "product": "Product",
+      "modality": "Format",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "orderTotal": "Order total",
+      "shippingInfo": "Shipping details"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {totalPages}"
     }
   },
   "gallery": {
@@ -159,6 +248,13 @@
   },
   "footer": {
     "rights": "All rights reserved."
+  },
+  "errors": {
+    "forbidden": {
+      "title": "Access denied",
+      "body": "You don't have permission to view this page.",
+      "cta": "Back to home"
+    }
   },
   "common": {
     "pending": "[CONTENT PENDING]",

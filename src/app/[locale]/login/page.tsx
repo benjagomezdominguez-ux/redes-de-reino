@@ -4,8 +4,12 @@ import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
 import { AuthForm } from "@/components/ui/AuthForm";
 
-export default async function LoginPage({ params }: PageProps<"/[locale]/login">) {
+export default async function LoginPage({
+  params,
+  searchParams,
+}: PageProps<"/[locale]/login">) {
   const { locale } = await params;
+  const { next } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("auth");
 
@@ -18,7 +22,7 @@ export default async function LoginPage({ params }: PageProps<"/[locale]/login">
             <h1 className="mb-6 text-center font-display text-2xl font-medium text-primary-900">
               {t("loginTitle")}
             </h1>
-            <AuthForm mode="login" />
+            <AuthForm mode="login" next={typeof next === "string" ? next : undefined} />
           </div>
         </Container>
       </main>

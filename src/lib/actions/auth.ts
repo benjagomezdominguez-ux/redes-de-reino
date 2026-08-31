@@ -4,15 +4,28 @@ import { z } from "zod";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
 import { redirect } from "@/i18n/navigation";
 import { getLocale } from "next-intl/server";
+import { safeRedirectPath } from "@/lib/security/safe-redirect";
+import { siteUrl } from "@/lib/site-config";
 
 const credentialsSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(6),
 });
 
+const signupSchema = credentialsSchema.extend({
+  firstName: z.string().trim().min(1),
+  lastName: z.string().trim().min(1),
+  confirmPassword: z.string().min(6),
+});
+
 export type AuthFormState = {
   status: "idle" | "error" | "checkEmail";
-  errorKey?: "invalidCredentials" | "emailInUse" | "generic";
+  errorKey?:
+    | "invalidCredentials"
+    | "emailInUse"
+    | "passwordMismatch"
+    | "required"
+    | "generic";
 };
 
 export async function signIn(
@@ -36,25 +49,40 @@ export async function signIn(
   }
 
   const locale = await getLocale();
-  // "Libros" is a section of the home page (#libros), not its own route.
-  return redirect({ href: "/", locale });
+  const next = safeRedirectPath(formData.get("next")?.toString());
+  return redirect({ href: next ?? "/", locale });
 }
 
 export async function signUp(
   _prevState: AuthFormState,
   formData: FormData
 ): Promise<AuthFormState> {
-  const parsed = credentialsSchema.safeParse({
+  const parsed = signupSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    confirmPassword: formData.get("confirmPassword"),
   });
 
   if (!parsed.success) {
-    return { status: "error", errorKey: "generic" };
+    return { status: "error", errorKey: "required" };
   }
 
+  if (parsed.data.password !== parsed.data.confirmPassword) {
+    return { status: "error", errorKey: "passwordMismatch" };
+  }
+
+  const locale = await getLocale();
   const supabase = await getSupabaseSessionClient();
-  const { error, data } = await supabase.auth.signUp(parsed.data);
+  const { error, data } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: {
+      data: { first_name: parsed.data.firstName, last_name: parsed.data.lastName },
+      emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(`/${locale}`)}`,
+    },
+  });
 
   if (error) {
     const errorKey = error.message.toLowerCase().includes("already")
@@ -70,8 +98,8 @@ export async function signUp(
     return { status: "checkEmail" };
   }
 
-  const locale = await getLocale();
-  return redirect({ href: "/", locale });
+  const next = safeRedirectPath(formData.get("next")?.toString());
+  return redirect({ href: next ?? "/", locale });
 }
 
 export async function signOut() {
@@ -79,4 +107,74 @@ export async function signOut() {
   await supabase.auth.signOut();
   const locale = await getLocale();
   redirect({ href: "/", locale });
+}
+
+const emailSchema = z.object({ email: z.string().trim().email() });
+
+export type ForgotPasswordState = {
+  status: "idle" | "success" | "error";
+  errorKey?: "generic";
+};
+
+// Always returns the same "success" state regardless of whether the email
+// exists or the Supabase call errored — rule 6: never let this endpoint
+// be used to enumerate registered emails. A malformed email is the only
+// thing that produces a different (validation) response.
+export async function requestPasswordReset(
+  _prevState: ForgotPasswordState,
+  formData: FormData
+): Promise<ForgotPasswordState> {
+  const parsed = emailSchema.safeParse({ email: formData.get("email") });
+  if (!parsed.success) {
+    return { status: "error", errorKey: "generic" };
+  }
+
+  const locale = await getLocale();
+  const supabase = await getSupabaseSessionClient();
+  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(`/${locale}/reset-password`)}`,
+  });
+
+  return { status: "success" };
+}
+
+const newPasswordSchema = z
+  .object({
+    password: z.string().min(6),
+    confirmPassword: z.string().min(6),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+  });
+
+export type ResetPasswordState = {
+  status: "idle" | "success" | "error";
+  errorKey?: "passwordMismatch" | "generic";
+};
+
+// Only works if the caller already holds the short-lived recovery session
+// that /auth/callback establishes after the emailed link's code exchange
+// — there is no other way to reach this successfully.
+export async function updatePassword(
+  _prevState: ResetPasswordState,
+  formData: FormData
+): Promise<ResetPasswordState> {
+  const parsed = newPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    const mismatch = parsed.error.issues.some((i) => i.path[0] === "confirmPassword");
+    return { status: "error", errorKey: mismatch ? "passwordMismatch" : "generic" };
+  }
+
+  const supabase = await getSupabaseSessionClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+
+  if (error) {
+    return { status: "error", errorKey: "generic" };
+  }
+
+  return { status: "success" };
 }

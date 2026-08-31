@@ -2,14 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
-import { AuthForm } from "@/components/ui/AuthForm";
+import { ForgotPasswordForm } from "@/components/ui/ForgotPasswordForm";
 
-export default async function SignupPage({
+export default async function ForgotPasswordPage({
   params,
-  searchParams,
-}: PageProps<"/[locale]/signup">) {
+}: PageProps<"/[locale]/forgot-password">) {
   const { locale } = await params;
-  const { next } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("auth");
 
@@ -20,9 +18,9 @@ export default async function SignupPage({
         <Container className="mx-auto max-w-md">
           <div className="rounded-2xl border border-border bg-surface p-8 shadow-soft">
             <h1 className="mb-6 text-center font-display text-2xl font-medium text-primary-900">
-              {t("signupTitle")}
+              {t("forgotPasswordTitle")}
             </h1>
-            <AuthForm mode="signup" next={typeof next === "string" ? next : undefined} />
+            <ForgotPasswordForm />
           </div>
         </Container>
       </main>

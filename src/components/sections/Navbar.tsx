@@ -9,7 +9,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
 import { signOut } from "@/lib/actions/auth";
 
-type NavbarUser = { email: string | null } | null;
+type NavbarUser = { email: string | null; role: "user" | "admin" } | null;
 
 function CartIcon({ count }: { count: number }) {
   return (
@@ -98,6 +98,11 @@ function AccountMenuDesktop({ user }: { user: NavbarUser }) {
           className="absolute right-0 z-50 mt-2 min-w-[11rem] overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-lifted"
         >
           <AccountLinkText
+            href="/account"
+            labelKey="account.title"
+            className="block px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
+          />
+          <AccountLinkText
             href="/biblioteca"
             labelKey="books.library.title"
             className="block px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
@@ -107,6 +112,13 @@ function AccountMenuDesktop({ user }: { user: NavbarUser }) {
             labelKey="books.orders.title"
             className="block px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
           />
+          {user.role === "admin" ? (
+            <AccountLinkText
+              href="/admin"
+              labelKey="admin.title"
+              className="block px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
+            />
+          ) : null}
           <form action={signOut}>
             <button
               type="submit"
@@ -135,8 +147,12 @@ function AccountMenuMobile({ user }: { user: NavbarUser }) {
 
   return (
     <div className="flex flex-col gap-1">
+      <AccountLinkText href="/account" labelKey="account.title" className={linkClass} />
       <AccountLinkText href="/biblioteca" labelKey="books.library.title" className={linkClass} />
       <AccountLinkText href="/pedidos" labelKey="books.orders.title" className={linkClass} />
+      {user.role === "admin" ? (
+        <AccountLinkText href="/admin" labelKey="admin.title" className={linkClass} />
+      ) : null}
       <form action={signOut}>
         <button type="submit" className={linkClass}>
           {t("logout")}

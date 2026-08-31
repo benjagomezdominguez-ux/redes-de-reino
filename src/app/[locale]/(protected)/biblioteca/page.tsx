@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
-import { Link } from "@/i18n/navigation";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
 
 export default async function LibraryPage({
@@ -14,9 +13,6 @@ export default async function LibraryPage({
   const t = await getTranslations("books.library");
 
   const supabase = await getSupabaseSessionClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   type LibraryEntry = {
     product_id: string;
@@ -24,25 +20,23 @@ export default async function LibraryPage({
   };
   let entitlements: LibraryEntry[] = [];
 
-  if (user) {
-    const { data: granted } = await supabase
-      .from("digital_entitlements")
-      .select("product_id")
-      .eq("status", "granted");
+  const { data: granted } = await supabase
+    .from("digital_entitlements")
+    .select("product_id")
+    .eq("status", "granted");
 
-    const productIds = (granted ?? []).map((g) => g.product_id);
+  const productIds = (granted ?? []).map((g) => g.product_id);
 
-    if (productIds.length > 0) {
-      const { data: products } = await supabase
-        .from("products")
-        .select("id, title, author, cover_url")
-        .in("id", productIds);
+  if (productIds.length > 0) {
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, title, author, cover_url")
+      .in("id", productIds);
 
-      entitlements = productIds.map((productId) => ({
-        product_id: productId,
-        products: products?.find((p) => p.id === productId) ?? null,
-      }));
-    }
+    entitlements = productIds.map((productId) => ({
+      product_id: productId,
+      products: products?.find((p) => p.id === productId) ?? null,
+    }));
   }
 
   return (
@@ -54,17 +48,7 @@ export default async function LibraryPage({
             {t("title")}
           </h1>
 
-          {!user ? (
-            <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border p-12 text-center">
-              <p className="text-muted">{t("loginRequired")}</p>
-              <Link
-                href="/login"
-                className="inline-flex items-center justify-center rounded-full bg-primary-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-800"
-              >
-                {t("access")}
-              </Link>
-            </div>
-          ) : entitlements.length === 0 ? (
+          {entitlements.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-10 text-center text-muted">
               {t("empty")}
             </p>
