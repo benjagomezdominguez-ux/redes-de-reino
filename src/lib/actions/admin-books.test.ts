@@ -4,6 +4,9 @@ const requireAdminMock = vi.fn();
 const insertMock = vi.fn();
 const updateMock = vi.fn();
 const auditInsertMock = vi.fn();
+const productFilesInsertMock = vi.fn();
+const productFilesDeleteMock = vi.fn();
+const createSignedUploadUrlMock = vi.fn();
 
 function buildAdminClient() {
   return {
@@ -30,11 +33,28 @@ function buildAdminClient() {
         return { insert: async (row: unknown) => auditInsertMock(row) };
       }
       if (table === "product_files") {
-        return { insert: async () => ({ error: null }), delete: () => ({ eq: async () => ({ error: null }) }) };
+        return {
+          insert: async (row: unknown) => {
+            productFilesInsertMock(row);
+            return { error: null };
+          },
+          delete: () => ({
+            eq: async () => {
+              productFilesDeleteMock();
+              return { error: null };
+            },
+          }),
+        };
       }
       throw new Error(`unexpected table ${table}`);
     },
-    storage: { from: () => ({ upload: async () => ({ error: null }), getPublicUrl: () => ({ data: { publicUrl: "" } }) }) },
+    storage: {
+      from: () => ({
+        upload: async () => ({ error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: "https://example.supabase.co/storage/v1/object/public/book-covers/product-1/cover.png" } }),
+        createSignedUploadUrl: createSignedUploadUrlMock,
+      }),
+    },
   };
 }
 
@@ -46,7 +66,8 @@ vi.mock("@/lib/supabase/admin", () => ({
   getSupabaseAdminClient: () => buildAdminClient(),
 }));
 
-const { createBook, updateBook, setBookStatus } = await import("./admin-books");
+const { createBook, updateBook, setBookStatus, requestBookUploadUrl, attachBookCover, attachBookFile } =
+  await import("./admin-books");
 
 function buildFormData(fields: Record<string, string>) {
   const formData = new FormData();
@@ -60,6 +81,9 @@ describe("createBook / updateBook / setBookStatus", () => {
     insertMock.mockReset();
     updateMock.mockReset();
     auditInsertMock.mockReset();
+    productFilesInsertMock.mockReset();
+    productFilesDeleteMock.mockReset();
+    createSignedUploadUrlMock.mockReset();
     requireAdminMock.mockResolvedValue({ id: "admin-1", role: "admin" });
   });
 
@@ -140,6 +164,75 @@ describe("createBook / updateBook / setBookStatus", () => {
     expect(requireAdminMock).toHaveBeenCalled();
     expect(auditInsertMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: "book_published", resource_id: "product-1" })
+    );
+  });
+});
+
+describe("requestBookUploadUrl / attachBookCover / attachBookFile", () => {
+  beforeEach(() => {
+    requireAdminMock.mockReset();
+    updateMock.mockReset();
+    auditInsertMock.mockReset();
+    productFilesInsertMock.mockReset();
+    productFilesDeleteMock.mockReset();
+    createSignedUploadUrlMock.mockReset();
+    requireAdminMock.mockResolvedValue({ id: "admin-1", role: "admin" });
+  });
+
+  it("CRITICAL: requires admin before minting an upload URL — never trusts the caller", async () => {
+    requireAdminMock.mockRejectedValue(new Error("REDIRECT"));
+
+    await expect(requestBookUploadUrl("cover", "product-1", "png")).rejects.toThrow("REDIRECT");
+    expect(createSignedUploadUrlMock).not.toHaveBeenCalled();
+  });
+
+  it("mints a signed upload URL scoped to the product's folder in the right bucket", async () => {
+    createSignedUploadUrlMock.mockResolvedValue({
+      data: { path: "product-1/cover-abc.png", token: "tok" },
+      error: null,
+    });
+
+    const result = await requestBookUploadUrl("cover", "product-1", "png");
+
+    expect(result).toEqual({ ok: true, bucket: "book-covers", path: "product-1/cover-abc.png", token: "tok" });
+  });
+
+  it("uses the book-files bucket for a digital file upload", async () => {
+    createSignedUploadUrlMock.mockResolvedValue({
+      data: { path: "product-1/file-abc.pdf", token: "tok" },
+      error: null,
+    });
+
+    const result = await requestBookUploadUrl("file", "product-1", "pdf");
+
+    expect(result).toEqual({ ok: true, bucket: "book-files", path: "product-1/file-abc.pdf", token: "tok" });
+  });
+
+  it("returns ok:false if Storage fails to mint the URL", async () => {
+    createSignedUploadUrlMock.mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    const result = await requestBookUploadUrl("cover", "product-1", "png");
+
+    expect(result).toEqual({ ok: false });
+  });
+
+  it("attachBookCover requires admin and records the public URL", async () => {
+    const result = await attachBookCover("product-1", "product-1/cover-abc.png");
+
+    expect(result.ok).toBe(true);
+    expect(updateMock).toHaveBeenCalledWith({ cover_url: expect.stringContaining("cover.png") });
+    expect(auditInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "book_cover_updated", resource_id: "product-1" })
+    );
+  });
+
+  it("attachBookFile replaces any previous file row (never leaves two)", async () => {
+    const result = await attachBookFile("product-1", "product-1/file-abc.pdf", "application/pdf");
+
+    expect(result.ok).toBe(true);
+    expect(productFilesDeleteMock).toHaveBeenCalledTimes(1);
+    expect(productFilesInsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: "product-1", storage_path: "product-1/file-abc.pdf", file_type: "pdf" })
     );
   });
 });

@@ -338,6 +338,27 @@ Reemplazar el archivo o la portada de un libro ya publicado no rompe las
 compras existentes — la relación de la compra sigue siendo con el mismo
 `product_id`.
 
+**Subida de archivos — directo a Storage, nunca por el body de una Server
+Action**: subir un libro con portada + PDF fallaba en producción con
+`413 Body exceeded 1 MB limit` (Server Actions de Next.js limitan el body
+a 1MB por defecto; y aunque se subiera ese límite, Vercel impone un techo
+de plataforma de ~4.5MB por función que ningún `next.config.ts` puede
+levantar). La solución no fue subir el límite — es estructural: el
+formulario (`BookForm.tsx`, y también `TransferProofForm.tsx` para el
+comprobante de transferencia) primero crea/actualiza el registro vía
+Server Action (solo metadata, sin archivos), pide una signed upload URL
+al Storage de Supabase (`requestBookUploadUrl` / `requestTransferProofUploadUrl`
+en el servidor, siempre detrás de `requireAdmin()` o la validación de
+dueño del pago), y sube el archivo directo desde el navegador
+(`uploadToSignedUrl`, cliente `lib/supabase/browser.ts` con la anon key)
+— los bytes nunca pasan por Next.js ni por el límite de Vercel. El
+tamaño y tipo MIME ahora se validan en el bucket mismo
+(`storage.buckets.file_size_limit` / `allowed_mime_types`, migración
+`20260831140000_storage_upload_limits.sql`) ya que la app no vuelve a ver
+los bytes. Verificado en vivo con un PDF de 2MB real (el tamaño exacto
+que antes fallaba): subida completa, sin 4xx/5xx, bytes idénticos en
+Storage.
+
 **Carrito**: `lib/cart/CartContext.tsx`, React Context + `localStorage`,
 sin tabla en el servidor — el precio que se ve ahí es solo para mostrar,
 nunca se envía al servidor como fuente de verdad.

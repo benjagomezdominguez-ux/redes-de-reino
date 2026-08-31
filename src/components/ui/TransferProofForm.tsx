@@ -1,17 +1,59 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { submitTransferProof, type TransferProofState } from "@/lib/actions/payments";
-
-const initialState: TransferProofState = { status: "idle" };
+import {
+  submitTransferProof,
+  requestTransferProofUploadUrl,
+  type TransferProofState,
+} from "@/lib/actions/payments";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClasses =
   "w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-muted focus-visible:outline-2 focus-visible:outline-secondary-500";
 
 export function TransferProofForm({ orderId }: { orderId: string }) {
   const t = useTranslations("books.checkout.transfer");
-  const [state, formAction, pending] = useActionState(submitTransferProof, initialState);
+  const [pending, setPending] = useState(false);
+  const [state, setState] = useState<TransferProofState>({ status: "idle" });
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setState({ status: "idle" });
+
+    const formData = new FormData(event.currentTarget);
+    formData.set("order_id", orderId);
+    const file = formData.get("proof_file");
+    formData.delete("proof_file");
+
+    // The proof file (often a phone screenshot, easily a few MB) goes
+    // straight to Storage via a signed URL — never through this form's
+    // Server Action body, which is capped well below that in production.
+    if (file instanceof File && file.size > 0) {
+      const extension = file.name.split(".").pop() ?? "bin";
+      const urlResult = await requestTransferProofUploadUrl(orderId, extension);
+      if (!urlResult.ok) {
+        setState({ status: "error", errorKey: "generic" });
+        setPending(false);
+        return;
+      }
+      const supabase = getSupabaseBrowserClient();
+      const { error } = await supabase.storage
+        .from(urlResult.bucket)
+        .uploadToSignedUrl(urlResult.path, urlResult.token, file);
+      if (error) {
+        setState({ status: "error", errorKey: "generic" });
+        setPending(false);
+        return;
+      }
+      formData.set("proof_path", urlResult.path);
+    }
+
+    const result = await submitTransferProof(state, formData);
+    setState(result);
+    setPending(false);
+  }
 
   if (state.status === "success") {
     return (
@@ -22,8 +64,7 @@ export function TransferProofForm({ orderId }: { orderId: string }) {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
-      <input type="hidden" name="order_id" value={orderId} />
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-sm text-muted">{t("proofIntro")}</p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

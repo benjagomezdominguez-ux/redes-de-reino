@@ -1,10 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
-import { createBook, updateBook, type AdminBookState } from "@/lib/actions/admin-books";
-
-const initialState: AdminBookState = { status: "idle" };
+import { useRouter } from "@/i18n/navigation";
+import {
+  createBook,
+  updateBook,
+  requestBookUploadUrl,
+  attachBookCover,
+  attachBookFile,
+} from "@/lib/actions/admin-books";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 const inputClasses =
   "w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-muted focus-visible:outline-2 focus-visible:outline-secondary-500";
@@ -23,6 +29,31 @@ export type BookFormInitial = {
   cover_url: string | null;
 };
 
+type ErrorKey = "generic" | "required" | "invalidFile";
+
+// Cover/digital-file bytes never go through a Server Action anymore (see
+// the comment in admin-books.ts) — they're uploaded directly from here to
+// Storage via a short-lived signed URL, so a real book PDF isn't capped
+// at the ~1MB (Next.js default) / ~4.5MB (Vercel platform ceiling) that a
+// Server Action body would otherwise hit.
+async function uploadDirect(
+  kind: "cover" | "file",
+  productId: string,
+  file: File
+): Promise<{ path: string } | null> {
+  const extension = file.name.split(".").pop() ?? "bin";
+  const urlResult = await requestBookUploadUrl(kind, productId, extension);
+  if (!urlResult.ok) return null;
+
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase.storage
+    .from(urlResult.bucket)
+    .uploadToSignedUrl(urlResult.path, urlResult.token, file);
+
+  if (error) return null;
+  return { path: urlResult.path };
+}
+
 export function BookForm({
   mode,
   initial,
@@ -33,15 +64,69 @@ export function BookForm({
   hasDigitalFile?: boolean;
 }) {
   const t = useTranslations("admin.books.form");
-  const action = mode === "create" ? createBook : updateBook;
-  const [state, formAction, pending] = useActionState(action, initialState);
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [errorKey, setErrorKey] = useState<ErrorKey | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setErrorKey(null);
+    setSaved(false);
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const coverFile = formData.get("cover");
+    const digitalFile = formData.get("file");
+    formData.delete("cover");
+    formData.delete("file");
+
+    if (mode === "edit" && initial) {
+      formData.set("productId", initial.id);
+    }
+
+    const result = await (mode === "create" ? createBook : updateBook)({ status: "idle" }, formData);
+
+    if (result.status !== "success" || !result.productId) {
+      setErrorKey(result.errorKey ?? "generic");
+      setPending(false);
+      return;
+    }
+
+    const productId = result.productId;
+
+    if (coverFile instanceof File && coverFile.size > 0) {
+      const uploaded = await uploadDirect("cover", productId, coverFile);
+      if (!uploaded) {
+        setErrorKey("invalidFile");
+        setPending(false);
+        return;
+      }
+      await attachBookCover(productId, uploaded.path);
+    }
+
+    if (digitalFile instanceof File && digitalFile.size > 0) {
+      const uploaded = await uploadDirect("file", productId, digitalFile);
+      if (!uploaded) {
+        setErrorKey("invalidFile");
+        setPending(false);
+        return;
+      }
+      await attachBookFile(productId, uploaded.path, digitalFile.type);
+    }
+
+    setPending(false);
+    setSaved(true);
+    if (mode === "create") {
+      router.push(`/admin/books/${productId}/edit`);
+    } else {
+      router.refresh();
+    }
+  }
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
-      {mode === "edit" && initial ? (
-        <input type="hidden" name="productId" value={initial.id} />
-      ) : null}
-
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900 sm:col-span-2">
           {t("title")}
@@ -135,12 +220,12 @@ export function BookForm({
         </label>
       </div>
 
-      {state.status === "error" && state.errorKey ? (
+      {errorKey ? (
         <p role="alert" className="text-sm font-medium text-error">
-          {t(`errors.${state.errorKey}`)}
+          {t(`errors.${errorKey}`)}
         </p>
       ) : null}
-      {state.status === "success" ? (
+      {saved ? (
         <p role="status" className="text-sm font-medium text-success">
           {t("saved")}
         </p>

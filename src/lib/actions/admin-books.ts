@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { randomUUID } from "node:crypto";
 import { requireAdmin } from "@/lib/supabase/require-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
@@ -11,10 +12,14 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 // insert/update/delete RLS policy for any client role at all (only a
 // public "active products" SELECT policy), so this is the only way to
 // write it — exactly like every other admin write already in this app.
-
-const MAX_COVER_BYTES = 5 * 1024 * 1024;
-const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_FILE_BYTES = 100 * 1024 * 1024;
+//
+// Cover/file bytes are NOT accepted here anymore — see
+// requestBookUploadUrl() below. A real book PDF routinely exceeds both
+// Next's default 1MB Server Action body limit and Vercel's own ~4.5MB
+// hard ceiling on serverless function request bodies; no next.config
+// setting can raise the second one. The browser uploads the bytes
+// directly to Storage via a short-lived signed URL instead, and only the
+// resulting storage path ever reaches this file.
 
 const bookFieldsSchema = z.object({
   title: z.string().trim().min(1),
@@ -30,7 +35,7 @@ const bookFieldsSchema = z.object({
 
 export type AdminBookState = {
   status: "idle" | "error" | "success";
-  errorKey?: "generic" | "required" | "invalidFile";
+  errorKey?: "generic" | "required";
   productId?: string;
 };
 
@@ -52,39 +57,8 @@ function toCents(value: string): number | null {
   return Math.round(parsed * 100);
 }
 
-async function uploadCover(admin: ReturnType<typeof getSupabaseAdminClient>, productId: string, file: File) {
-  if (file.size > MAX_COVER_BYTES || !ALLOWED_COVER_TYPES.includes(file.type)) {
-    return { error: true as const };
-  }
-  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const path = `${productId}/cover-${Date.now()}.${extension}`;
-  const { error } = await admin.storage
-    .from("book-covers")
-    .upload(path, file, { contentType: file.type, upsert: true });
-  if (error) return { error: true as const };
-  const { data } = admin.storage.from("book-covers").getPublicUrl(path);
-  return { error: false as const, url: data.publicUrl };
-}
-
-async function uploadDigitalFile(admin: ReturnType<typeof getSupabaseAdminClient>, productId: string, file: File) {
-  if (file.size > MAX_FILE_BYTES) {
-    return { error: true as const };
-  }
-  const path = `${productId}/${Date.now()}-${file.name}`;
-  const { error } = await admin.storage
-    .from("book-files")
-    .upload(path, file, { contentType: file.type || "application/octet-stream" });
-  if (error) return { error: true as const };
-  return { error: false as const, path };
-}
-
-export async function createBook(
-  _prevState: AdminBookState,
-  formData: FormData
-): Promise<AdminBookState> {
-  const admin_ = await requireAdmin();
-
-  const parsed = bookFieldsSchema.safeParse({
+function bookFields(formData: FormData) {
+  return bookFieldsSchema.safeParse({
     title: formData.get("title"),
     author: formData.get("author"),
     description: formData.get("description"),
@@ -95,6 +69,14 @@ export async function createBook(
     physicalPrice: formData.get("physicalPrice"),
     stock: formData.get("stock"),
   });
+}
+
+export async function createBook(
+  _prevState: AdminBookState,
+  formData: FormData
+): Promise<AdminBookState> {
+  const admin_ = await requireAdmin();
+  const parsed = bookFields(formData);
   if (!parsed.success) {
     return { status: "error", errorKey: "required" };
   }
@@ -133,26 +115,6 @@ export async function createBook(
     return { status: "error", errorKey: "generic" };
   }
 
-  const coverFile = formData.get("cover");
-  if (coverFile instanceof File && coverFile.size > 0) {
-    const result = await uploadCover(admin, product.id, coverFile);
-    if (result.error) return { status: "error", errorKey: "invalidFile", productId: product.id };
-    await admin.from("products").update({ cover_url: result.url }).eq("id", product.id);
-  }
-
-  if (needsDigitalPrice) {
-    const digitalFile = formData.get("file");
-    if (digitalFile instanceof File && digitalFile.size > 0) {
-      const result = await uploadDigitalFile(admin, product.id, digitalFile);
-      if (result.error) return { status: "error", errorKey: "invalidFile", productId: product.id };
-      await admin.from("product_files").insert({
-        product_id: product.id,
-        storage_path: result.path,
-        file_type: digitalFile.type.includes("pdf") ? "pdf" : "file",
-      });
-    }
-  }
-
   await admin.from("audit_log").insert({
     actor_id: admin_.id,
     action: "book_created",
@@ -174,17 +136,7 @@ export async function updateBook(
     return { status: "error", errorKey: "generic" };
   }
 
-  const parsed = bookFieldsSchema.safeParse({
-    title: formData.get("title"),
-    author: formData.get("author"),
-    description: formData.get("description"),
-    category: formData.get("category"),
-    language: formData.get("language"),
-    productType: formData.get("productType"),
-    digitalPrice: formData.get("digitalPrice"),
-    physicalPrice: formData.get("physicalPrice"),
-    stock: formData.get("stock"),
-  });
+  const parsed = bookFields(formData);
   if (!parsed.success) {
     return { status: "error", errorKey: "required" };
   }
@@ -218,33 +170,6 @@ export async function updateBook(
     return { status: "error", errorKey: "generic" };
   }
 
-  const coverFile = formData.get("cover");
-  if (coverFile instanceof File && coverFile.size > 0) {
-    const result = await uploadCover(admin, productId, coverFile);
-    if (result.error) return { status: "error", errorKey: "invalidFile", productId };
-    await admin.from("products").update({ cover_url: result.url }).eq("id", productId);
-  }
-
-  // Replacing the digital file keeps the same product_id relationship —
-  // existing buyers' entitlements and orders are untouched (rule 33: a
-  // file replacement never breaks past purchases). Old file rows for
-  // this product are removed so resolveDigitalAccessUrl() always signs
-  // the current one; the underlying storage object is left in place
-  // rather than deleted, in case it needs to be recovered.
-  if (needsDigitalPrice) {
-    const digitalFile = formData.get("file");
-    if (digitalFile instanceof File && digitalFile.size > 0) {
-      const result = await uploadDigitalFile(admin, productId, digitalFile);
-      if (result.error) return { status: "error", errorKey: "invalidFile", productId };
-      await admin.from("product_files").delete().eq("product_id", productId);
-      await admin.from("product_files").insert({
-        product_id: productId,
-        storage_path: result.path,
-        file_type: digitalFile.type.includes("pdf") ? "pdf" : "file",
-      });
-    }
-  }
-
   await admin.from("audit_log").insert({
     actor_id: admin_.id,
     action: "book_updated",
@@ -268,4 +193,82 @@ export async function setBookStatus(productId: string, status: "draft" | "active
     resource_id: productId,
     metadata: { status },
   });
+}
+
+export type UploadUrlResult =
+  | { ok: true; bucket: "book-covers" | "book-files"; path: string; token: string }
+  | { ok: false };
+
+// Mints a short-lived signed upload URL for one file, scoped to this
+// product's folder. Called from the browser before the actual bytes are
+// sent — the token IS the authorization for that one upload; nothing
+// else about this endpoint needs to be secret.
+export async function requestBookUploadUrl(
+  kind: "cover" | "file",
+  productId: string,
+  extension: string
+): Promise<UploadUrlResult> {
+  await requireAdmin();
+
+  const safeExtension = extension.replace(/[^a-z0-9]/gi, "").slice(0, 10) || "bin";
+  const bucket = kind === "cover" ? "book-covers" : "book-files";
+  const path = `${productId}/${kind}-${randomUUID()}.${safeExtension}`;
+
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin.storage.from(bucket).createSignedUploadUrl(path);
+  if (error || !data) {
+    return { ok: false };
+  }
+
+  return { ok: true, bucket, path: data.path, token: data.token };
+}
+
+// Called after the browser finishes uploading the cover directly to
+// Storage — just records the public URL. Never receives the file itself.
+export async function attachBookCover(productId: string, path: string): Promise<{ ok: boolean }> {
+  const admin_ = await requireAdmin();
+  const admin = getSupabaseAdminClient();
+
+  const { data } = admin.storage.from("book-covers").getPublicUrl(path);
+  const { error } = await admin.from("products").update({ cover_url: data.publicUrl }).eq("id", productId);
+
+  await admin.from("audit_log").insert({
+    actor_id: admin_.id,
+    action: "book_cover_updated",
+    resource_type: "product",
+    resource_id: productId,
+    metadata: {},
+  });
+
+  return { ok: !error };
+}
+
+// Same idea for the digital file. Replaces any previous file row for
+// this product (rule 33: the storage object itself is left in place,
+// only the pointer changes, and existing entitlements/orders reference
+// product_id, not this row, so past purchases are unaffected).
+export async function attachBookFile(
+  productId: string,
+  path: string,
+  fileType: string
+): Promise<{ ok: boolean }> {
+  const admin_ = await requireAdmin();
+  const admin = getSupabaseAdminClient();
+
+  await admin.from("product_files").delete().eq("product_id", productId);
+  const { error } = await admin.from("product_files").insert({
+    product_id: productId,
+    storage_path: path,
+    file_type: fileType.includes("pdf") ? "pdf" : "file",
+  });
+
+  await admin.from("audit_log").insert({
+    actor_id: admin_.id,
+    action: "book_file_updated",
+    resource_type: "product",
+    resource_id: productId,
+    metadata: {},
+  });
+
+  return { ok: !error };
 }
