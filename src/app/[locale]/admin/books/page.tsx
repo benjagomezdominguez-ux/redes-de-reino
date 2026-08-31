@@ -82,7 +82,15 @@ export default async function AdminBooksPage({
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <BookStatusButtons productId={product.id} status={product.status} />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/admin/books/${product.id}/edit`}
+                        className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
+                      >
+                        {t("edit")}
+                      </Link>
+                      <BookStatusButtons productId={product.id} status={product.status} />
+                    </div>
                   </td>
                 </tr>
               ))}

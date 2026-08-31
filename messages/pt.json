@@ -227,6 +227,7 @@
       "salesSummary": "{units} vendidos · {revenue} em receita confirmada",
       "publish": "Publicar",
       "unpublish": "Despublicar",
+      "edit": "Editar",
       "columns": {
         "cover": "Capa",
         "title": "Título",
