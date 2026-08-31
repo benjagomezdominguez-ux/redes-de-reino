@@ -9,9 +9,6 @@
     "horarios": "Schedule",
     "pastores": "Pastors",
     "libros": "Books",
-    "estudiosBiblicos": "Bible Studies",
-    "diezmosYOfrendas": "Tithes & Offerings",
-    "contacto": "Contact",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "ariaLabel": "Main navigation"
@@ -155,86 +152,10 @@
       "generic": "Something went wrong. Please try again."
     }
   },
-  "bibleStudies": {
-    "eyebrow": "Bible Studies",
-    "title": "Grow in the Word",
-    "description": "Join a weekly Bible study and deepen your faith alongside others. Here are the groups currently available.",
-    "genericDescription": "This space will show the details of the Bible study.",
-    "teacherLabel": "Teacher",
-    "dayLabel": "Day",
-    "timeLabel": "Time",
-    "viewCta": "View study",
-    "joinCta": "Join",
-    "status": {
-      "proximamente": "Coming soon",
-      "enCurso": "In progress",
-      "inscripcionesAbiertas": "Open enrollment"
-    }
-  },
-  "activities": {
-    "eyebrow": "Activities",
-    "title": "Experience community",
-    "description": "Different spaces to connect with others, wherever you are in life.",
-    "groups": {
-      "reuniones": "Gatherings",
-      "jovenes": "Youth",
-      "familias": "Families",
-      "grupos": "Groups"
-    },
-    "descriptions": {
-      "reuniones": "General gatherings and meetings for the whole congregation.",
-      "jovenes": "A space for young people to grow and connect.",
-      "familias": "Activities designed for families.",
-      "grupos": "Small groups for study and prayer."
-    }
-  },
   "gallery": {
     "imageAlt": "Photo {index} of the {name} community",
     "goToSlide": "Go to photo {index}",
     "pending": "Photo coming soon"
-  },
-  "giving": {
-    "eyebrow": "Tithes & Offerings",
-    "title": "Generosity that sustains the Kingdom",
-    "description": "Tithing and giving is an act of faith and gratitude. Here you'll find, clearly and transparently, how to support the work of Redes de Reino.",
-    "aliasLabel": "Bank alias",
-    "cbuLabel": "Account number (CBU)",
-    "bankLabel": "Bank",
-    "tithCta": "Give your tithe",
-    "offeringCta": "Give an offering"
-  },
-  "contact": {
-    "eyebrow": "Contact",
-    "title": "We're here for you",
-    "description": "Write to us or come visit. We'd love to meet you.",
-    "labels": {
-      "whatsapp": "WhatsApp",
-      "instagram": "Instagram",
-      "facebook": "Facebook",
-      "youtube": "YouTube",
-      "email": "Email",
-      "address": "Address",
-      "schedule": "Service times"
-    },
-    "form": {
-      "nameLabel": "Name",
-      "emailLabel": "Email",
-      "phoneLabel": "Phone (optional)",
-      "interestLabel": "Reason",
-      "interestGeneral": "General inquiry",
-      "interestMembership": "I want to become a member",
-      "messageLabel": "Message (optional)",
-      "submit": "Send message",
-      "submitting": "Sending…",
-      "success": "Thank you! We received your message and will reach out soon.",
-      "errors": {
-        "nameRequired": "Please enter your name.",
-        "emailInvalid": "Please enter a valid email address.",
-        "generic": "Please check the information you entered.",
-        "submitFailed": "We couldn't send your message. Please try again in a moment.",
-        "rateLimited": "We already received your message. We'll be in touch soon — please wait a few minutes before sending another."
-      }
-    }
   },
   "footer": {
     "rights": "All rights reserved."

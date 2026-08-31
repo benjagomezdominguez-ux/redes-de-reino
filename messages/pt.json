@@ -9,9 +9,6 @@
     "horarios": "Horários",
     "pastores": "Pastores",
     "libros": "Livros",
-    "estudiosBiblicos": "Estudos Bíblicos",
-    "diezmosYOfrendas": "Dízimos e Ofertas",
-    "contacto": "Contato",
     "openMenu": "Abrir menu",
     "closeMenu": "Fechar menu",
     "ariaLabel": "Navegação principal"
@@ -155,86 +152,10 @@
       "generic": "Algo deu errado. Tente novamente."
     }
   },
-  "bibleStudies": {
-    "eyebrow": "Estudos Bíblicos",
-    "title": "Cresça na Palavra",
-    "description": "Participe de um estudo bíblico semanal e aprofunde sua fé junto com outros. Estes são os espaços disponíveis.",
-    "genericDescription": "Este espaço vai mostrar os detalhes do estudo bíblico.",
-    "teacherLabel": "Professor",
-    "dayLabel": "Dia",
-    "timeLabel": "Horário",
-    "viewCta": "Ver estudo",
-    "joinCta": "Participar",
-    "status": {
-      "proximamente": "Em breve",
-      "enCurso": "Em andamento",
-      "inscripcionesAbiertas": "Inscrições abertas"
-    }
-  },
-  "activities": {
-    "eyebrow": "Atividades",
-    "title": "Viva a comunidade",
-    "description": "Diferentes espaços para se encontrar com outros, de acordo com o momento da sua vida.",
-    "groups": {
-      "reuniones": "Reuniões",
-      "jovenes": "Jovens",
-      "familias": "Famílias",
-      "grupos": "Grupos"
-    },
-    "descriptions": {
-      "reuniones": "Encontros e reuniões gerais da congregação.",
-      "jovenes": "Espaço de crescimento e comunhão para os jovens.",
-      "familias": "Atividades pensadas para famílias.",
-      "grupos": "Pequenos grupos de estudo e oração."
-    }
-  },
   "gallery": {
     "imageAlt": "Fotografia {index} da comunidade da {name}",
     "goToSlide": "Ir para a fotografia {index}",
     "pending": "Fotografia em breve"
-  },
-  "giving": {
-    "eyebrow": "Dízimos e Ofertas",
-    "title": "Generosidade que sustenta o Reino",
-    "description": "Dizimar e ofertar é um ato de fé e gratidão. Aqui você vai encontrar, de forma clara e transparente, como colaborar com a obra da Redes de Reino.",
-    "aliasLabel": "Alias bancário",
-    "cbuLabel": "Número da conta (CBU)",
-    "bankLabel": "Banco",
-    "tithCta": "Dizimar",
-    "offeringCta": "Fazer uma oferta"
-  },
-  "contact": {
-    "eyebrow": "Contato",
-    "title": "Estamos aqui para você",
-    "description": "Escreva para nós ou venha nos visitar. Ficaríamos felizes em conhecer você.",
-    "labels": {
-      "whatsapp": "WhatsApp",
-      "instagram": "Instagram",
-      "facebook": "Facebook",
-      "youtube": "YouTube",
-      "email": "Email",
-      "address": "Endereço",
-      "schedule": "Horários"
-    },
-    "form": {
-      "nameLabel": "Nome",
-      "emailLabel": "Email",
-      "phoneLabel": "Telefone (opcional)",
-      "interestLabel": "Motivo",
-      "interestGeneral": "Dúvida geral",
-      "interestMembership": "Quero ser membro",
-      "messageLabel": "Mensagem (opcional)",
-      "submit": "Enviar mensagem",
-      "submitting": "Enviando…",
-      "success": "Obrigado! Recebemos sua mensagem e entraremos em contato em breve.",
-      "errors": {
-        "nameRequired": "Digite seu nome.",
-        "emailInvalid": "Digite um email válido.",
-        "generic": "Verifique os dados informados.",
-        "submitFailed": "Não conseguimos enviar sua mensagem. Tente novamente em instantes.",
-        "rateLimited": "Já recebemos sua mensagem. Vamos entrar em contato em breve — aguarde alguns minutos antes de enviar novamente."
-      }
-    }
   },
   "footer": {
     "rights": "Todos os direitos reservados."

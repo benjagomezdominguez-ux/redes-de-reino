@@ -16,7 +16,6 @@ test.describe("i18n — Spanish (default)", () => {
     await expect(nav(page).getByRole("link", { name: "Galería" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Horarios" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Libros" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Estudios Bíblicos" })).toBeVisible();
   });
 
   test("a visitor whose browser doesn't match any supported language falls back to Spanish", async ({
@@ -51,9 +50,6 @@ test.describe("i18n — English", () => {
     await expect(nav(page).getByRole("link", { name: "Schedule" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Pastors" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Books" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Bible Studies" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Tithes & Offerings" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Contact" })).toBeVisible();
     await expect(page.getByText("Get to know Redes de Reino")).toBeVisible();
     await expect(page.getByText("I want to join")).toBeVisible();
 
@@ -63,11 +59,6 @@ test.describe("i18n — English", () => {
     await nav(page).getByRole("link", { name: "Pastors" }).click();
     await expect(page.getByRole("heading", { name: "Our Pastors" })).toBeVisible();
     await expect(page.getByText("Ariel Gómez")).toBeVisible();
-
-    await nav(page).getByRole("link", { name: "Contact" }).click();
-    await expect(page.getByRole("heading", { name: "We're here for you" })).toBeVisible();
-    await expect(page.getByLabel("Name")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Send message" })).toBeVisible();
   });
 });
 
@@ -80,16 +71,10 @@ test.describe("i18n — Portuguese", () => {
     await expect(nav(page).getByRole("link", { name: "Galeria" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Horários" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Livros" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Estudos Bíblicos" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Dízimos e Ofertas" })).toBeVisible();
     await expect(page.getByText("Conhecer a Redes de Reino")).toBeVisible();
 
     await nav(page).getByRole("link", { name: "Horários" }).click();
     await expect(page.getByRole("heading", { name: "Horários das Reuniões" })).toBeVisible();
-
-    await nav(page).getByRole("link", { name: "Estudos Bíblicos" }).click();
-    await expect(page.getByRole("heading", { name: "Cresça na Palavra" })).toBeVisible();
-    await expect(page.getByText("Em breve").first()).toBeVisible();
   });
 });
 
@@ -213,6 +198,41 @@ test.describe("structure — Membresía replaced by Libros (books store)", () =>
   }) => {
     await page.goto("/es");
     await expect(page.getByText("Todavía no hay libros publicados. Volvé pronto.")).toBeVisible();
+  });
+});
+
+test.describe("structure — Estudios Bíblicos, Actividades, Diezmos y Ofrendas, Contacto removed", () => {
+  test("none of the four removed sections exist anywhere on the page, in any locale", async ({ page }) => {
+    for (const [locale, phrases] of [
+      ["es", ["Estudios Bíblicos", "Crecé en la Palabra", "Viví la comunidad", "Diezmos y Ofrendas", "Estamos para vos"]],
+      ["en", ["Bible Studies", "Grow in the Word", "Experience community", "Tithes & Offerings", "We're here for you"]],
+      ["pt", ["Estudos Bíblicos", "Cresça na Palavra", "Viva a comunidade", "Dízimos e Ofertas", "Estamos aqui para você"]],
+    ] as const) {
+      await page.goto(`/${locale}`);
+      for (const phrase of phrases) {
+        await expect(page.locator("body")).not.toContainText(phrase);
+      }
+    }
+  });
+
+  test("no nav link points at any of the four removed sections' anchors", async ({ page }) => {
+    await page.goto("/es");
+    for (const href of ["#estudios-biblicos", "#actividades", "#diezmos-y-ofrendas", "#contacto"]) {
+      await expect(page.locator(`nav a[href="${href}"]`)).toHaveCount(0);
+    }
+  });
+
+  test("the page now ends with Books, followed directly by the footer", async ({ page }) => {
+    await page.goto("/es");
+    const main = page.locator("main");
+    await expect(main.locator("section").last()).toHaveAttribute("id", "libros");
+    await expect(page.locator("footer")).toBeVisible();
+  });
+
+  test("the Hero's secondary CTA no longer points at the removed Contact anchor", async ({ page }) => {
+    await page.goto("/es");
+    await page.getByText("Quiero ser parte").click();
+    await expect(page.locator("#horarios")).toBeInViewport();
   });
 });
 

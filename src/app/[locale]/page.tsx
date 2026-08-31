@@ -5,10 +5,6 @@ import { Gallery } from "@/components/sections/Gallery";
 import { Schedule } from "@/components/sections/Schedule";
 import { Pastors } from "@/components/sections/Pastors";
 import { Books } from "@/components/sections/Books";
-import { Giving } from "@/components/sections/Giving";
-import { BibleStudies } from "@/components/sections/BibleStudies";
-import { Activities } from "@/components/sections/Activities";
-import { Contact } from "@/components/sections/Contact";
 import { Footer } from "@/components/sections/Footer";
 import { Reveal } from "@/components/ui/Reveal";
 import { site, siteUrl } from "@/lib/site-config";
@@ -54,18 +50,6 @@ export default async function Home({
         </Reveal>
         <Reveal>
           <Books />
-        </Reveal>
-        <Reveal>
-          <BibleStudies />
-        </Reveal>
-        <Reveal>
-          <Activities />
-        </Reveal>
-        <Reveal>
-          <Giving />
-        </Reveal>
-        <Reveal>
-          <Contact />
         </Reveal>
       </main>
       <Footer />

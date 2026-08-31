@@ -47,7 +47,7 @@ export async function Hero() {
           <Button href="#galeria" variant="secondary">
             {t("ctaPrimary")}
           </Button>
-          <Button href="#contacto" variant="outline-light">
+          <Button href="#horarios" variant="outline-light">
             {t("ctaSecondary")}
           </Button>
         </div>

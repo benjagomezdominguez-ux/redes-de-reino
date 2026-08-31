@@ -9,9 +9,6 @@
     "horarios": "Horarios",
     "pastores": "Pastores",
     "libros": "Libros",
-    "estudiosBiblicos": "Estudios Bíblicos",
-    "diezmosYOfrendas": "Diezmos y Ofrendas",
-    "contacto": "Contacto",
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "ariaLabel": "Navegación principal"
@@ -155,86 +152,10 @@
       "generic": "Algo salió mal. Probá de nuevo."
     }
   },
-  "bibleStudies": {
-    "eyebrow": "Estudios Bíblicos",
-    "title": "Crecé en la Palabra",
-    "description": "Sumate a un estudio bíblico semanal y profundizá tu fe junto a otros. Estos son los espacios disponibles.",
-    "genericDescription": "Este espacio mostrará el detalle del estudio bíblico.",
-    "teacherLabel": "Profesor",
-    "dayLabel": "Día",
-    "timeLabel": "Horario",
-    "viewCta": "Ver estudio",
-    "joinCta": "Participar",
-    "status": {
-      "proximamente": "Próximamente",
-      "enCurso": "En curso",
-      "inscripcionesAbiertas": "Inscripciones abiertas"
-    }
-  },
-  "activities": {
-    "eyebrow": "Actividades",
-    "title": "Viví la comunidad",
-    "description": "Distintos espacios para encontrarte con otros, según tu momento de vida.",
-    "groups": {
-      "reuniones": "Reuniones",
-      "jovenes": "Jóvenes",
-      "familias": "Familias",
-      "grupos": "Grupos"
-    },
-    "descriptions": {
-      "reuniones": "Encuentros y reuniones generales de la congregación.",
-      "jovenes": "Espacio de crecimiento y comunión para jóvenes.",
-      "familias": "Actividades pensadas para familias.",
-      "grupos": "Grupos pequeños de estudio y oración."
-    }
-  },
   "gallery": {
     "imageAlt": "Fotografía {index} de la comunidad de {name}",
     "goToSlide": "Ir a la fotografía {index}",
     "pending": "Fotografía próximamente"
-  },
-  "giving": {
-    "eyebrow": "Diezmos y Ofrendas",
-    "title": "Generosidad que sostiene el Reino",
-    "description": "Diezmar y ofrendar es un acto de fe y gratitud. Acá vas a encontrar, de forma clara y transparente, cómo colaborar con la obra de Redes de Reino.",
-    "aliasLabel": "Alias",
-    "cbuLabel": "CBU",
-    "bankLabel": "Banco",
-    "tithCta": "Diezmar",
-    "offeringCta": "Dar una ofrenda"
-  },
-  "contact": {
-    "eyebrow": "Contacto",
-    "title": "Estamos para vos",
-    "description": "Escribinos o visitanos. Nos encantaría conocerte.",
-    "labels": {
-      "whatsapp": "WhatsApp",
-      "instagram": "Instagram",
-      "facebook": "Facebook",
-      "youtube": "YouTube",
-      "email": "Email",
-      "address": "Dirección",
-      "schedule": "Horarios"
-    },
-    "form": {
-      "nameLabel": "Nombre",
-      "emailLabel": "Email",
-      "phoneLabel": "Teléfono (opcional)",
-      "interestLabel": "Motivo",
-      "interestGeneral": "Consulta general",
-      "interestMembership": "Quiero ser miembro",
-      "messageLabel": "Mensaje (opcional)",
-      "submit": "Enviar mensaje",
-      "submitting": "Enviando…",
-      "success": "¡Gracias! Recibimos tu mensaje y te vamos a contactar pronto.",
-      "errors": {
-        "nameRequired": "Ingresá tu nombre.",
-        "emailInvalid": "Ingresá un email válido.",
-        "generic": "Revisá los datos ingresados.",
-        "submitFailed": "No pudimos enviar tu mensaje. Probá de nuevo en un momento.",
-        "rateLimited": "Ya recibimos tu mensaje. Te vamos a contactar pronto — esperá unos minutos antes de volver a enviar."
-      }
-    }
   },
   "footer": {
     "rights": "Todos los derechos reservados."

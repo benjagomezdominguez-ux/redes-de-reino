@@ -6,8 +6,8 @@ Landing page institucional de Redes de Reino (Salta, Argentina). Next.js 16
 ## Requisitos
 
 - Node.js 24+ y npm.
-- Una cuenta de Supabase con acceso al proyecto (formulario de contacto,
-  autenticación, tienda de libros).
+- Una cuenta de Supabase con acceso al proyecto (autenticación, tienda de
+  libros).
 
 ## Desarrollo
 
@@ -54,8 +54,7 @@ src/
     robots.ts, sitemap.ts, manifest.ts, icon*, opengraph-image.jpg
                    # recursos globales, no dependen del idioma
   components/
-    sections/     # Navbar, Hero, Gallery, Schedule, Pastors, Books,
-                   # BibleStudies, Activities, Giving, Contact, Footer
+    sections/     # Navbar, Hero, Gallery, Schedule, Pastors, Books, Footer
     ui/            # Primitivas reutilizables (Container, Button, SectionHeading,
                    # LanguageSwitcher, Reveal, CinematicGallery, MeetingSchedule,
                    # BookCard, AddToCartButton, CartView, CheckoutView, AuthForm)
@@ -66,7 +65,7 @@ src/
   lib/
     site-config.ts # Datos estructurales/nombres propios (NO textos traducibles)
     supabase/      # Clientes de Supabase — ver "Tienda de libros" abajo
-    actions/       # Server Actions (contacto, auth, checkout)
+    actions/       # Server Actions (auth, checkout)
     cart/          # Carrito de compra (React Context + localStorage)
     books/         # Queries de catálogo + resolución de acceso digital
 messages/
@@ -81,11 +80,11 @@ supabase/
 
 ## Backend (Supabase)
 
-El formulario de contacto/membresía (sección "Contacto") persiste en la
-tabla `contact_submissions` de Supabase. Row Level Security está activo:
-el rol público (`anon`) solo puede insertar — nadie puede leer, editar ni
-borrar submissions vía API. Los pastores revisan los mensajes desde el
-Table Editor del dashboard de Supabase con su propia cuenta.
+La sección "Contacto" (y su formulario) fue eliminada del sitio, así que ya
+no se generan nuevos registros. Las tablas `contact_submissions` y su
+rate-limit siguen existiendo en Supabase con el historial de mensajes
+recibidos mientras la sección existió — no se borraron, por si los
+pastores todavía quieren revisarlos desde el Table Editor del dashboard.
 
 Cambios de schema van como una nueva migración en `supabase/migrations/`
 y se aplican con:
@@ -137,9 +136,8 @@ cambia cómo el navegador reporta la petición al servidor y rompe esa
 sincronización.
 
 **Contenido no traducido a propósito**: nombres propios (`Redes de
-Reino`, `Ariel Gómez`, `Gabriela de Gómez`) y los nombres de los estudios
-bíblicos (`Columnas`, `Bases`, `Protocolo`) se mantienen iguales en los
-tres idiomas — no hay una traducción oficial de esos programas, e
+Reino`, `Ariel Gómez`, `Gabriela de Gómez`) se mantienen iguales en los
+tres idiomas — no hay traducción oficial de un nombre propio, e
 inventarla violaría la regla de no inventar contenido.
 
 ## Tienda de libros
@@ -228,15 +226,9 @@ con `[CONTENIDO PENDIENTE]` en `src/lib/site-config.ts` debe completarse
 con datos reales antes de producción:
 
 - Biografías de los pastores (fotos ya cargadas) (`pastors`).
-- Estudios bíblicos reales: profesor, día, horario (títulos ya definidos)
-  (`bibleStudies`).
-- Actividades reales de la iglesia (`activities`).
 - Horarios de reuniones reales: día, nombre y horario de cada encuentro
   (`meetings`).
 - Las 4 fotos de la galería cinematográfica (`galleryImages`).
-- Datos de contacto: WhatsApp, Instagram, Facebook, YouTube, email,
-  dirección, horarios (`contact`).
-- Datos de diezmos y ofrendas: alias, CBU, banco (`giving`).
 
 ## Estado y control de versiones
 
@@ -253,9 +245,8 @@ conocida (*last known good version*): para volver a un estado estable,
 
 ## Pendiente para producción
 
-- Contenido real listado arriba (pastores, estudios, actividades,
-  contacto, diezmos).
-- Fotografías profesionales para pastores, hero y actividades.
+- Contenido real listado arriba (pastores, horarios, fotos de galería).
+- Fotografías profesionales para pastores y hero.
 - Dominio propio (hoy el sitio vive en el subdominio `.vercel.app`) —
   requiere que el cliente compre/apunte un dominio.
 - Tienda de libros: catálogo real (libros, precios, stock) — hoy vacío a

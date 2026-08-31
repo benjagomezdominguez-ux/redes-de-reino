@@ -35,7 +35,7 @@ describe("Navbar", () => {
     const mobileMenu = document.getElementById("mobile-menu");
     expect(mobileMenu).not.toBeNull();
     expect(
-      within(mobileMenu!).getByRole("link", { name: "Contacto" })
+      within(mobileMenu!).getByRole("link", { name: "Libros" })
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Cerrar menú" }));
