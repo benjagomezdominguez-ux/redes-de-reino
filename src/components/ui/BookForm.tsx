@@ -68,6 +68,12 @@ export function BookForm({
   const [pending, setPending] = useState(false);
   const [errorKey, setErrorKey] = useState<ErrorKey | null>(null);
   const [saved, setSaved] = useState(false);
+  const [productType, setProductType] = useState<"digital" | "fisico" | "digital_fisico">(
+    initial?.product_type ?? "digital"
+  );
+
+  const showDigitalFields = productType !== "fisico";
+  const showPhysicalFields = productType !== "digital";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,7 +167,8 @@ export function BookForm({
           {t("productType")}
           <select
             name="productType"
-            defaultValue={initial?.product_type ?? "digital"}
+            value={productType}
+            onChange={(e) => setProductType(e.target.value as typeof productType)}
             className={inputClasses}
           >
             <option value="digital">{t("typeDigital")}</option>
@@ -169,43 +176,49 @@ export function BookForm({
             <option value="digital_fisico">{t("typeBoth")}</option>
           </select>
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          {t("digitalPrice")}
-          <input
-            name="digitalPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={
-              initial?.digital_price_cents != null ? (initial.digital_price_cents / 100).toFixed(2) : ""
-            }
-            className={inputClasses}
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          {t("physicalPrice")}
-          <input
-            name="physicalPrice"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={
-              initial?.physical_price_cents != null ? (initial.physical_price_cents / 100).toFixed(2) : ""
-            }
-            className={inputClasses}
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          {t("stock")}
-          <input
-            name="stock"
-            type="number"
-            min="0"
-            step="1"
-            defaultValue={initial?.stock ?? ""}
-            className={inputClasses}
-          />
-        </label>
+        {showDigitalFields ? (
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
+            {t("digitalPrice")}
+            <input
+              name="digitalPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={
+                initial?.digital_price_cents != null ? (initial.digital_price_cents / 100).toFixed(2) : ""
+              }
+              className={inputClasses}
+            />
+          </label>
+        ) : null}
+        {showPhysicalFields ? (
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
+            {t("physicalPrice")}
+            <input
+              name="physicalPrice"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={
+                initial?.physical_price_cents != null ? (initial.physical_price_cents / 100).toFixed(2) : ""
+              }
+              className={inputClasses}
+            />
+          </label>
+        ) : null}
+        {showPhysicalFields ? (
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
+            {t("stock")}
+            <input
+              name="stock"
+              type="number"
+              min="0"
+              step="1"
+              defaultValue={initial?.stock ?? ""}
+              className={inputClasses}
+            />
+          </label>
+        ) : null}
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
           {t("cover")}
           <input name="cover" type="file" accept="image/jpeg,image/png,image/webp" className={inputClasses} />
@@ -213,11 +226,13 @@ export function BookForm({
             <span className="text-xs text-muted">{t("coverCurrent")}</span>
           ) : null}
         </label>
-        <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-          {t("file")}
-          <input name="file" type="file" accept="application/pdf" className={inputClasses} />
-          {hasDigitalFile ? <span className="text-xs text-muted">{t("fileCurrent")}</span> : null}
-        </label>
+        {showDigitalFields ? (
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
+            {t("file")}
+            <input name="file" type="file" accept="application/pdf" className={inputClasses} />
+            {hasDigitalFile ? <span className="text-xs text-muted">{t("fileCurrent")}</span> : null}
+          </label>
+        ) : null}
       </div>
 
       {errorKey ? (

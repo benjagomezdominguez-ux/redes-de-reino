@@ -114,6 +114,23 @@ describe("createBook / updateBook / setBookStatus", () => {
     expect(insertMock).not.toHaveBeenCalled();
   });
 
+  it("CRITICAL: creates a physical-only book even when digitalPrice/author/description/category/stock are entirely absent from the form, not just blank — BookForm hides those fields for 'fisico', so FormData.get() returns null for them, not \"\"", async () => {
+    const formData = new FormData();
+    formData.set("title", "Libro físico");
+    formData.set("language", "es");
+    formData.set("productType", "fisico");
+    formData.set("physicalPrice", "50.00");
+    // Deliberately NOT setting digitalPrice/author/description/category/stock at all.
+
+    const result = await createBook({ status: "idle" }, formData);
+
+    expect(result.status).toBe("success");
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    const insertedRow = insertMock.mock.calls[0][0];
+    expect(insertedRow.physical_price_cents).toBe(5000);
+    expect(insertedRow.digital_price_cents).toBeNull();
+  });
+
   it("creates a digital book, converting dollars to cents, and logs it to the audit trail", async () => {
     const result = await createBook(
       { status: "idle" },

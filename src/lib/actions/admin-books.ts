@@ -21,16 +21,25 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 // directly to Storage via a short-lived signed URL instead, and only the
 // resulting storage path ever reaches this file.
 
+// FormData.get() returns null (not undefined) for a key that's simply
+// not in the form — which happens for real now that BookForm hides
+// digitalPrice/physicalPrice/stock/file depending on productType, not
+// just when a value was left blank. z.optional() only tolerates
+// undefined, so an absent optional field would otherwise fail parsing
+// as if it were required. This normalizes null to "" first, same as
+// "left blank", for every field that's allowed to not be there.
+const optionalFormField = () => z.preprocess((v) => v ?? "", z.string().trim().optional().or(z.literal("")));
+
 const bookFieldsSchema = z.object({
   title: z.string().trim().min(1),
-  author: z.string().trim().optional().or(z.literal("")),
-  description: z.string().trim().max(2000).optional().or(z.literal("")),
-  category: z.string().trim().optional().or(z.literal("")),
+  author: optionalFormField(),
+  description: z.preprocess((v) => v ?? "", z.string().trim().max(2000).optional().or(z.literal(""))),
+  category: optionalFormField(),
   language: z.string().trim().min(2).max(5),
   productType: z.enum(["digital", "fisico", "digital_fisico"]),
-  digitalPrice: z.string().trim().optional().or(z.literal("")),
-  physicalPrice: z.string().trim().optional().or(z.literal("")),
-  stock: z.string().trim().optional().or(z.literal("")),
+  digitalPrice: optionalFormField(),
+  physicalPrice: optionalFormField(),
+  stock: optionalFormField(),
 });
 
 export type AdminBookState = {
