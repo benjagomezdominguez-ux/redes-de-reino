@@ -105,6 +105,8 @@ src/
                    # haya un proveedor configurado, nunca un 200 falso
     api/cron/whatsapp/route.ts
                    # scheduler de campañas de WhatsApp — ver "WhatsApp" abajo
+    api/tiendanube/oauth/start, api/tiendanube/oauth/callback
+                   # flujo OAuth de Tiendanube — ver "Tiendanube" abajo
     robots.ts, sitemap.ts, manifest.ts, icon*, opengraph-image.jpg
                    # recursos globales, no dependen del idioma
   components/
@@ -134,6 +136,7 @@ src/
     email/         # Interfaz EmailProvider + implementación real de Resend
     whatsapp/      # Interfaz WhatsAppProvider + Meta Cloud API + scheduler
                    # — ver "WhatsApp"
+    tiendanube/    # Cliente REST + flujo OAuth — ver "Tiendanube"
     admin/         # Queries del panel de administración (via cliente de sesión + RLS)
 messages/
   es.json, en.json, pt.json   # Todo el texto traducible de la UI
@@ -600,6 +603,66 @@ proyecto):
 - `CRON_SECRET` — ya configurado en producción (Vercel), es lo que
   autoriza al cron diario a llamar a `/api/cron/whatsapp`.
 
+## Tiendanube — conexión OAuth (`/admin` → sección Tiendanube)
+
+Un admin conecta la cuenta de Tiendanube de la tienda desde el dashboard
+(`/admin`, tarjeta "Tiendanube"). El flujo completo corre server-side:
+
+1. El admin hace clic en "Conectar Tiendanube" → `GET
+   /api/tiendanube/oauth/start` (`lib/supabase/require-admin-api.ts` exige
+   sesión de admin activa antes de nada). Genera un `state` aleatorio de
+   32 bytes, lo guarda en una cookie `httpOnly` de corta duración (10 min,
+   scope `/api/tiendanube/oauth`), y redirige al admin a la pantalla de
+   autorización real de Tiendanube
+   (`https://www.tiendanube.com/apps/{TIENDANUBE_CLIENT_ID}/authorize?state=...`).
+2. El admin autoriza en Tiendanube. Tiendanube redirige de vuelta a
+   `https://redes-de-reino.vercel.app/api/tiendanube/oauth/callback?code=...&state=...`
+   — esa es la URL que hay que tener cargada en el panel de partners de
+   Tiendanube ("URL para redirigir después de la instalación"), no la URL
+   automática de pruebas.
+3. El callback (`src/app/api/tiendanube/oauth/callback/route.ts`) vuelve
+   a exigir sesión de admin, compara el `state` recibido contra el de la
+   cookie (protección CSRF, tal como recomienda la documentación oficial
+   de Tiendanube) y solo entonces intercambia el `code` por un
+   `access_token` real contra el endpoint oficial
+   (`POST https://www.tiendanube.com/apps/authorize/token`,
+   `lib/tiendanube/oauth.ts`). Un `code` robado o repetido sin pasar por
+   `/start` primero nunca llega al intercambio — se rechaza antes.
+4. El `access_token` se guarda en `tiendanube_connections` (Supabase),
+   nunca en una variable de entorno: una función serverless no puede
+   escribirse env vars a sí misma en tiempo de ejecución, así que la base
+   de datos es el único lugar real donde puede persistir un token
+   obtenido dinámicamente. La tabla tiene RLS activado sin ninguna policy
+   para ningún rol de cliente — ni siquiera los admins pueden leerla vía
+   el cliente de sesión; solo el cliente admin/service-role (server-only)
+   la toca, en el callback y en `lib/tiendanube/client.ts`.
+5. `client.ts` (el cliente REST real hacia la API de Tiendanube — `GET
+   /store`, `GET /products`, con `Authorization: Bearer`, el
+   `User-Agent` que la API exige, timeout y manejo de errores) ya no lee
+   ninguna variable de entorno de token — busca la conexión guardada en
+   `tiendanube_connections`.
+
+El `access_token` y el `client_secret` nunca llegan al navegador ni a
+ninguna respuesta pública de la API — todo el intercambio ocurre en Route
+Handlers server-only, y ningún log registra el `code`, el `client_secret`
+ni el `access_token` en texto, solo códigos de error cortos.
+
+**Variables de entorno necesarias** (cargar en Vercel, nunca en el
+código):
+
+- `TIENDANUBE_CLIENT_ID` — no es secreto (va embebido en la URL pública
+  de autorización), pero igual vive solo en env vars.
+- `TIENDANUBE_CLIENT_SECRET` — secreto, solo usado server-side en el
+  intercambio del token.
+
+**Nota de seguridad de esta sesión**: existieron previamente
+`TIENDANUBE_ACCESS_TOKEN`/`TIENDANUBE_STORE_ID` como variables sueltas —
+se eliminaron de Vercel porque quedaron reemplazadas por este flujo, y
+porque la primera contenía por error el comando completo de ejemplo de la
+documentación de Tiendanube (con un `client_secret` real adentro) en vez
+de un token. Se recomendó rotar ese `client_secret` en el panel de
+Tiendanube por las dudas.
+
 ## Sistema de diseño
 
 Los tokens de color en `src/app/globals.css` (`--color-primary-*`,
@@ -667,3 +730,16 @@ conocida (*last known good version*): para volver a un estado estable,
   `RESEND_API_KEY`, `RESEND_FROM_EMAIL`) para que la alerta de "5 días
   antes" le llegue de verdad a Benjamín Gómez — sin esto, el sistema seguí
   detectando la condición todos los días pero no manda nada.
+- Tiendanube: cargar `TIENDANUBE_CLIENT_ID` y `TIENDANUBE_CLIENT_SECRET`
+  en Vercel (producción) con los valores reales de la app registrada en
+  el panel de partners.
+- Tiendanube: rotar el `client_secret` de la app en el panel de
+  partners — el valor anterior quedó expuesto por error dentro de
+  `TIENDANUBE_ACCESS_TOKEN` (ver sección "Tiendanube — conexión OAuth").
+- Tiendanube: reemplazar la URL automática de pruebas
+  (`https://partners.tiendanube.com/applications/authentication/...`) por
+  `https://redes-de-reino.vercel.app/api/tiendanube/oauth/callback` en
+  "URL para redirigir después de la instalación", en el panel de la app.
+- Tiendanube: una vez cargadas las credenciales, un admin real tiene que
+  completar la conexión desde `/admin` ("Conectar Tiendanube") — no se
+  puede completar por código ni con datos de prueba.

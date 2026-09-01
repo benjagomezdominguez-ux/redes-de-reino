@@ -217,7 +217,19 @@
       "registeredUsers": "Registered users",
       "purchases": "Purchases",
       "pendingOrders": "Pending orders",
-      "booksSold": "Books sold"
+      "booksSold": "Books sold",
+      "tiendanube": {
+        "title": "Tiendanube",
+        "connected": "Connected — store {storeId}",
+        "notConnected": "You haven't connected your Tiendanube account yet.",
+        "connect": "Connect Tiendanube",
+        "banners": {
+          "connected": "Tiendanube connected successfully.",
+          "invalid_state": "We couldn't verify the connection (invalid state). Try connecting again.",
+          "error": "Tiendanube rejected the connection. Try again or check the configured client_id/client_secret.",
+          "save_failed": "Got the token but couldn't save it. Try again."
+        }
+      }
     },
     "books": {
       "count": "{count, plural, =1 {1 book} other {# books}}",

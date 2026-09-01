@@ -146,6 +146,22 @@ test.describe("payments webhook — honest about not being configured", () => {
   });
 });
 
+test.describe("tiendanube oauth — never reachable by a non-admin", () => {
+  test("/api/tiendanube/oauth/start redirects an unauthenticated visitor to login instead of starting OAuth", async ({ request }) => {
+    const response = await request.get("/api/tiendanube/oauth/start", { maxRedirects: 0 });
+    expect([301, 302, 307, 308]).toContain(response.status());
+    expect(response.headers()["location"]).toContain("/es/login");
+  });
+
+  test("/api/tiendanube/oauth/callback redirects an unauthenticated visitor to login even with code/state present, never attempts a token exchange", async ({
+    request,
+  }) => {
+    const response = await request.get("/api/tiendanube/oauth/callback?code=fake&state=fake", { maxRedirects: 0 });
+    expect([301, 302, 307, 308]).toContain(response.status());
+    expect(response.headers()["location"]).toContain("/es/login");
+  });
+});
+
 test.describe("whatsapp cron endpoint — never triggerable by an outsider", () => {
   test("refuses a request without the cron secret", async ({ request }) => {
     const response = await request.get("/api/cron/whatsapp");

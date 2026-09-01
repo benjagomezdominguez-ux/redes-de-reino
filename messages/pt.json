@@ -217,7 +217,19 @@
       "registeredUsers": "Usuários registrados",
       "purchases": "Compras",
       "pendingOrders": "Pedidos pendentes",
-      "booksSold": "Livros vendidos"
+      "booksSold": "Livros vendidos",
+      "tiendanube": {
+        "title": "Tiendanube",
+        "connected": "Conectada — loja {storeId}",
+        "notConnected": "Você ainda não conectou sua conta do Tiendanube.",
+        "connect": "Conectar Tiendanube",
+        "banners": {
+          "connected": "Tiendanube conectada com sucesso.",
+          "invalid_state": "Não conseguimos verificar a conexão (estado inválido). Tente conectar de novo.",
+          "error": "Tiendanube rejeitou a conexão. Tente novamente ou revise o client_id/client_secret configurados.",
+          "save_failed": "O token foi obtido mas não pôde ser salvo. Tente novamente."
+        }
+      }
     },
     "books": {
       "count": "{count, plural, =1 {1 livro} other {# livros}}",
