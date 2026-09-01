@@ -2,16 +2,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listOrders } from "@/lib/admin/queries";
 import { AdminPagination } from "@/components/ui/AdminPagination";
 import { Link } from "@/i18n/navigation";
+import { formatPrice } from "@/lib/books/format-price";
 
 const PAGE_SIZE = 20;
-
-function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
-}
 
 export default async function AdminOrdersPage({
   params,

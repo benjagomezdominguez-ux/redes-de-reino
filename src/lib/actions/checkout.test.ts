@@ -34,7 +34,7 @@ const RPC_SUCCESS = {
   subtotal_cents: 1500,
   tax_cents: 0,
   total_cents: 1500,
-  currency: "USD",
+  currency: "ARS",
   payment_method: "bank_transfer",
 };
 
@@ -180,7 +180,7 @@ describe("createOrder", () => {
       subtotalCents: 1500,
       taxCents: 0,
       totalCents: 1500,
-      currency: "USD",
+      currency: "ARS",
       paymentMethod: "bank_transfer",
     });
   });

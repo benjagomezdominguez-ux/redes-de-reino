@@ -2,14 +2,11 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import type { Product } from "@/lib/books/types";
+import { formatPrice as formatPriceBase } from "@/lib/books/format-price";
 
 function formatPrice(cents: number | null, currency: string) {
   if (cents === null) return null;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
+  return formatPriceBase(cents, currency);
 }
 
 export async function BookCard({ product }: { product: Product }) {

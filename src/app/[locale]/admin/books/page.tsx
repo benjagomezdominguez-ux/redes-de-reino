@@ -3,12 +3,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listAllProducts } from "@/lib/admin/book-queries";
 import { Link } from "@/i18n/navigation";
 import { BookStatusButtons } from "@/components/ui/BookStatusButtons";
+import { formatPrice as formatPriceBase } from "@/lib/books/format-price";
 
 function formatPrice(cents: number | null, currency: string) {
   if (cents === null) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(
-    cents / 100
-  );
+  return formatPriceBase(cents, currency);
 }
 
 export default async function AdminBooksPage({

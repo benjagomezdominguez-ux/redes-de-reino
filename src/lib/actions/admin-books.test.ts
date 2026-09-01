@@ -134,7 +134,7 @@ describe("createBook / updateBook / setBookStatus", () => {
     const insertedRow = insertMock.mock.calls[0][0];
     expect(insertedRow.digital_price_cents).toBe(1500);
     expect(insertedRow.physical_price_cents).toBeNull();
-    expect(insertedRow.currency).toBe("USD");
+    expect(insertedRow.currency).toBe("ARS");
     expect(insertedRow.status).toBe("draft");
     expect(result.status).toBe("success");
     expect(auditInsertMock).toHaveBeenCalledWith(

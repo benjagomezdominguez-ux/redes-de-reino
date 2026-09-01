@@ -3,14 +3,7 @@ import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
-
-function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
-}
+import { formatPrice } from "@/lib/books/format-price";
 
 export default async function OrdersPage({
   params,

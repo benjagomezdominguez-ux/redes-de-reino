@@ -7,16 +7,9 @@ import { createOrder, type CheckoutState } from "@/lib/actions/checkout";
 import { bankTransfer } from "@/lib/site-config";
 import { countries } from "@/lib/checkout/countries";
 import { TransferProofForm } from "@/components/ui/TransferProofForm";
+import { formatPrice } from "@/lib/books/format-price";
 
 const initialState: CheckoutState = { status: "idle" };
-
-function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
-}
 
 const inputClasses =
   "w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-muted focus-visible:outline-2 focus-visible:outline-secondary-500";
@@ -43,7 +36,7 @@ export function CheckoutView({ onlinePaymentAvailable }: { onlinePaymentAvailabl
   }
 
   if (state.status === "success") {
-    const currency = state.currency ?? "USD";
+    const currency = state.currency ?? "ARS";
     return (
       <div className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-8 shadow-soft">
         <div className="text-center">
@@ -262,7 +255,7 @@ export function CheckoutView({ onlinePaymentAvailable }: { onlinePaymentAvailabl
         </div>
         <div className="flex justify-between border-t border-border pt-3 text-base font-semibold text-primary-900">
           <span>{t("subtotal")}</span>
-          <span>{formatPrice(subtotalCents, items[0]?.currency ?? "USD")}</span>
+          <span>{formatPrice(subtotalCents, items[0]?.currency ?? "ARS")}</span>
         </div>
 
         {state.status === "error" && state.errorKey ? (

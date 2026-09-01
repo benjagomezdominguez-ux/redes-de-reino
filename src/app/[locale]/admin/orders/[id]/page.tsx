@@ -3,14 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getOrderDetail, getPaymentProofSignedUrl } from "@/lib/admin/queries";
 import { Link } from "@/i18n/navigation";
 import { AdminPaymentReviewActions } from "@/components/ui/AdminPaymentReviewActions";
-
-function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 2,
-  }).format(cents / 100);
-}
+import { formatPrice } from "@/lib/books/format-price";
 
 const MODALITY_KEYS: Record<string, string> = {
   digital: "digital",

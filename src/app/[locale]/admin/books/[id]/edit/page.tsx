@@ -3,12 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getProductForEdit, getProductSales } from "@/lib/admin/book-queries";
 import { BookForm } from "@/components/ui/BookForm";
 import { Link } from "@/i18n/navigation";
-
-function formatPrice(cents: number, currency: string) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(
-    cents / 100
-  );
-}
+import { formatPrice } from "@/lib/books/format-price";
 
 export default async function AdminEditBookPage({
   params,
@@ -34,7 +29,7 @@ export default async function AdminEditBookPage({
         <p className="mb-6 text-sm text-muted">
           {t("salesSummary", {
             units: sales.unitsSold,
-            revenue: formatPrice(sales.revenueCents, product.currency ?? "USD"),
+            revenue: formatPrice(sales.revenueCents, product.currency ?? "ARS"),
           })}
         </p>
         <BookForm

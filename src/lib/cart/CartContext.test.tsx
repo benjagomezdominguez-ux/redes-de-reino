@@ -15,7 +15,7 @@ function makeItem(overrides: Partial<CartItem> = {}): CartItem {
     author: "Test Author",
     coverUrl: null,
     unitPriceCents: 1000,
-    currency: "USD",
+    currency: "ARS",
     maxStock: null,
     ...overrides,
   };

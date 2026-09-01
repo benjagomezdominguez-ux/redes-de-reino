@@ -342,7 +342,7 @@ verificado de verdad, nunca porque el comprador lo dijo.
 crean/editan libros desde una UI real (`BookForm.tsx` + las Server
 Actions en `lib/actions/admin-books.ts`) — título, autor, categoría,
 descripción, idioma, tipo (`digital` / `fisico` / `digital_fisico`),
-precio en USD, stock, portada y archivo digital. La portada se sube al
+precio en ARS (pesos argentinos), stock, portada y archivo digital. La portada se sube al
 bucket público `book-covers`; el archivo digital, al bucket privado
 `book-files`. Publicar/despublicar es un toggle. Nada de esto está
 hardcodeado — el catálogo vive en la tabla `products`, hoy vacío a

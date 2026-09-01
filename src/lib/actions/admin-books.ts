@@ -104,7 +104,7 @@ export async function createBook(
       product_type: parsed.data.productType,
       digital_price_cents: needsDigitalPrice ? digitalPriceCents : null,
       physical_price_cents: needsPhysicalPrice ? physicalPriceCents : null,
-      currency: "USD",
+      currency: "ARS",
       stock: needsPhysicalPrice ? Number(parsed.data.stock || 0) : null,
       status: "draft",
     })
