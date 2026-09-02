@@ -1,10 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { FakeStore } from "@/lib/whatsapp/scheduler.test-helpers";
 
-const requireAdminMock = vi.fn();
+const requireChatAdminMock = vi.fn();
 let store: FakeStore;
 
-vi.mock("@/lib/supabase/require-auth", () => ({ requireAdmin: requireAdminMock }));
+vi.mock("@/lib/supabase/require-auth", () => ({ requireChatAdmin: requireChatAdminMock }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
 
 const { subscribeToPush, unsubscribeFromPush } = await import("./push");
@@ -17,13 +17,13 @@ const VALID_SUBSCRIPTION = {
 
 beforeEach(() => {
   store = new FakeStore();
-  requireAdminMock.mockReset();
-  requireAdminMock.mockResolvedValue(ADMIN);
+  requireChatAdminMock.mockReset();
+  requireChatAdminMock.mockResolvedValue(ADMIN);
 });
 
 describe("subscribeToPush", () => {
-  it("CRITICAL: requires an admin session before storing anything", async () => {
-    requireAdminMock.mockRejectedValue(new Error("REDIRECT"));
+  it("CRITICAL: requires Ariel's own chat-admin session before storing anything", async () => {
+    requireChatAdminMock.mockRejectedValue(new Error("REDIRECT"));
     await expect(subscribeToPush(VALID_SUBSCRIPTION)).rejects.toThrow("REDIRECT");
     expect(store.tables.push_subscriptions ?? []).toHaveLength(0);
   });

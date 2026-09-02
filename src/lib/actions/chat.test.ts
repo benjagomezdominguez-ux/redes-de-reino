@@ -15,6 +15,17 @@ const { getOrCreateConversation, sendMessage, markConversationRead, refreshAdmin
 const USER = { id: "user-1", email: "user@example.com", firstName: "Ana", lastName: "Gómez", role: "user" as const, status: "active" as const };
 const ADMIN = { id: "admin-1", email: "admin@example.com", firstName: "Ariel", lastName: "Gomez", role: "admin" as const, status: "active" as const };
 const INACTIVE_ADMIN = { ...ADMIN, id: "admin-2", status: "inactive" as const };
+// A real, different admin account (e.g. the site's original admin/owner)
+// — the chat is private to Ariel specifically, so this account must be
+// refused exactly like a non-admin would be for anyone else's conversation.
+const OTHER_ADMIN = {
+  id: "other-admin-1",
+  email: "other-admin@example.com",
+  firstName: "Benjamin",
+  lastName: "Gomez",
+  role: "admin" as const,
+  status: "active" as const,
+};
 
 const CONVERSATION_ID = "conv-1";
 
@@ -67,6 +78,16 @@ describe("sendMessage", () => {
     store.seed("conversations", [{ id: "someone-elses-conversation", user_id: "different-user" }]);
 
     const result = await sendMessage("someone-elses-conversation", "trying to snoop");
+
+    expect(result).toEqual({ status: "error", errorKey: "unauthorized" });
+    expect(store.tables.messages ?? []).toHaveLength(0);
+  });
+
+  it("CRITICAL: a different real admin (not Ariel) can never send into someone else's conversation — the chat is private to Ariel specifically, not any admin", async () => {
+    getAuthProfileMock.mockResolvedValue(OTHER_ADMIN);
+    store.seed("conversations", [{ id: "someone-elses-conversation", user_id: "different-user" }]);
+
+    const result = await sendMessage("someone-elses-conversation", "un admin distinto tratando de responder");
 
     expect(result).toEqual({ status: "error", errorKey: "unauthorized" });
     expect(store.tables.messages ?? []).toHaveLength(0);
@@ -183,6 +204,16 @@ describe("markConversationRead", () => {
     expect(m1.read_at).toBeNull();
   });
 
+  it("CRITICAL: a different real admin (not Ariel) cannot mark someone else's conversation as read", async () => {
+    getAuthProfileMock.mockResolvedValue(OTHER_ADMIN);
+    await markConversationRead(CONVERSATION_ID);
+
+    const m1 = store.tables.messages.find((m) => m.id === "m1")!;
+    const m2 = store.tables.messages.find((m) => m.id === "m2")!;
+    expect(m1.read_at).toBeNull();
+    expect(m2.read_at).toBeNull();
+  });
+
   it("CRITICAL (regression): an admin viewing THEIR OWN conversation marks the admin-side messages as read, same as any other owner would — not the reverse", async () => {
     store.seed("conversations", [{ id: "ariel-own-conversation", user_id: ADMIN.id }]);
     store.seed("messages", [
@@ -203,6 +234,12 @@ describe("markConversationRead", () => {
 describe("refreshAdminConversations / getMyUnreadCount", () => {
   it("refreshAdminConversations returns nothing for a non-admin, even though the query itself would return everything", async () => {
     getAuthProfileMock.mockResolvedValue(USER);
+    const result = await refreshAdminConversations();
+    expect(result).toEqual([]);
+  });
+
+  it("CRITICAL: refreshAdminConversations returns nothing for a different real admin (not Ariel) — the chat inbox is private to Ariel specifically", async () => {
+    getAuthProfileMock.mockResolvedValue(OTHER_ADMIN);
     const result = await refreshAdminConversations();
     expect(result).toEqual([]);
   });

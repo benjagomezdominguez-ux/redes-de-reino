@@ -2,6 +2,7 @@ import "server-only";
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getAuthProfile, type AuthProfile } from "./get-profile";
+import { isChatAdmin } from "@/lib/chat/is-chat-admin";
 
 // Server-side route guards. These are the actual security boundary (rule
 // 2) — middleware.ts also redirects unauthenticated visitors away from
@@ -29,6 +30,23 @@ export async function requireAdmin(): Promise<AuthProfile> {
     redirect({ href: "/login", locale });
   }
   if ((profile as AuthProfile).role !== "admin") {
+    redirect({ href: "/403", locale });
+  }
+  return profile as AuthProfile;
+}
+
+// The chat's admin side is private to Ariel Gómez specifically — other
+// admins (e.g. the site's original admin/owner account) are refused the
+// same as any non-admin, per explicit request. See
+// src/lib/chat/is-chat-admin.ts.
+export async function requireChatAdmin(): Promise<AuthProfile> {
+  const profile = await getAuthProfile();
+  const locale = await getLocale();
+
+  if (!profile || profile.status !== "active") {
+    redirect({ href: "/login", locale });
+  }
+  if (!isChatAdmin(profile as AuthProfile)) {
     redirect({ href: "/403", locale });
   }
   return profile as AuthProfile;

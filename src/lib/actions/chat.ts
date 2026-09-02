@@ -4,6 +4,7 @@ import { getAuthProfile, type AuthProfile } from "@/lib/supabase/get-profile";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendChatPushToAdmins } from "@/lib/push/web-push";
 import { listConversationsForAdmin, type AdminConversationListItem } from "@/lib/admin/chat-queries";
+import { isChatAdmin } from "@/lib/chat/is-chat-admin";
 
 // Every write here goes through the admin/service-role client — messages
 // and conversations have SELECT-only RLS policies (see the migration),
@@ -16,10 +17,6 @@ import { listConversationsForAdmin, type AdminConversationListItem } from "@/lib
 const MAX_MESSAGE_LENGTH = 4000;
 const RATE_LIMIT_MAX_MESSAGES = 20;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
-
-function isActiveAdmin(profile: AuthProfile): boolean {
-  return profile.role === "admin" && profile.status === "active";
-}
 
 // Returns the caller's own conversation, creating it on first contact —
 // never anyone else's. The unique constraint on conversations.user_id is
@@ -47,22 +44,22 @@ export async function getOrCreateConversation(): Promise<{ id: string } | null> 
 
 type ConversationAccess = { allowed: boolean; isOwner: boolean };
 
-// Whether `profile` is the conversation's own user, whether they're
-// allowed in at all (owner OR any active admin), determined together
-// because sendMessage/markConversationRead both need "is this the
-// owner?" specifically — not just "are they an admin somewhere" — to
-// label things correctly. An admin's account IS a user account too: if
-// Ariel is the owner of this particular conversation (e.g. he opened
-// /chat himself), a message he sends there is a message from the owner,
-// not "an admin replying to someone else" — those are different things
-// even though it's the same person.
+// Whether `profile` is the conversation's own user, and whether they're
+// allowed in at all (owner OR Ariel specifically — not any admin, see
+// isChatAdmin), determined together because sendMessage/
+// markConversationRead both need "is this the owner?" specifically —
+// not just "is this Ariel" — to label things correctly. Ariel's account
+// IS a user account too: if he's the owner of this particular
+// conversation (e.g. he opened /chat himself), a message he sends there
+// is a message from the owner, not "Ariel replying to someone else" —
+// those are different things even though it's the same person.
 async function getConversationAccess(conversationId: string, profile: AuthProfile): Promise<ConversationAccess> {
   const admin = getSupabaseAdminClient();
   const { data } = await admin.from("conversations").select("user_id").eq("id", conversationId).maybeSingle();
   if (!data) return { allowed: false, isOwner: false };
 
   const isOwner = data.user_id === profile.id;
-  return { allowed: isOwner || isActiveAdmin(profile), isOwner };
+  return { allowed: isOwner || isChatAdmin(profile), isOwner };
 }
 
 export type SendMessageResult =
@@ -163,7 +160,7 @@ export async function markConversationRead(conversationId: string): Promise<void
 // browser.
 export async function refreshAdminConversations(): Promise<AdminConversationListItem[]> {
   const profile = await getAuthProfile();
-  if (!profile || !isActiveAdmin(profile)) return [];
+  if (!isChatAdmin(profile)) return [];
   return listConversationsForAdmin();
 }
 

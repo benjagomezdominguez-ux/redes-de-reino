@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { setRequestLocale } from "next-intl/server";
-import { requireAdmin } from "@/lib/supabase/require-auth";
+import { requireChatAdmin } from "@/lib/supabase/require-auth";
 import { listConversationsForAdmin } from "@/lib/admin/chat-queries";
 import { AdminChatView } from "@/components/chat/AdminChatView";
 import { PushPermissionBanner } from "@/components/chat/PushPermissionBanner";
@@ -11,7 +11,10 @@ export default async function AdminChatPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const admin = await requireAdmin();
+  // Private to Ariel Gómez specifically — any other admin (even the
+  // site's original admin/owner account) is refused, same as a
+  // non-admin. See src/lib/chat/is-chat-admin.ts.
+  const admin = await requireChatAdmin();
   const conversations = await listConversationsForAdmin();
 
   return (

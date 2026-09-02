@@ -1,16 +1,17 @@
 "use server";
 
 import { z } from "zod";
-import { requireAdmin } from "@/lib/supabase/require-auth";
+import { requireChatAdmin } from "@/lib/supabase/require-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
-// Web Push is an admin-only feature (only Ariel/admins need OS-level
-// notifications — see the chat prompt's own scoping). requireAdmin()
-// here is the real gate: push_subscriptions has no client INSERT policy
-// at all (see the migration), so this Server Action is the only path
-// that can ever write to it, and it never trusts a client-supplied
-// "this is Ariel's subscription" claim — the subscription is always
-// tied to whichever admin is actually authenticated right now.
+// Web Push is private to Ariel specifically, same as the rest of the
+// chat's admin side — requireChatAdmin() here is the real gate:
+// push_subscriptions has no client INSERT policy at all (see the
+// migration), so this Server Action is the only path that can ever
+// write to it, and it never trusts a client-supplied "this is Ariel's
+// subscription" claim — the subscription is always tied to whichever
+// account is actually authenticated right now, and only Ariel's account
+// can ever pass the gate to create one.
 
 const subscriptionSchema = z.object({
   endpoint: z.string().url(),
@@ -21,7 +22,7 @@ const subscriptionSchema = z.object({
 });
 
 export async function subscribeToPush(subscriptionJson: unknown): Promise<{ ok: boolean }> {
-  const admin_ = await requireAdmin();
+  const admin_ = await requireChatAdmin();
   const parsed = subscriptionSchema.safeParse(subscriptionJson);
   if (!parsed.success) return { ok: false };
 
@@ -40,7 +41,7 @@ export async function subscribeToPush(subscriptionJson: unknown): Promise<{ ok: 
 }
 
 export async function unsubscribeFromPush(endpoint: string): Promise<{ ok: boolean }> {
-  const admin_ = await requireAdmin();
+  const admin_ = await requireChatAdmin();
   const admin = getSupabaseAdminClient();
   // Scoped to this admin's own subscription — one admin unsubscribing
   // their browser must never delete a different admin's row, even if

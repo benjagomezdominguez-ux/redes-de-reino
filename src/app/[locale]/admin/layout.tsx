@@ -5,6 +5,7 @@ import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
 import { Link } from "@/i18n/navigation";
 import { requireAdmin } from "@/lib/supabase/require-auth";
+import { isChatAdmin } from "@/lib/chat/is-chat-admin";
 
 // Rule 22: admin routes must stay out of search engines' reach.
 export const metadata: Metadata = {
@@ -18,8 +19,9 @@ export default async function AdminLayout({
   // server-side on every request to anything under /admin. Middleware
   // only redirects unauthenticated visitors faster; this is what actually
   // enforces the role.
-  await requireAdmin();
+  const profile = await requireAdmin();
   const t = await getTranslations("admin");
+  const showChatNav = isChatAdmin(profile);
 
   return (
     <>
@@ -61,12 +63,14 @@ export default async function AdminLayout({
               >
                 {t("nav.whatsapp")}
               </Link>
-              <Link
-                href="/admin/chat"
-                className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
-              >
-                {t("nav.chat")}
-              </Link>
+              {showChatNav ? (
+                <Link
+                  href="/admin/chat"
+                  className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
+                >
+                  {t("nav.chat")}
+                </Link>
+              ) : null}
             </nav>
           </div>
           {children}
