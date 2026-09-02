@@ -47,7 +47,8 @@
     "roles": {
       "pastor": "Pastor",
       "pastora": "Pastor"
-    }
+    },
+    "messageButton": "💬 Message"
   },
   "books": {
     "eyebrow": "Books",
