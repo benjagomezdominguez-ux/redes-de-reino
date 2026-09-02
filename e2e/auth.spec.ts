@@ -22,6 +22,8 @@ const PROTECTED_PATHS = [
   "/es/admin/whatsapp",
   "/es/admin/whatsapp/groups",
   "/es/admin/whatsapp/groups/new",
+  "/es/chat",
+  "/es/admin/chat",
 ];
 
 test.describe("route protection — unauthenticated visitor", () => {

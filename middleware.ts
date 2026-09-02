@@ -10,7 +10,7 @@ const intlMiddleware = createMiddleware(routing);
 // guarded server-side by requireUser()/requireAdmin() in a layout (see
 // src/lib/supabase/require-auth.ts), which is what actually enforces
 // access and cannot be bypassed by skipping this redirect.
-const PROTECTED_PREFIXES = ["/account", "/admin", "/pedidos", "/biblioteca", "/libros/checkout"];
+const PROTECTED_PREFIXES = ["/account", "/admin", "/pedidos", "/biblioteca", "/libros/checkout", "/chat"];
 
 function stripLocale(pathname: string) {
   const match = pathname.match(new RegExp(`^/(${routing.locales.join("|")})(?=/|$)`));

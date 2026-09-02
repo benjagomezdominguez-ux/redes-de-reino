@@ -90,7 +90,10 @@ src/
     [locale]/admin/           # su layout exige sesión + rol admin.
                    # admin, admin/books(+/new, /[id]/edit), admin/users,
                    # admin/orders(+/[id]), admin/whatsapp(+/groups,
-                   # /groups/[id], /groups/new, /campaigns/new, /campaigns/[id])
+                   # /groups/[id], /groups/new, /campaigns/new, /campaigns/[id]),
+                   # admin/chat
+    [locale]/(protected)/chat
+                   # chat privado del usuario con el equipo de administración
     [locale]/login, [locale]/signup, [locale]/forgot-password,
     [locale]/reset-password, [locale]/403
                    # autenticación (Supabase Auth) y control de acceso
@@ -119,6 +122,8 @@ src/
                    # AdminPaymentReviewActions, WhatsAppGroupForm,
                    # WhatsAppContactForm/List, WhatsAppCampaignForm,
                    # WhatsAppMessageForm, WhatsAppCampaignControls)
+  chat/          # ChatWindow, AdminChatView, NotificationBell,
+                   # PushPermissionBanner, ChatNavBadge
   i18n/
     routing.ts     # locales soportados, default, prefijo de URL
     request.ts     # carga de mensajes + fallback a español
@@ -128,7 +133,7 @@ src/
     supabase/      # Clientes de Supabase + guards — ver "Autenticación" abajo
     security/      # safeRedirectPath() — evita open-redirects en `next`
     actions/       # Server Actions (auth, checkout, payments, admin-books,
-                   # admin-payments, admin-whatsapp)
+                   # admin-payments, admin-whatsapp, chat, push)
     cart/          # Carrito de compra (React Context + localStorage)
     books/         # Queries de catálogo + resolución de acceso digital
     checkout/      # Lista de países para el selector de facturación
@@ -137,6 +142,7 @@ src/
     whatsapp/      # Interfaz WhatsAppProvider + Meta Cloud API + scheduler
                    # — ver "WhatsApp"
     tiendanube/    # Cliente REST + flujo OAuth — ver "Tiendanube"
+    push/          # web-push (VAPID) real — ver "Chat privado"
     admin/         # Queries del panel de administración (via cliente de sesión + RLS)
 messages/
   es.json, en.json, pt.json   # Todo el texto traducible de la UI
@@ -662,6 +668,121 @@ porque la primera contenía por error el comando completo de ejemplo de la
 documentación de Tiendanube (con un `client_secret` real adentro) en vez
 de un token. Se recomendó rotar ese `client_secret` en el panel de
 Tiendanube por las dudas.
+
+## Chat privado (`/chat` para usuarios, `/admin` → Chat para administradores)
+
+Cualquier usuario autenticado tiene una conversación privada 1:1 con "el
+equipo de administración" — visible y respondible por cualquier admin
+activo (`is_admin(auth.uid())`), no atado a un UUID fijo de Ariel Gómez
+en particular. Esto fue una decisión deliberada (rule 6 del prompt): la
+identidad de Ariel se resuelve por rol, igual que el resto del panel
+admin (libros, pedidos, WhatsApp, Tiendanube) — nadie está silado a un
+admin específico, así que si Ariel no está disponible cualquier otro
+admin real puede seguir respondiendo. `conversations.admin_id` existe
+solo como metadato informativo ("quién contestó por última vez"), nunca
+como parte del control de acceso.
+
+**Modelo de datos** (`20260901234500_create_chat_system.sql` +
+`20260902003000_fix_messages_realtime_rls.sql`): `conversations`
+(`user_id` único — una sola conversación por usuario, reutilizada
+siempre) → `messages` (`sender_id`, `sender_role` snapshotteado al
+momento de enviar — igual que `sender_role` en WhatsApp, para que un
+mensaje quede correctamente etiquetado aunque la cuenta del remitente se
+borre después) → `push_subscriptions` (solo admins). RLS: SELECT-only en
+`conversations`/`messages` — no existe ninguna policy de INSERT/UPDATE
+para ningún rol de cliente, así que el único camino de escritura es un
+Server Action con el cliente admin/service-role. Eso es lo que hace
+literalmente cierto que "nunca se confía en `sender_id`/`sender_role` del
+frontend" (rule 10): el navegador no tiene ninguna forma de escribir un
+mensaje directamente, sea lo que sea que envíe.
+
+**Hallazgo en vivo, importante**: la policy de SELECT de `messages`
+usaba originalmente un `exists (select ... from conversations ...)`
+inline contra otra tabla con RLS — el canal de Realtime se suscribía sin
+ningún error, pero no entregaba un solo evento. Confirmado con dos
+cuentas reales de prueba y un script aislado. Arreglado envolviendo el
+chequeo en una función `SECURITY DEFINER`
+(`can_access_conversation()`), el mismo patrón que ya usa `is_admin()` —
+Realtime no soporta de forma confiable políticas con subqueries a otra
+tabla también protegida por RLS.
+
+**Tiempo real**: Supabase Realtime (`postgres_changes` sobre
+`messages`/`conversations`, agregadas a la publicación
+`supabase_realtime`). Detalle no obvio: un cliente creado con
+`createBrowserClient` (que restaura la sesión desde cookies) no propaga
+esa sesión al websocket de Realtime hasta que se llama explícitamente a
+`supabase.auth.getSession()` — sin eso, el canal se suscribe
+perfectamente (sin error) pero nunca entrega un evento protegido por
+RLS. `lib/supabase/browser-session.ts` expone
+`getSupabaseBrowserSessionClientReady()` para esto; los cuatro
+componentes con canales (`ChatWindow`, `AdminChatView`,
+`NotificationBell`, `ChatNavBadge`) lo esperan antes de abrir el canal.
+Verificado en vivo de punta a punta con dos cuentas reales (una usuario,
+una admin): mensaje del usuario → aparece en el panel de Ariel sin
+recargar → respuesta de Ariel → aparece para el usuario sin recargar,
+incluyendo el contador de no leídos y el marcado como leído.
+
+**Seguridad verificada en vivo** (no solo en tests): con una tercera
+cuenta real autenticada, una consulta directa a `conversations`/`messages`
+por el id de la conversación de otro usuario devuelve cero filas — RLS lo
+bloquea a nivel de base de datos, no es solo que la UI no lo muestre.
+
+**Notificaciones internas**: campana en `/admin` (`NotificationBell.tsx`)
+con contador de mensajes sin leer, lista con preview + nombre + link
+directo a la conversación — derivada de la misma lista de conversaciones
+(`refreshAdminConversations()`), sin una tabla de notificaciones separada.
+
+**Notificaciones del navegador**: `Notification` API — nunca se pide
+permiso solo al cargar la página; el banner (`PushPermissionBanner.tsx`,
+solo admin) explica y ofrece "Activar notificaciones" / "Ahora no". Si ya
+estaba concedido de una sesión anterior, se re-confirma en silencio sin
+mostrar nada. Se muestra cuando Ariel está en otra pestaña o en otra
+sección del panel (fuera de `/admin/chat` con foco) — si ya está viendo
+la conversación, no duplica el aviso con una notificación del sistema.
+
+**Web Push real (Service Worker + VAPID)**: para cuando el navegador o la
+pestaña están cerrados, la Notification API sola no alcanza — se
+implementó Web Push de verdad (`lib/push/web-push.ts`, paquete
+`web-push`, sin ningún servicio de terceros de pago: son claves VAPID
+autogeneradas + HTTPS directo al servicio de push de cada navegador). El
+service worker ya existente del proyecto (`public/sw.js`, antes solo para
+cache offline) se extendió con `push`/`notificationclick`. El envío
+ocurre en línea dentro de `sendMessage()` cuando el remitente es un
+usuario — sin necesidad de un listener siempre activo, coherente con la
+arquitectura serverless del resto del proyecto. Suscripciones inválidas
+(404/410) se borran solas; un error transitorio no borra la suscripción
+ni bloquea el envío a los demás admins.
+
+**Limitación de entorno de prueba, real y documentada**: no se pudo
+verificar la entrega final de una notificación Web Push de punta a punta
+en este entorno — el Chromium que usa Playwright corre en un perfil
+efímero (Push API deshabilitada a propósito por Chrome en modo
+incógnito) y, aun forzando un perfil persistente, el Chromium que
+distribuye Playwright no trae las API keys de Google que el backend de
+push de Chrome necesita para registrar. Se verificó en cambio: (1) la
+lógica de envío server-side completa, con `web-push` mockeado (suscripción
+inválida se borra, error transitorio no borra nada, éxito no bloquea a
+otros admins); (2) que la llamada real del navegador a
+`PushManager.subscribe()` está bien formada (llegó hasta el backend de
+push de Chrome antes de fallar por la limitación de Chromium); (3) el
+guardado real de una suscripción cuando el permiso ya estaba concedido.
+Con un navegador real (Chrome/Firefox normal, no el Chromium de
+Playwright) esto debería funcionar sin cambios de código.
+
+**Multidioma**: es/en/pt completos para toda la UI del chat. El
+contenido de los mensajes en sí nunca se traduce — queda exactamente como
+lo escribió cada persona.
+
+**Protecciones**: mensajes limitados a 4000 caracteres, límite de 20
+mensajes por remitente por minuto, contenido siempre tratado como texto
+plano (React escapa todo — no hay `dangerouslySetInnerHTML` en ningún
+componente del chat, así que no hay superficie de XSS que sanitizar).
+
+**Variables de entorno necesarias**:
+
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` —
+  ya generadas y cargadas en Vercel producción con un par de claves VAPID
+  real (autogenerado, no hace falta ninguna cuenta externa).
 
 ## Sistema de diseño
 

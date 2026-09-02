@@ -74,6 +74,14 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: unknown; count?: 
     this.filters.push((r) => (r[col] as number) < val);
     return this;
   }
+  gte(col: string, val: string | number) {
+    this.filters.push((r) => (r[col] as string | number) >= val);
+    return this;
+  }
+  is(col: string, val: null | boolean) {
+    this.filters.push((r) => r[col] === val);
+    return this;
+  }
   ilike(col: string, pattern: string) {
     const regex = new RegExp(`^${pattern.replace(/%/g, ".*")}$`, "i");
     this.filters.push((r) => regex.test(String(r[col] ?? "")));

@@ -211,7 +211,8 @@
       "books": "Books",
       "users": "Users",
       "orders": "Orders",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "chat": "Chat"
     },
     "dashboard": {
       "registeredUsers": "Registered users",
@@ -496,5 +497,40 @@
   "common": {
     "pending": "[CONTENT PENDING]",
     "logoAlt": "{name} logo"
+  },
+  "chat": {
+    "navLink": "💬 Talk to Ariel",
+    "headerTitle": "Chat with Ariel Gómez",
+    "headerSubtitle": "Your conversation is private.",
+    "loading": "Loading…",
+    "empty": "Message Ariel. Your conversation is private.",
+    "placeholder": "Type your message…",
+    "send": "Send",
+    "sending": "Sending…",
+    "read": "Read",
+    "disconnected": "Reconnecting…",
+    "errors": {
+      "unauthorized": "We couldn't verify your session. Please try again.",
+      "invalidContent": "The message can't be empty or longer than 4000 characters.",
+      "rateLimited": "You're sending messages too fast. Please wait a moment.",
+      "generic": "We couldn't send the message. Please try again."
+    },
+    "admin": {
+      "noConversations": "No conversations yet.",
+      "noMessagesYet": "No messages yet.",
+      "selectConversation": "Pick a conversation to get started.",
+      "bell": {
+        "ariaLabel": "Notifications",
+        "title": "New messages",
+        "empty": "No unread messages.",
+        "osTitle": "Redes de Reino",
+        "osFallbackSender": "Someone"
+      },
+      "push": {
+        "prompt": "Turn on notifications to get alerted when someone writes to you.",
+        "enable": "Enable notifications",
+        "notNow": "Not now"
+      }
+    }
   }
 }

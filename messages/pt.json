@@ -211,7 +211,8 @@
       "books": "Livros",
       "users": "Usuários",
       "orders": "Pedidos",
-      "whatsapp": "WhatsApp"
+      "whatsapp": "WhatsApp",
+      "chat": "Chat"
     },
     "dashboard": {
       "registeredUsers": "Usuários registrados",
@@ -496,5 +497,40 @@
   "common": {
     "pending": "[CONTEÚDO PENDENTE]",
     "logoAlt": "Logo da {name}"
+  },
+  "chat": {
+    "navLink": "💬 Falar com Ariel",
+    "headerTitle": "Chat com Ariel Gómez",
+    "headerSubtitle": "Sua conversa é privada.",
+    "loading": "Carregando…",
+    "empty": "Escreva para o Ariel. Sua conversa é privada.",
+    "placeholder": "Escreva sua mensagem…",
+    "send": "Enviar",
+    "sending": "Enviando…",
+    "read": "Lida",
+    "disconnected": "Reconectando…",
+    "errors": {
+      "unauthorized": "Não conseguimos verificar sua sessão. Tente novamente.",
+      "invalidContent": "A mensagem não pode estar vazia nem passar de 4000 caracteres.",
+      "rateLimited": "Você está enviando mensagens muito rápido. Aguarde um momento.",
+      "generic": "Não conseguimos enviar a mensagem. Tente novamente."
+    },
+    "admin": {
+      "noConversations": "Ainda não há conversas.",
+      "noMessagesYet": "Ainda não há mensagens.",
+      "selectConversation": "Escolha uma conversa para começar.",
+      "bell": {
+        "ariaLabel": "Notificações",
+        "title": "Novas mensagens",
+        "empty": "Nenhuma mensagem não lida.",
+        "osTitle": "Redes de Reino",
+        "osFallbackSender": "Alguém"
+      },
+      "push": {
+        "prompt": "Ative as notificações para ser avisado quando alguém escrever para você.",
+        "enable": "Ativar notificações",
+        "notNow": "Agora não"
+      }
+    }
   }
 }

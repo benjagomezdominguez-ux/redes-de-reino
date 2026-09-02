@@ -8,6 +8,7 @@ import { navLinks, site } from "@/lib/site-config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
 import { signOut } from "@/lib/actions/auth";
+import { ChatNavBadge } from "@/components/chat/ChatNavBadge";
 
 type NavbarUser = { email: string | null; role: "user" | "admin" } | null;
 
@@ -46,6 +47,7 @@ function AccountLinkText({ href, labelKey, className }: { href: string; labelKey
 // previously pushed the cart/language switcher off-screen once logged in).
 function AccountMenuDesktop({ user }: { user: NavbarUser }) {
   const t = useTranslations("auth");
+  const tChat = useTranslations("chat");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -112,6 +114,13 @@ function AccountMenuDesktop({ user }: { user: NavbarUser }) {
             labelKey="books.orders.title"
             className="block px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
           />
+          <Link
+            href="/chat"
+            className="flex items-center px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
+          >
+            {tChat("navLink")}
+            <ChatNavBadge />
+          </Link>
           {user.role === "admin" ? (
             <AccountLinkText
               href="/admin"
@@ -135,6 +144,7 @@ function AccountMenuDesktop({ user }: { user: NavbarUser }) {
 
 function AccountMenuMobile({ user }: { user: NavbarUser }) {
   const t = useTranslations("auth");
+  const tChat = useTranslations("chat");
   const linkClass = "block rounded-md px-3 py-3 text-base font-medium text-primary-900 hover:bg-primary-900/5";
 
   if (!user) {
@@ -150,6 +160,10 @@ function AccountMenuMobile({ user }: { user: NavbarUser }) {
       <AccountLinkText href="/account" labelKey="account.title" className={linkClass} />
       <AccountLinkText href="/biblioteca" labelKey="books.library.title" className={linkClass} />
       <AccountLinkText href="/pedidos" labelKey="books.orders.title" className={linkClass} />
+      <Link href="/chat" className={`flex items-center ${linkClass}`}>
+        {tChat("navLink")}
+        <ChatNavBadge />
+      </Link>
       {user.role === "admin" ? (
         <AccountLinkText href="/admin" labelKey="admin.title" className={linkClass} />
       ) : null}
