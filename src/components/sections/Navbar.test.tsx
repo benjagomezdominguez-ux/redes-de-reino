@@ -14,6 +14,15 @@ vi.mock("@/lib/actions/auth", () => ({
   signOut: async () => {},
 }));
 
+// Same reasoning as the signOut mock above: NotificationBell pulls in
+// @/i18n/navigation (next-intl's createNavigation) and next/navigation
+// (usePathname), neither of which resolve under Vitest/jsdom. It's only
+// rendered for admins and isn't what this file tests, so it's stubbed
+// out rather than exercised here.
+vi.mock("@/components/chat/NotificationBell", () => ({
+  NotificationBell: () => null,
+}));
+
 function renderNavbar() {
   return render(
     <NextIntlClientProvider locale="es" messages={esMessages}>

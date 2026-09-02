@@ -45,11 +45,24 @@ export async function getOrCreateConversation(): Promise<{ id: string } | null> 
   return created;
 }
 
-async function canAccessConversation(conversationId: string, profile: AuthProfile): Promise<boolean> {
-  if (isActiveAdmin(profile)) return true;
+type ConversationAccess = { allowed: boolean; isOwner: boolean };
+
+// Whether `profile` is the conversation's own user, whether they're
+// allowed in at all (owner OR any active admin), determined together
+// because sendMessage/markConversationRead both need "is this the
+// owner?" specifically — not just "are they an admin somewhere" — to
+// label things correctly. An admin's account IS a user account too: if
+// Ariel is the owner of this particular conversation (e.g. he opened
+// /chat himself), a message he sends there is a message from the owner,
+// not "an admin replying to someone else" — those are different things
+// even though it's the same person.
+async function getConversationAccess(conversationId: string, profile: AuthProfile): Promise<ConversationAccess> {
   const admin = getSupabaseAdminClient();
   const { data } = await admin.from("conversations").select("user_id").eq("id", conversationId).maybeSingle();
-  return data?.user_id === profile.id;
+  if (!data) return { allowed: false, isOwner: false };
+
+  const isOwner = data.user_id === profile.id;
+  return { allowed: isOwner || isActiveAdmin(profile), isOwner };
 }
 
 export type SendMessageResult =
@@ -65,7 +78,8 @@ export async function sendMessage(conversationId: string, content: string): Prom
     return { status: "error", errorKey: "invalidContent" };
   }
 
-  if (!(await canAccessConversation(conversationId, profile))) {
+  const access = await getConversationAccess(conversationId, profile);
+  if (!access.allowed) {
     return { status: "error", errorKey: "unauthorized" };
   }
 
@@ -81,7 +95,11 @@ export async function sendMessage(conversationId: string, content: string): Prom
     return { status: "error", errorKey: "rateLimited" };
   }
 
-  const senderRole = isActiveAdmin(profile) ? "admin" : "user";
+  // The conversation's own owner is always "user", even when that same
+  // account also happens to hold the admin role (e.g. Ariel testing his
+  // own /chat) — see the comment on getConversationAccess(). Only
+  // someone else, an admin stepping in on this conversation, is "admin".
+  const senderRole = access.isOwner ? "user" : "admin";
 
   // content is stored and ever rendered as plain text (React escapes it
   // by default — no dangerouslySetInnerHTML anywhere in the chat UI), so
@@ -121,10 +139,15 @@ export async function sendMessage(conversationId: string, content: string): Prom
 export async function markConversationRead(conversationId: string): Promise<void> {
   const profile = await getAuthProfile();
   if (!profile || profile.status !== "active") return;
-  if (!(await canAccessConversation(conversationId, profile))) return;
+
+  const access = await getConversationAccess(conversationId, profile);
+  if (!access.allowed) return;
 
   const admin = getSupabaseAdminClient();
-  const otherPartyRole = isActiveAdmin(profile) ? "user" : "admin";
+  // Same ownership-based logic as sendMessage(): the owner reads the
+  // admin side's messages; anyone else here is an admin reading the
+  // owner's messages.
+  const otherPartyRole = access.isOwner ? "admin" : "user";
 
   await admin
     .from("messages")

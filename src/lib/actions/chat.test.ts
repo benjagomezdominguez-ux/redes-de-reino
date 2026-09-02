@@ -99,6 +99,19 @@ describe("sendMessage", () => {
     expect(store.tables.conversations[0].admin_id).toBe(ADMIN.id);
   });
 
+  it("CRITICAL (regression): an admin who owns THIS conversation (e.g. testing their own /chat) sends as 'user', not 'admin' — sender_role reflects conversation ownership, never just 'is this account an admin somewhere'", async () => {
+    store.seed("conversations", [{ id: "ariel-own-conversation", user_id: ADMIN.id }]);
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+
+    const result = await sendMessage("ariel-own-conversation", "probando mi propio chat");
+
+    expect(result.status).toBe("success");
+    expect(store.tables.messages[0].sender_role).toBe("user");
+    // Only a *different* admin replying sets admin_id — the owner
+    // messaging their own conversation never does.
+    expect(store.tables.conversations.find((c) => c.id === "ariel-own-conversation")!.admin_id).toBeUndefined();
+  });
+
   it("a deactivated admin is treated as a regular unauthorized caller, not as admin", async () => {
     getAuthProfileMock.mockResolvedValue(INACTIVE_ADMIN);
     const result = await sendMessage(CONVERSATION_ID, "should not work");
@@ -168,6 +181,22 @@ describe("markConversationRead", () => {
 
     const m1 = store.tables.messages.find((m) => m.id === "m1")!;
     expect(m1.read_at).toBeNull();
+  });
+
+  it("CRITICAL (regression): an admin viewing THEIR OWN conversation marks the admin-side messages as read, same as any other owner would — not the reverse", async () => {
+    store.seed("conversations", [{ id: "ariel-own-conversation", user_id: ADMIN.id }]);
+    store.seed("messages", [
+      { id: "am1", conversation_id: "ariel-own-conversation", sender_role: "admin", read_at: null },
+      { id: "am2", conversation_id: "ariel-own-conversation", sender_role: "user", read_at: null },
+    ]);
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+
+    await markConversationRead("ariel-own-conversation");
+
+    const am1 = store.tables.messages.find((m) => m.id === "am1")!;
+    const am2 = store.tables.messages.find((m) => m.id === "am2")!;
+    expect(am1.read_at).not.toBeNull(); // the "admin" side message gets marked read...
+    expect(am2.read_at).toBeNull(); // ...never their own "user" (owner) message
   });
 });
 

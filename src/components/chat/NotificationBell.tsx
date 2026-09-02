@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
 import { useLocale, useTranslations } from "next-intl";
@@ -19,6 +19,15 @@ export function NotificationBell() {
   const t = useTranslations("chat.admin.bell");
   const locale = useLocale();
   const pathname = usePathname();
+  // The Navbar renders this twice at once — one copy per responsive
+  // breakpoint (same pattern as CartIcon), each hidden via CSS rather
+  // than conditionally mounted. Supabase caches realtime channels by
+  // topic name, so two instances sharing one hardcoded name would have
+  // the second instance's .on() throw ("cannot add callbacks... after
+  // subscribe()") against the first instance's already-subscribed
+  // channel — confirmed live. A per-instance id keeps each mount on its
+  // own channel.
+  const instanceId = useId();
   const [conversations, setConversations] = useState<AdminConversationListItem[]>([]);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,7 +59,7 @@ export function NotificationBell() {
       await refresh();
 
       channel = supabase
-        .channel("admin-chat-notifications")
+        .channel(`admin-chat-notifications:${instanceId}`)
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "messages" },
@@ -93,7 +102,7 @@ export function NotificationBell() {
       active = false;
       channel?.unsubscribe();
     };
-  }, [t, locale]);
+  }, [t, locale, instanceId]);
 
   useEffect(() => {
     if (!open) return;

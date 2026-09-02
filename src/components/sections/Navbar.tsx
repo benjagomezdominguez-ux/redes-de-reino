@@ -9,6 +9,7 @@ import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
 import { signOut } from "@/lib/actions/auth";
 import { ChatNavBadge } from "@/components/chat/ChatNavBadge";
+import { NotificationBell } from "@/components/chat/NotificationBell";
 
 type NavbarUser = { email: string | null; role: "user" | "admin" } | null;
 
@@ -221,6 +222,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
             ))}
           </ul>
           <div className="flex items-center gap-3 border-l border-border pl-4">
+            {user?.role === "admin" ? <NotificationBell /> : null}
             <AccountMenuDesktop user={user} />
             <CartIcon count={itemCount} />
             <LanguageSwitcher />
@@ -228,6 +230,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
         </div>
 
         <div className="flex items-center gap-1 lg:hidden">
+          {user?.role === "admin" ? <NotificationBell /> : null}
           <CartIcon count={itemCount} />
           <button
             type="button"

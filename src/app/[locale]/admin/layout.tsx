@@ -5,7 +5,6 @@ import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
 import { Link } from "@/i18n/navigation";
 import { requireAdmin } from "@/lib/supabase/require-auth";
-import { NotificationBell } from "@/components/chat/NotificationBell";
 
 // Rule 22: admin routes must stay out of search engines' reach.
 export const metadata: Metadata = {
@@ -28,12 +27,9 @@ export default async function AdminLayout({
       <main className="flex-1 py-12 sm:py-16">
         <Container className="flex flex-col gap-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <h1 className="font-display text-2xl font-medium text-primary-900 sm:text-3xl">
-                {t("title")}
-              </h1>
-              <NotificationBell />
-            </div>
+            <h1 className="font-display text-2xl font-medium text-primary-900 sm:text-3xl">
+              {t("title")}
+            </h1>
             <nav aria-label={t("navLabel")} className="flex flex-wrap gap-2">
               <Link
                 href="/admin"

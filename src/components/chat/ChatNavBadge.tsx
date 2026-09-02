@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { getMyUnreadCount } from "@/lib/actions/chat";
 import { getSupabaseBrowserSessionClientReady } from "@/lib/supabase/browser-session";
 
 export function ChatNavBadge() {
   const [count, setCount] = useState(0);
+  // Navbar renders this twice at once (desktop + mobile account menus,
+  // same as CartIcon) — a channel name built only from conversationId
+  // would collide between the two mounts. See the identical fix/comment
+  // in NotificationBell.tsx (confirmed live: "cannot add callbacks...
+  // after subscribe()").
+  const instanceId = useId();
 
   useEffect(() => {
     let active = true;
@@ -25,7 +31,7 @@ export function ChatNavBadge() {
       if (!active) return;
 
       channel = supabase
-        .channel(`nav-unread:${result.conversationId}`)
+        .channel(`nav-unread:${result.conversationId}:${instanceId}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${result.conversationId}` },
@@ -42,7 +48,7 @@ export function ChatNavBadge() {
       active = false;
       channel?.unsubscribe();
     };
-  }, []);
+  }, [instanceId]);
 
   if (count === 0) return null;
 
