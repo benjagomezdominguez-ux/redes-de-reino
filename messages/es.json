@@ -530,7 +530,15 @@
       "push": {
         "prompt": "Activá las notificaciones para recibir avisos cuando alguien te escriba.",
         "enable": "Activar notificaciones",
-        "notNow": "Ahora no"
+        "notNow": "Ahora no",
+        "enabling": "Activando…",
+        "enabled": "Notificaciones activadas",
+        "error": "No pudimos activar las notificaciones. Probá de nuevo.",
+        "denied": "Bloqueaste las notificaciones para este sitio. Podés habilitarlas de nuevo desde la configuración del navegador.",
+        "unsupported": "Tu navegador no soporta notificaciones push.",
+        "needsInstallTitle": "Para recibir notificaciones en este dispositivo, agregá la app a tu pantalla de inicio.",
+        "needsInstallBody": "Tocá el botón Compartir de Safari y elegí \"Agregar a pantalla de inicio\". Después abrí Redes de Reino desde ese ícono y volvé a intentar activar las notificaciones.",
+        "retry": "Reintentar"
       }
     }
   }

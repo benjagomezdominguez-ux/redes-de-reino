@@ -5,6 +5,8 @@ import { Container } from "@/components/ui/Container";
 import { Link } from "@/i18n/navigation";
 import { getAuthProfile } from "@/lib/supabase/get-profile";
 import { signOut } from "@/lib/actions/auth";
+import { isChatAdmin } from "@/lib/chat/is-chat-admin";
+import { PushPermissionBanner } from "@/components/chat/PushPermissionBanner";
 
 export default async function AccountPage({
   params,
@@ -42,6 +44,12 @@ export default async function AccountPage({
               </div>
             ))}
           </dl>
+
+          {isChatAdmin(profile) ? (
+            <div className="mb-8">
+              <PushPermissionBanner />
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link

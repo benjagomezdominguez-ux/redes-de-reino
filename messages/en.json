@@ -530,7 +530,15 @@
       "push": {
         "prompt": "Turn on notifications to get alerted when someone writes to you.",
         "enable": "Enable notifications",
-        "notNow": "Not now"
+        "notNow": "Not now",
+        "enabling": "Enabling…",
+        "enabled": "Notifications enabled",
+        "error": "We couldn't enable notifications. Please try again.",
+        "denied": "You blocked notifications for this site. You can re-enable them from your browser settings.",
+        "unsupported": "Your browser doesn't support push notifications.",
+        "needsInstallTitle": "To get notifications on this device, add the app to your Home Screen.",
+        "needsInstallBody": "Tap Safari's Share button and choose \"Add to Home Screen\". Then open Redes de Reino from that icon and try enabling notifications again.",
+        "retry": "Retry"
       }
     }
   }
