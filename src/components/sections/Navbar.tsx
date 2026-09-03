@@ -145,7 +145,6 @@ function AccountMenuDesktop({ user }: { user: NavbarUser }) {
 
 function AccountMenuMobile({ user }: { user: NavbarUser }) {
   const t = useTranslations("auth");
-  const tChat = useTranslations("chat");
   const linkClass = "block rounded-md px-3 py-3 text-base font-medium text-primary-900 hover:bg-primary-900/5";
 
   if (!user) {
@@ -161,10 +160,6 @@ function AccountMenuMobile({ user }: { user: NavbarUser }) {
       <AccountLinkText href="/account" labelKey="account.title" className={linkClass} />
       <AccountLinkText href="/biblioteca" labelKey="books.library.title" className={linkClass} />
       <AccountLinkText href="/pedidos" labelKey="books.orders.title" className={linkClass} />
-      <Link href="/chat" className={`flex items-center ${linkClass}`}>
-        {tChat("navLink")}
-        <ChatNavBadge />
-      </Link>
       {user.role === "admin" ? (
         <AccountLinkText href="/admin" labelKey="admin.title" className={linkClass} />
       ) : null}
