@@ -2,9 +2,10 @@
 
 import { getAuthProfile, type AuthProfile } from "@/lib/supabase/get-profile";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { sendChatPushToAdmins } from "@/lib/push/web-push";
+import { sendChatPush } from "@/lib/push/web-push";
 import { listConversationsForAdmin, type AdminConversationListItem } from "@/lib/admin/chat-queries";
 import { isChatAdmin } from "@/lib/chat/is-chat-admin";
+import { getChatAdminId } from "@/lib/chat/chat-admin-lookup";
 
 // Every write here goes through the admin/service-role client — messages
 // and conversations have SELECT-only RLS policies (see the migration),
@@ -42,7 +43,7 @@ export async function getOrCreateConversation(): Promise<{ id: string } | null> 
   return created;
 }
 
-type ConversationAccess = { allowed: boolean; isOwner: boolean };
+type ConversationAccess = { allowed: boolean; isOwner: boolean; ownerId: string | null };
 
 // Whether `profile` is the conversation's own user, and whether they're
 // allowed in at all (owner OR Ariel specifically — not any admin, see
@@ -53,13 +54,15 @@ type ConversationAccess = { allowed: boolean; isOwner: boolean };
 // conversation (e.g. he opened /chat himself), a message he sends there
 // is a message from the owner, not "Ariel replying to someone else" —
 // those are different things even though it's the same person.
+// `ownerId` is also returned — sendMessage() needs the real owner's id
+// to resolve who the OTHER party is when an admin (not the owner) sends.
 async function getConversationAccess(conversationId: string, profile: AuthProfile): Promise<ConversationAccess> {
   const admin = getSupabaseAdminClient();
   const { data } = await admin.from("conversations").select("user_id").eq("id", conversationId).maybeSingle();
-  if (!data) return { allowed: false, isOwner: false };
+  if (!data) return { allowed: false, isOwner: false, ownerId: null };
 
   const isOwner = data.user_id === profile.id;
-  return { allowed: isOwner || isChatAdmin(profile), isOwner };
+  return { allowed: isOwner || isChatAdmin(profile), isOwner, ownerId: data.user_id };
 }
 
 export type SendMessageResult =
@@ -119,14 +122,30 @@ export async function sendMessage(conversationId: string, content: string): Prom
     })
     .eq("id", conversationId);
 
-  if (senderRole === "user") {
+  // The one authorized recipient, resolved entirely server-side from real
+  // data — never a client-supplied id/role: the conversation's owner and
+  // the real chat-admin account (Ariel, via getChatAdminId()) are the
+  // only two possible parties, and whichever one is NOT the sender is
+  // the recipient. sendChatPush() itself refuses recipientId === senderId
+  // as a second guard, so a sender never gets pushed their own message —
+  // a general rule, not a "skip it if this is Ariel" special case: it's
+  // exactly this general rule that stops Ariel from being pushed when he
+  // sends a message inside his own /chat conversation (there, isOwner is
+  // true, so the resolved recipient is "the chat admin" — which is also
+  // Ariel — and the two ids match, so nothing gets sent).
+  const recipientId = access.isOwner ? await getChatAdminId() : access.ownerId;
+  if (recipientId && recipientId !== profile.id) {
     const senderName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email || "Alguien";
     // Fire-and-forget on purpose — a push failure (or nothing configured
     // yet) must never fail the message send itself.
-    sendChatPushToAdmins({
-      title: "Nuevo mensaje",
-      body: `${senderName}: ${trimmed.slice(0, 120)}`,
-      conversationId,
+    sendChatPush({
+      recipientId,
+      senderId: profile.id,
+      notification: {
+        title: "Nuevo mensaje",
+        body: `${senderName}: ${trimmed.slice(0, 120)}`,
+        conversationId,
+      },
     }).catch((err) => console.error("chat push notify failed", err));
   }
 

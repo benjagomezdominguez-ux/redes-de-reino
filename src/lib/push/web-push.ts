@@ -28,18 +28,33 @@ export type ChatPushPayload = {
   conversationId: string;
 };
 
-// Sends to every admin's saved subscription. Best-effort and
-// fire-and-forget per subscription — one admin's expired/invalid
-// subscription must never stop the others from being notified. A 404/410
-// response means the push service itself says the subscription is dead
-// (browser uninstalled, permission revoked, etc.) — those get deleted so
-// they stop being retried forever.
-export async function sendChatPushToAdmins(payload: ChatPushPayload): Promise<{ sent: number; removed: number }> {
+// Sends only to the given recipient's own saved subscriptions — never
+// the sender's. The `recipientId === senderId` check is a second,
+// unconditional guard here (on top of whatever resolved the recipient
+// upstream in sendMessage()): a message's sender must never receive a
+// push for their own message, full stop, regardless of who they are.
+// This is what makes the rule general rather than an "if this is Ariel,
+// skip it" special case — it holds for any account in that position.
+//
+// Best-effort and fire-and-forget per subscription — one dead
+// subscription must never stop another of the same recipient's devices
+// from being notified. A 404/410 response means the push service itself
+// says the subscription is dead (browser uninstalled, permission
+// revoked, etc.) — those get deleted so they stop being retried forever.
+export async function sendChatPush(params: {
+  recipientId: string;
+  senderId: string;
+  notification: ChatPushPayload;
+}): Promise<{ sent: number; removed: number }> {
   if (!isPushConfigured()) return { sent: 0, removed: 0 };
+  if (params.recipientId === params.senderId) return { sent: 0, removed: 0 };
   configureVapid();
 
   const admin = getSupabaseAdminClient();
-  const { data: subscriptions } = await admin.from("push_subscriptions").select("id, endpoint, p256dh, auth_key");
+  const { data: subscriptions } = await admin
+    .from("push_subscriptions")
+    .select("id, endpoint, p256dh, auth_key")
+    .eq("user_id", params.recipientId);
 
   let sent = 0;
   let removed = 0;
@@ -52,7 +67,7 @@ export async function sendChatPushToAdmins(payload: ChatPushPayload): Promise<{ 
             endpoint: sub.endpoint,
             keys: { p256dh: sub.p256dh, auth: sub.auth_key },
           },
-          JSON.stringify(payload)
+          JSON.stringify(params.notification)
         );
         sent += 1;
       } catch (err) {

@@ -2,12 +2,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { FakeStore } from "@/lib/whatsapp/scheduler.test-helpers";
 
 const getAuthProfileMock = vi.fn();
-const sendChatPushToAdminsMock = vi.fn();
+const sendChatPushMock = vi.fn();
 let store: FakeStore;
 
 vi.mock("@/lib/supabase/get-profile", () => ({ getAuthProfile: getAuthProfileMock }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
-vi.mock("@/lib/push/web-push", () => ({ sendChatPushToAdmins: sendChatPushToAdminsMock }));
+vi.mock("@/lib/push/web-push", () => ({ sendChatPush: sendChatPushMock }));
 
 const { getOrCreateConversation, sendMessage, markConversationRead, refreshAdminConversations, getMyUnreadCount } =
   await import("./chat");
@@ -32,8 +32,12 @@ const CONVERSATION_ID = "conv-1";
 beforeEach(() => {
   store = new FakeStore();
   getAuthProfileMock.mockReset();
-  sendChatPushToAdminsMock.mockReset();
-  sendChatPushToAdminsMock.mockResolvedValue({ sent: 0, removed: 0 });
+  sendChatPushMock.mockReset();
+  sendChatPushMock.mockResolvedValue({ sent: 0, removed: 0 });
+  // getChatAdminId() queries this for real (not mocked) — seed the one
+  // real chat-admin account (Ariel) the same way it exists in production,
+  // so recipient resolution behaves exactly as it does for real.
+  store.seed("profiles", [{ id: ADMIN.id, role: "admin", status: "active", first_name: "Ariel", last_name: "Gomez" }]);
 });
 
 describe("getOrCreateConversation", () => {
@@ -155,15 +159,54 @@ describe("sendMessage", () => {
     expect(result).toEqual({ status: "error", errorKey: "rateLimited" });
   });
 
-  it("notifies admins via push only when the sender is a user, never when an admin replies", async () => {
-    getAuthProfileMock.mockResolvedValue(ADMIN);
-    await sendMessage(CONVERSATION_ID, "respuesta de admin");
-    expect(sendChatPushToAdminsMock).not.toHaveBeenCalled();
-
+  it("a user's message pushes the real chat-admin account (Ariel), never the sender", async () => {
     getAuthProfileMock.mockResolvedValue(USER);
     await sendMessage(CONVERSATION_ID, "mensaje de usuario");
-    expect(sendChatPushToAdminsMock).toHaveBeenCalledTimes(1);
-    expect(sendChatPushToAdminsMock.mock.calls[0][0]).toMatchObject({ conversationId: CONVERSATION_ID });
+
+    expect(sendChatPushMock).toHaveBeenCalledTimes(1);
+    expect(sendChatPushMock.mock.calls[0][0]).toMatchObject({
+      recipientId: ADMIN.id,
+      senderId: USER.id,
+      notification: { conversationId: CONVERSATION_ID },
+    });
+  });
+
+  it("an admin's reply pushes the conversation's owner (the user), not the admin", async () => {
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+    await sendMessage(CONVERSATION_ID, "respuesta de admin");
+
+    expect(sendChatPushMock).toHaveBeenCalledTimes(1);
+    expect(sendChatPushMock.mock.calls[0][0]).toMatchObject({
+      recipientId: USER.id,
+      senderId: ADMIN.id,
+      notification: { conversationId: CONVERSATION_ID },
+    });
+  });
+
+  it("CRITICAL: the real bug this fixes — an admin (Ariel) sending inside THEIR OWN conversation never pushes themself", async () => {
+    store.seed("conversations", [{ id: "ariel-own-conversation", user_id: ADMIN.id }]);
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+
+    const result = await sendMessage("ariel-own-conversation", "probando mi propio chat");
+
+    expect(result.status).toBe("success");
+    // The recipient resolves to "the chat admin" (Ariel, via
+    // getChatAdminId()) exactly like any user's conversation would — it
+    // just happens to be the same account as the sender here, which is
+    // exactly what must suppress the push. No sender-specific branching.
+    expect(sendChatPushMock).not.toHaveBeenCalled();
+  });
+
+  it("CRITICAL: a regular user never pushes themself either — same general rule, different account", async () => {
+    // If a user's own conversation somehow had no resolvable chat-admin
+    // recipient (e.g. getChatAdminId() finds nothing), no push should be
+    // attempted at all — never fall back to notifying the sender.
+    store.tables.profiles = [];
+    getAuthProfileMock.mockResolvedValue(USER);
+
+    await sendMessage(CONVERSATION_ID, "mensaje de usuario");
+
+    expect(sendChatPushMock).not.toHaveBeenCalled();
   });
 });
 
