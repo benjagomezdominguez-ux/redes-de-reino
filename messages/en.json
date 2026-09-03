@@ -47,8 +47,7 @@
     "roles": {
       "pastor": "Pastor",
       "pastora": "Pastor"
-    },
-    "messageButton": "💬 Message"
+    }
   },
   "books": {
     "eyebrow": "Books",
@@ -540,6 +539,10 @@
         "needsInstallBody": "Tap Safari's Share button and choose \"Add to Home Screen\". Then open Redes de Reino from that icon and try enabling notifications again.",
         "retry": "Retry"
       }
+    },
+    "floatingButton": {
+      "label": "Talk to Pastor Ariel",
+      "ariaLabel": "Talk to Pastor Ariel via chat"
     }
   }
 }

@@ -47,8 +47,7 @@
     "roles": {
       "pastor": "Pastor",
       "pastora": "Pastora"
-    },
-    "messageButton": "💬 Mensaje"
+    }
   },
   "books": {
     "eyebrow": "Libros",
@@ -540,6 +539,10 @@
         "needsInstallBody": "Tocá el botón Compartir de Safari y elegí \"Agregar a pantalla de inicio\". Después abrí Redes de Reino desde ese ícono y volvé a intentar activar las notificaciones.",
         "retry": "Reintentar"
       }
+    },
+    "floatingButton": {
+      "label": "Hablar con el Pastor Ariel",
+      "ariaLabel": "Hablar con el Pastor Ariel por chat"
     }
   }
 }

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { siteUrl, site } from "@/lib/site-config";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { PastorChatFloatingButton } from "@/components/chat/PastorChatFloatingButton";
 import { CartProvider } from "@/lib/cart/CartContext";
 import "../globals.css";
 
@@ -98,6 +99,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages}>
           <CartProvider>
             {children}
+            <PastorChatFloatingButton />
             <ServiceWorkerRegistration />
           </CartProvider>
         </NextIntlClientProvider>
