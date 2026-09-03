@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 import { isOnlinePaymentConfigured } from "@/lib/payments/provider";
 
 const itemSchema = z.object({
@@ -45,14 +46,16 @@ export async function createOrder(
   _prevState: CheckoutState,
   formData: FormData
 ): Promise<CheckoutState> {
-  const supabase = await getSupabaseSessionClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user || !user.email) {
+  // A deactivated account keeps its historical orders untouched, but
+  // can never create a new one — same status check every other
+  // protected write in this app makes (see require-auth.ts, chat.ts).
+  const profile = await getAuthProfile();
+  if (!profile || !profile.email || profile.status !== "active") {
     return { status: "error", errorKey: "generic" };
   }
+  const user = { id: profile.id, email: profile.email };
+
+  const supabase = await getSupabaseSessionClient();
 
   let items: z.infer<typeof itemSchema>[];
   try {

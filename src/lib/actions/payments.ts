@@ -4,6 +4,7 @@ import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 
 const proofSchema = z.object({
   orderId: z.string().uuid(),
@@ -23,12 +24,12 @@ export type TransferProofState = {
 // this from ever resolving another user's payment — this query simply
 // can't return a row that isn't the caller's.
 async function getOwnPendingTransfer(orderId: string) {
-  const supabase = await getSupabaseSessionClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // A deactivated account can't attach new proof to a pending transfer
+  // either — same status check as every other protected write here.
+  const profile = await getAuthProfile();
+  if (!profile || profile.status !== "active") return null;
 
+  const supabase = await getSupabaseSessionClient();
   const { data: payment } = await supabase
     .from("payments")
     .select("id, order_id, method, status")

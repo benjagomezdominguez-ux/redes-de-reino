@@ -25,6 +25,7 @@ export type AuthFormState = {
     | "emailInUse"
     | "passwordMismatch"
     | "required"
+    | "accountDisabled"
     | "generic";
 };
 
@@ -42,10 +43,26 @@ export async function signIn(
   }
 
   const supabase = await getSupabaseSessionClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { error, data } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
     return { status: "error", errorKey: "invalidCredentials" };
+  }
+
+  // Deactivated accounts (rule 8 of the admin-deactivation prompt: "no
+  // debe poder iniciar una nueva sesión funcional") never get a working
+  // session from here, even though the password was correct — sign the
+  // just-created session back out immediately rather than leaving the
+  // user with a cookie that every subsequent protected check would
+  // reject anyway.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("status")
+    .eq("id", data.user.id)
+    .maybeSingle();
+  if (profile?.status === "inactive") {
+    await supabase.auth.signOut();
+    return { status: "error", errorKey: "accountDisabled" };
   }
 
   const locale = await getLocale();

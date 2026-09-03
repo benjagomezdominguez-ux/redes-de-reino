@@ -1,72 +1,134 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { listUsers } from "@/lib/admin/queries";
+import { listUsers, type UserStatusFilter } from "@/lib/admin/queries";
+import { requireAdmin } from "@/lib/supabase/require-auth";
 import { AdminPagination } from "@/components/ui/AdminPagination";
+import { UserStatusAction } from "@/components/ui/UserStatusAction";
+import { Link } from "@/i18n/navigation";
 
 const PAGE_SIZE = 20;
+const FILTERS: UserStatusFilter[] = ["all", "active", "inactive"];
+
+function isStatusFilter(value: string | undefined): value is UserStatusFilter {
+  return FILTERS.includes(value as UserStatusFilter);
+}
 
 export default async function AdminUsersPage({
   params,
   searchParams,
 }: PageProps<"/[locale]/admin/users">) {
   const { locale } = await params;
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, status: statusParam } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("admin.users");
 
+  // Also used to exclude the acting admin's own row from any action — a
+  // second, purely presentational layer on top of the real server-side
+  // guard in admin-users.ts/admin_set_user_status().
+  const admin = await requireAdmin();
+
   const page = Math.max(1, Number(pageParam) || 1);
-  const { rows, total } = await listUsers(page, PAGE_SIZE);
+  const statusFilter: UserStatusFilter = isStatusFilter(
+    Array.isArray(statusParam) ? statusParam[0] : statusParam
+  )
+    ? ((Array.isArray(statusParam) ? statusParam[0] : statusParam) as UserStatusFilter)
+    : "all";
+  const { rows, total } = await listUsers(page, PAGE_SIZE, statusFilter);
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex gap-2">
+        {FILTERS.map((filter) => (
+          <Link
+            key={filter}
+            href={{ pathname: "/admin/users", query: filter === "all" ? {} : { status: filter } }}
+            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+              statusFilter === filter
+                ? "border-primary-900 bg-primary-900 text-white"
+                : "border-border text-primary-900 hover:bg-primary-900/5"
+            }`}
+          >
+            {t(`filters.${filter}`)}
+          </Link>
+        ))}
+      </div>
+
       {rows.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border p-10 text-center text-muted">
           {t("empty")}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-soft">
-          <table className="w-full min-w-[640px] text-left text-sm">
+          <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="border-b border-border text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
                 <th className="px-6 py-4">{t("columns.user")}</th>
                 <th className="px-6 py-4">{t("columns.email")}</th>
                 <th className="px-6 py-4">{t("columns.registered")}</th>
                 <th className="px-6 py-4">{t("columns.status")}</th>
+                <th className="px-6 py-4">{t("columns.actions")}</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr key={row.id} className="border-b border-border last:border-0">
-                  <td className="px-6 py-4 text-text">
-                    {[row.first_name, row.last_name].filter(Boolean).join(" ") || "—"}
-                    {row.role === "admin" ? (
-                      <span className="ml-2 rounded-full bg-secondary-300/60 px-2 py-0.5 text-xs font-semibold text-secondary-700">
-                        {t("adminBadge")}
+              {rows.map((row) => {
+                const displayName = [row.first_name, row.last_name].filter(Boolean).join(" ") || "—";
+                const isSelf = row.id === admin.id;
+                return (
+                  <tr key={row.id} className="border-b border-border last:border-0">
+                    <td className="px-6 py-4 text-text">
+                      {displayName}
+                      {row.role === "admin" ? (
+                        <span className="ml-2 rounded-full bg-secondary-300/60 px-2 py-0.5 text-xs font-semibold text-secondary-700">
+                          {t("adminBadge")}
+                        </span>
+                      ) : null}
+                      {isSelf ? (
+                        <span className="ml-2 rounded-full bg-primary-900/10 px-2 py-0.5 text-xs font-semibold text-primary-900">
+                          {t("youBadge")}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-6 py-4 text-muted">{row.email ?? "—"}</td>
+                    <td className="px-6 py-4 text-muted">
+                      {new Date(row.created_at).toLocaleDateString(locale)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                          row.status === "active"
+                            ? "bg-success/15 text-success"
+                            : "bg-muted/20 text-muted"
+                        }`}
+                      >
+                        {t(`status.${row.status}`)}
                       </span>
-                    ) : null}
-                  </td>
-                  <td className="px-6 py-4 text-muted">{row.email ?? "—"}</td>
-                  <td className="px-6 py-4 text-muted">
-                    {new Date(row.created_at).toLocaleDateString(locale)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        row.status === "active"
-                          ? "bg-success/15 text-success"
-                          : "bg-muted/20 text-muted"
-                      }`}
-                    >
-                      {t(`status.${row.status}`)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4">
+                      {row.role === "admin" || isSelf ? (
+                        <span className="text-xs text-muted">{t("noActionAvailable")}</span>
+                      ) : (
+                        <UserStatusAction
+                          userId={row.id}
+                          status={row.status}
+                          displayName={displayName}
+                          email={row.email}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
 
-      <AdminPagination basePath="/admin/users" page={page} pageSize={PAGE_SIZE} total={total} />
+      <AdminPagination
+        basePath="/admin/users"
+        page={page}
+        pageSize={PAGE_SIZE}
+        total={total}
+        extraQuery={statusFilter === "all" ? undefined : { status: statusFilter }}
+      />
     </div>
   );
 }

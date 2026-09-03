@@ -191,7 +191,8 @@
       "emailInUse": "That email already has an account.",
       "passwordMismatch": "Passwords don't match.",
       "required": "Please fill in every field.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "accountDisabled": "Your account is deactivated. Please contact an administrator."
     }
   },
   "account": {
@@ -288,11 +289,40 @@
         "user": "User",
         "email": "Email",
         "registered": "Registered",
-        "status": "Status"
+        "status": "Status",
+        "actions": "Actions"
       },
       "status": {
         "active": "Active",
         "inactive": "Inactive"
+      },
+      "filters": {
+        "all": "All",
+        "active": "Active",
+        "inactive": "Deactivated"
+      },
+      "youBadge": "You",
+      "noActionAvailable": "—",
+      "actions": {
+        "deactivate": "Deactivate user",
+        "reactivate": "Reactivate user",
+        "deactivating": "Deactivating…",
+        "reactivating": "Reactivating…",
+        "confirmTitle": "Deactivate this user?",
+        "confirmBody": "The user will no longer be able to use the site normally, but their data will be kept.",
+        "confirmName": "Name",
+        "confirmEmail": "Email",
+        "cancel": "Cancel",
+        "confirmButton": "Deactivate user",
+        "deactivateSuccess": "User deactivated successfully.",
+        "reactivateSuccess": "User reactivated successfully.",
+        "errors": {
+          "unauthorized": "You do not have permission to perform this action.",
+          "notFound": "User not found.",
+          "cannotTargetSelf": "You cannot deactivate your own account.",
+          "cannotTargetAdmin": "An administrator cannot be deactivated.",
+          "generic": "We could not complete the action. Please try again."
+        }
       }
     },
     "orders": {

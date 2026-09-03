@@ -65,16 +65,25 @@ export type ProfileRow = {
 
 export type Paginated<T> = { rows: T[]; total: number; page: number; pageSize: number };
 
-export async function listUsers(page: number, pageSize = 20): Promise<Paginated<ProfileRow>> {
+export type UserStatusFilter = "all" | "active" | "inactive";
+
+export async function listUsers(
+  page: number,
+  pageSize = 20,
+  statusFilter: UserStatusFilter = "all"
+): Promise<Paginated<ProfileRow>> {
   const supabase = await getSupabaseSessionClient();
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  const { data, count } = await supabase
+  let query = supabase
     .from("profiles")
-    .select("id, first_name, last_name, email, created_at, status, role", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .select("id, first_name, last_name, email, created_at, status, role", { count: "exact" });
+  if (statusFilter !== "all") {
+    query = query.eq("status", statusFilter);
+  }
+
+  const { data, count } = await query.order("created_at", { ascending: false }).range(from, to);
 
   return { rows: (data ?? []) as ProfileRow[], total: count ?? 0, page, pageSize };
 }

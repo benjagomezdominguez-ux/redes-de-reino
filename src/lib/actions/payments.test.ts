@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const getUserMock = vi.fn();
+const getAuthProfileMock = vi.fn();
 const fromMock = vi.fn();
 const rpcMock = vi.fn();
 const createSignedUploadUrlMock = vi.fn();
 
+vi.mock("@/lib/supabase/get-profile", () => ({ getAuthProfile: getAuthProfileMock }));
 vi.mock("@/lib/supabase/session", () => ({
   getSupabaseSessionClient: async () => ({
-    auth: { getUser: getUserMock },
     from: fromMock,
     rpc: rpcMock,
   }),
@@ -36,6 +36,7 @@ function buildFormData(fields: Record<string, string>) {
 }
 
 const ORDER_ID = "123e4567-e89b-12d3-a456-426614174000";
+const ACTIVE_PROFILE = { id: "user-1", email: "buyer@example.com", firstName: null, lastName: null, role: "user" as const, status: "active" as const };
 
 function mockPaymentLookup(payment: unknown) {
   fromMock.mockReturnValue({
@@ -49,15 +50,24 @@ function mockPaymentLookup(payment: unknown) {
 
 describe("submitTransferProof", () => {
   beforeEach(() => {
-    getUserMock.mockReset();
+    getAuthProfileMock.mockReset();
     fromMock.mockReset();
     rpcMock.mockReset();
-    getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    getAuthProfileMock.mockResolvedValue(ACTIVE_PROFILE);
     rpcMock.mockResolvedValue({ error: null });
   });
 
   it("rejects an unauthenticated caller before touching anything", async () => {
-    getUserMock.mockResolvedValue({ data: { user: null } });
+    getAuthProfileMock.mockResolvedValue(null);
+
+    const result = await submitTransferProof({ status: "idle" }, buildFormData({ order_id: ORDER_ID }));
+
+    expect(result).toEqual({ status: "error", errorKey: "unauthorized" });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("CRITICAL: rejects a deactivated account, even with a valid session", async () => {
+    getAuthProfileMock.mockResolvedValue({ ...ACTIVE_PROFILE, status: "inactive" });
 
     const result = await submitTransferProof({ status: "idle" }, buildFormData({ order_id: ORDER_ID }));
 
@@ -120,10 +130,10 @@ describe("submitTransferProof", () => {
 
 describe("requestTransferProofUploadUrl", () => {
   beforeEach(() => {
-    getUserMock.mockReset();
+    getAuthProfileMock.mockReset();
     fromMock.mockReset();
     createSignedUploadUrlMock.mockReset();
-    getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    getAuthProfileMock.mockResolvedValue(ACTIVE_PROFILE);
   });
 
   it("CRITICAL: refuses to mint an upload URL for a payment that isn't the caller's own pending bank transfer", async () => {

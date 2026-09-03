@@ -191,7 +191,8 @@
       "emailInUse": "Ese email ya tiene una cuenta.",
       "passwordMismatch": "Las contraseñas no coinciden.",
       "required": "Completá todos los campos.",
-      "generic": "Algo salió mal. Probá de nuevo."
+      "generic": "Algo salió mal. Probá de nuevo.",
+      "accountDisabled": "Tu cuenta está desactivada. Contactá a un administrador."
     }
   },
   "account": {
@@ -288,11 +289,40 @@
         "user": "Usuario",
         "email": "Email",
         "registered": "Registro",
-        "status": "Estado"
+        "status": "Estado",
+        "actions": "Acciones"
       },
       "status": {
         "active": "Activo",
         "inactive": "Inactivo"
+      },
+      "filters": {
+        "all": "Todos",
+        "active": "Activos",
+        "inactive": "Desactivados"
+      },
+      "youBadge": "Vos",
+      "noActionAvailable": "—",
+      "actions": {
+        "deactivate": "Desactivar usuario",
+        "reactivate": "Reactivar usuario",
+        "deactivating": "Desactivando…",
+        "reactivating": "Reactivando…",
+        "confirmTitle": "¿Desactivar este usuario?",
+        "confirmBody": "El usuario dejará de poder utilizar normalmente la página, pero sus datos se conservarán.",
+        "confirmName": "Nombre",
+        "confirmEmail": "Email",
+        "cancel": "Cancelar",
+        "confirmButton": "Desactivar usuario",
+        "deactivateSuccess": "Usuario desactivado correctamente.",
+        "reactivateSuccess": "Usuario reactivado correctamente.",
+        "errors": {
+          "unauthorized": "No tenés permisos para realizar esta acción.",
+          "notFound": "No se encontró el usuario.",
+          "cannotTargetSelf": "No podés desactivar tu propia cuenta.",
+          "cannotTargetAdmin": "No se puede desactivar a un administrador.",
+          "generic": "No pudimos completar la acción. Probá de nuevo."
+        }
       }
     },
     "orders": {

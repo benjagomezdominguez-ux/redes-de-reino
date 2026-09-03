@@ -1,12 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const getUserMock = vi.fn();
+const getAuthProfileMock = vi.fn();
 const rpcMock = vi.fn();
 const isOnlinePaymentConfiguredMock = vi.fn();
 
+vi.mock("@/lib/supabase/get-profile", () => ({ getAuthProfile: getAuthProfileMock }));
 vi.mock("@/lib/supabase/session", () => ({
   getSupabaseSessionClient: async () => ({
-    auth: { getUser: getUserMock },
     rpc: rpcMock,
   }),
 }));
@@ -25,7 +25,7 @@ function buildFormData(fields: Record<string, string>) {
   return formData;
 }
 
-const AUTH_USER = { id: "user-1", email: "buyer@example.com" };
+const AUTH_PROFILE = { id: "user-1", email: "buyer@example.com", firstName: null, lastName: null, role: "user" as const, status: "active" as const };
 const PRODUCT_ID = "123e4567-e89b-12d3-a456-426614174000";
 
 const RPC_SUCCESS = {
@@ -40,10 +40,10 @@ const RPC_SUCCESS = {
 
 describe("createOrder", () => {
   beforeEach(() => {
-    getUserMock.mockReset();
+    getAuthProfileMock.mockReset();
     rpcMock.mockReset();
     isOnlinePaymentConfiguredMock.mockReset();
-    getUserMock.mockResolvedValue({ data: { user: AUTH_USER } });
+    getAuthProfileMock.mockResolvedValue(AUTH_PROFILE);
     rpcMock.mockResolvedValue({ data: RPC_SUCCESS, error: null });
     isOnlinePaymentConfiguredMock.mockReturnValue(false);
   });
@@ -97,11 +97,29 @@ describe("createOrder", () => {
   });
 
   it("rejects when the user isn't authenticated", async () => {
-    getUserMock.mockResolvedValue({ data: { user: null } });
+    getAuthProfileMock.mockResolvedValue(null);
 
     const result = await createOrder(
       { status: "idle" },
       buildFormData({ items: "[]", first_name: "A", last_name: "B", billing_country: "AR", requiresShipping: "false" })
+    );
+
+    expect(result.status).toBe("error");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("CRITICAL: a deactivated account can never create a new order, even with a valid session", async () => {
+    getAuthProfileMock.mockResolvedValue({ ...AUTH_PROFILE, status: "inactive" });
+
+    const result = await createOrder(
+      { status: "idle" },
+      buildFormData({
+        items: JSON.stringify([{ productId: PRODUCT_ID, modality: "digital", quantity: 1 }]),
+        first_name: "Test",
+        last_name: "Buyer",
+        billing_country: "AR",
+        requiresShipping: "false",
+      })
     );
 
     expect(result.status).toBe("error");

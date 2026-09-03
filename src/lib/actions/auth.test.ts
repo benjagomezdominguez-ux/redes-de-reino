@@ -1,19 +1,32 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const signInWithPasswordMock = vi.fn();
+const signOutMock = vi.fn();
 const signUpMock = vi.fn();
 const resetPasswordForEmailMock = vi.fn();
 const updateUserMock = vi.fn();
 const redirectMock = vi.fn();
+// Profile status looked up right after a successful password check —
+// defaults to "active" so every pre-existing test (which never mocks
+// this) still exercises the normal, successful sign-in path.
+let profileStatus: "active" | "inactive" = "active";
 
 vi.mock("@/lib/supabase/session", () => ({
   getSupabaseSessionClient: async () => ({
     auth: {
       signInWithPassword: signInWithPasswordMock,
+      signOut: signOutMock,
       signUp: signUpMock,
       resetPasswordForEmail: resetPasswordForEmailMock,
       updateUser: updateUserMock,
     },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: async () => ({ data: { status: profileStatus } }),
+        }),
+      }),
+    }),
   }),
 }));
 
@@ -42,7 +55,9 @@ function buildFormData(fields: Record<string, string>) {
 describe("signIn", () => {
   beforeEach(() => {
     signInWithPasswordMock.mockReset();
+    signOutMock.mockReset();
     redirectMock.mockReset();
+    profileStatus = "active";
   });
 
   it("returns invalidCredentials on bad credentials and never redirects", async () => {
@@ -58,7 +73,7 @@ describe("signIn", () => {
   });
 
   it("redirects to / by default on success", async () => {
-    signInWithPasswordMock.mockResolvedValue({ error: null });
+    signInWithPasswordMock.mockResolvedValue({ error: null, data: { user: { id: "user-1" } } });
 
     await signIn({ status: "idle" }, buildFormData({ email: "a@b.com", password: "correct1" }));
 
@@ -66,7 +81,7 @@ describe("signIn", () => {
   });
 
   it("redirects to a safe `next` path on success", async () => {
-    signInWithPasswordMock.mockResolvedValue({ error: null });
+    signInWithPasswordMock.mockResolvedValue({ error: null, data: { user: { id: "user-1" } } });
 
     await signIn(
       { status: "idle" },
@@ -77,7 +92,7 @@ describe("signIn", () => {
   });
 
   it("CRITICAL: falls back to / for an open-redirect `next` value instead of honoring it", async () => {
-    signInWithPasswordMock.mockResolvedValue({ error: null });
+    signInWithPasswordMock.mockResolvedValue({ error: null, data: { user: { id: "user-1" } } });
 
     await signIn(
       { status: "idle" },
@@ -85,6 +100,20 @@ describe("signIn", () => {
     );
 
     expect(redirectMock).toHaveBeenCalledWith({ href: "/", locale: "es" });
+  });
+
+  it("CRITICAL: a deactivated account's correct password never yields a working session — signed back out immediately, no redirect", async () => {
+    signInWithPasswordMock.mockResolvedValue({ error: null, data: { user: { id: "user-1" } } });
+    profileStatus = "inactive";
+
+    const result = await signIn(
+      { status: "idle" },
+      buildFormData({ email: "disabled@example.com", password: "correct1" })
+    );
+
+    expect(result).toEqual({ status: "error", errorKey: "accountDisabled" });
+    expect(signOutMock).toHaveBeenCalledTimes(1);
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 });
 
