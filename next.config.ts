@@ -11,16 +11,24 @@ const nextConfig: NextConfig = {
   // production (Vercel doesn't apply this restriction).
   allowedDevOrigins: ["*.local"],
   images: {
-    // Book covers live in the public "book-covers" Storage bucket and
-    // are rendered via next/image — without this, Next's image
-    // optimizer rejects the remote URL outright (400) and every cover
-    // silently fails to load. Scoped to this bucket's public path, not
-    // the whole Supabase domain.
+    // Every public Storage bucket rendered via next/image needs its own
+    // entry here — without it, Next's image optimizer rejects the
+    // remote URL outright (400) and the image silently fails to load
+    // (the <img> never paints, only its alt text renders — exactly what
+    // happened to gallery photos before this bucket was added: the
+    // Storage URL itself was always valid, this allowlist was the only
+    // thing missing). Each entry is scoped to one bucket's public path,
+    // not the whole Supabase domain.
     remotePatterns: [
       {
         protocol: "https",
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/book-covers/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/gallery-photos/**",
       },
     ],
   },
