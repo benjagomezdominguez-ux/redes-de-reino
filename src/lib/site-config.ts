@@ -33,22 +33,6 @@ export const pastors = [
   },
 ] as const;
 
-export type GalleryImage = {
-  // Real photo, pending from the church. Drop a path (e.g. "/gallery-1.jpg")
-  // in here to replace the placeholder — no component changes needed.
-  src: string | null;
-  // CSS object-position, per image, for when the subject sits off-center.
-  objectPosition?: string;
-};
-
-// Exactly 4 slides for the cinematic gallery — see CinematicGallery.
-export const galleryImages: GalleryImage[] = [
-  { src: null },
-  { src: null },
-  { src: null },
-  { src: null },
-];
-
 export type WeekdayKey =
   | "lunes"
   | "martes"

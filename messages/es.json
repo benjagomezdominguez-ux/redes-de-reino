@@ -21,9 +21,7 @@
   },
   "hero": {
     "logoAlt": "Emblema de {name}, {location}",
-    "tagline": "Una red de personas creciendo en fe, unidas en comunidad, viviendo con propósito.",
-    "ctaPrimary": "Quiero conocer Redes de Reino",
-    "ctaSecondary": "Quiero ser parte"
+    "tagline": "Una red de personas creciendo en fe, unidas en comunidad, viviendo con propósito."
   },
   "schedule": {
     "eyebrow": "Horarios",
@@ -213,7 +211,8 @@
       "users": "Usuarios",
       "orders": "Pedidos",
       "whatsapp": "WhatsApp",
-      "chat": "Chat"
+      "chat": "Chat",
+      "gallery": "Galería"
     },
     "dashboard": {
       "registeredUsers": "Usuarios registrados",
@@ -506,6 +505,38 @@
           "cancelled": "Cancelado"
         },
         "deliveryProgress": "{sent} de {total} enviados · {failed} fallidos"
+      }
+    },
+    "gallery": {
+      "count": "{count, plural, =1 {1 foto} other {# fotos}}",
+      "addNew": "Agregar foto",
+      "empty": "Todavía no cargaste ninguna foto.",
+      "untitled": "Sin título",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "cancel": "Cancelar",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "preview": "Vista previa",
+      "photo": "Fotografía",
+      "photoRequired": "Fotografía (JPG, PNG o WEBP)",
+      "photoCurrent": "Ya tiene una foto cargada — subí otra para reemplazarla.",
+      "title": "Título (opcional)",
+      "altText": "Texto alternativo",
+      "objectPosition": "Posición de la imagen (opcional, ej: center, top)",
+      "confirmDeleteTitle": "¿Eliminar esta foto?",
+      "confirmDeleteBody": "Esta acción no se puede deshacer. La foto se eliminará del carrusel público y del almacenamiento.",
+      "confirmDeleteButton": "Eliminar foto",
+      "deleting": "Eliminando…",
+      "deleteSuccess": "Foto eliminada correctamente.",
+      "errors": {
+        "generic": "No pudimos guardar los cambios. Probá de nuevo.",
+        "invalidFile": "No pudimos subir el archivo. Probá de nuevo.",
+        "required": "Seleccioná una fotografía.",
+        "notFound": "No se encontró la fotografía.",
+        "unauthorized": "No tenés permisos para realizar esta acción."
       }
     }
   },

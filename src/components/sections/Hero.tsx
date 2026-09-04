@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
-import { Button } from "@/components/ui/Button";
 import { site } from "@/lib/site-config";
 
 export async function Hero() {
@@ -41,15 +40,6 @@ export async function Hero() {
           <p className="max-w-xl text-lg text-white/80 text-balance sm:text-xl">
             {t("tagline")}
           </p>
-        </div>
-
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Button href="#galeria" variant="secondary">
-            {t("ctaPrimary")}
-          </Button>
-          <Button href="#horarios" variant="outline-light">
-            {t("ctaSecondary")}
-          </Button>
         </div>
       </Container>
     </section>

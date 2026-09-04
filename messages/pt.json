@@ -21,9 +21,7 @@
   },
   "hero": {
     "logoAlt": "Emblema da {name}, {location}",
-    "tagline": "Uma rede de pessoas crescendo na fé, unidas em comunidade, vivendo com propósito.",
-    "ctaPrimary": "Conhecer a Redes de Reino",
-    "ctaSecondary": "Quero fazer parte"
+    "tagline": "Uma rede de pessoas crescendo na fé, unidas em comunidade, vivendo com propósito."
   },
   "schedule": {
     "eyebrow": "Horários",
@@ -213,7 +211,8 @@
       "users": "Usuários",
       "orders": "Pedidos",
       "whatsapp": "WhatsApp",
-      "chat": "Chat"
+      "chat": "Chat",
+      "gallery": "Galeria"
     },
     "dashboard": {
       "registeredUsers": "Usuários registrados",
@@ -506,6 +505,38 @@
           "cancelled": "Cancelado"
         },
         "deliveryProgress": "{sent} de {total} enviados · {failed} falharam"
+      }
+    },
+    "gallery": {
+      "count": "{count, plural, =1 {1 foto} other {# fotos}}",
+      "addNew": "Adicionar foto",
+      "empty": "Nenhuma foto foi enviada ainda.",
+      "untitled": "Sem título",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "moveUp": "Mover para cima",
+      "moveDown": "Mover para baixo",
+      "cancel": "Cancelar",
+      "save": "Salvar",
+      "saving": "Salvando…",
+      "preview": "Pré-visualização",
+      "photo": "Foto",
+      "photoRequired": "Foto (JPG, PNG ou WEBP)",
+      "photoCurrent": "Já tem uma foto carregada — envie outra para substituí-la.",
+      "title": "Título (opcional)",
+      "altText": "Texto alternativo",
+      "objectPosition": "Posição da imagem (opcional, ex: center, top)",
+      "confirmDeleteTitle": "Excluir esta foto?",
+      "confirmDeleteBody": "Esta ação não pode ser desfeita. A foto será removida do carrossel público e do armazenamento.",
+      "confirmDeleteButton": "Excluir foto",
+      "deleting": "Excluindo…",
+      "deleteSuccess": "Foto excluída com sucesso.",
+      "errors": {
+        "generic": "Não foi possível salvar as alterações. Tente novamente.",
+        "invalidFile": "Não foi possível enviar o arquivo. Tente novamente.",
+        "required": "Selecione uma foto.",
+        "notFound": "Foto não encontrada.",
+        "unauthorized": "Você não tem permissão para realizar esta ação."
       }
     }
   },

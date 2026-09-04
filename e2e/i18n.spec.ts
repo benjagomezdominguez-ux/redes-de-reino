@@ -12,7 +12,6 @@ test.describe("i18n — Spanish (default)", () => {
 
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(page.getByRole("heading", { name: "Redes de Reino", level: 1 })).toBeVisible();
-    await expect(page.getByText("Quiero conocer Redes de Reino")).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Galería" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Horarios" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Libros" })).toBeVisible();
@@ -50,8 +49,6 @@ test.describe("i18n — English", () => {
     await expect(nav(page).getByRole("link", { name: "Schedule" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Pastors" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Books" })).toBeVisible();
-    await expect(page.getByText("Get to know Redes de Reino")).toBeVisible();
-    await expect(page.getByText("I want to join")).toBeVisible();
 
     await nav(page).getByRole("link", { name: "Schedule" }).click();
     await expect(page.getByRole("heading", { name: "Meeting Times" })).toBeVisible();
@@ -71,10 +68,36 @@ test.describe("i18n — Portuguese", () => {
     await expect(nav(page).getByRole("link", { name: "Galeria" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Horários" })).toBeVisible();
     await expect(nav(page).getByRole("link", { name: "Livros" })).toBeVisible();
-    await expect(page.getByText("Conhecer a Redes de Reino")).toBeVisible();
 
     await nav(page).getByRole("link", { name: "Horários" }).click();
     await expect(page.getByRole("heading", { name: "Horários das Reuniões" })).toBeVisible();
+  });
+});
+
+test.describe("structure — Hero CTA buttons removed, sections kept", () => {
+  test("'Quiero conocer Redes de Reino' / 'Quiero ser parte' and their translations no longer exist, in any locale", async ({
+    page,
+  }) => {
+    for (const [locale, phrases] of [
+      ["es", ["Quiero conocer Redes de Reino", "Quiero ser parte"]],
+      ["en", ["Get to know Redes de Reino", "I want to join"]],
+      ["pt", ["Conhecer a Redes de Reino", "Quero fazer parte"]],
+    ] as const) {
+      await page.goto(`/${locale}`);
+      for (const phrase of phrases) {
+        await expect(page.locator("body")).not.toContainText(phrase);
+      }
+    }
+  });
+
+  test("the Hero section, the Gallery, and the Schedule still exist and render their real content", async ({ page }) => {
+    await page.goto("/es");
+
+    await expect(page.locator("#inicio")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Redes de Reino", level: 1 })).toBeVisible();
+    await expect(page.locator("#galeria")).toBeVisible();
+    await expect(page.locator("#horarios")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Horarios de Reuniones" })).toBeVisible();
   });
 });
 
@@ -90,7 +113,7 @@ test.describe("structure — Nuestra Iglesia removed, Gallery + Schedule in its 
     }
   });
 
-  test("the gallery occupies the position right after the hero, with 4 slides, and has no heading text of its own", async ({
+  test("the gallery occupies the position right after the hero, has no heading text of its own, and shows a pending placeholder with no photos configured", async ({
     page,
   }) => {
     await page.goto("/es");
@@ -108,8 +131,12 @@ test.describe("structure — Nuestra Iglesia removed, Gallery + Schedule in its 
     await expect(gallery.locator("h2")).toHaveCount(0);
     await expect(page.getByText("Momentos de nuestra comunidad")).toHaveCount(0);
 
-    const indicators = gallery.locator('button[aria-current]');
-    await expect(indicators).toHaveCount(4);
+    // Gallery photos are admin-managed (see /admin/gallery) — with none
+    // configured yet, a single "coming soon" placeholder slide shows
+    // instead of a broken/empty carousel, and there's only one slide so
+    // no slide indicators render at all.
+    await expect(page.getByText("Fotografía próximamente")).toBeVisible();
+    await expect(gallery.locator('button[aria-current]')).toHaveCount(0);
   });
 
   test("Schedule section exists, right after the gallery, and renders meeting cards", async ({ page }) => {
@@ -130,11 +157,6 @@ test.describe("structure — Nuestra Iglesia removed, Gallery + Schedule in its 
     await expect(schedule.getByText("Trascender")).toBeVisible();
   });
 
-  test("the Hero's primary CTA now points at the gallery, not a dead anchor", async ({ page }) => {
-    await page.goto("/es");
-    await page.getByText("Quiero conocer Redes de Reino").click();
-    await expect(page.locator("#galeria")).toBeInViewport();
-  });
 });
 
 test.describe("i18n — language switcher", () => {
@@ -147,7 +169,7 @@ test.describe("i18n — language switcher", () => {
     await page.getByRole("button", { name: "Idioma" }).click();
     await page.getByRole("option", { name: "English" }).click();
     await expect(page).toHaveURL(/\/en$/);
-    await expect(page.getByText("Get to know Redes de Reino")).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Home" })).toBeVisible();
 
     // Persistence: a fresh navigation to "/" (as if the visitor came back
     // later) must honor the saved choice, not silently reset to Spanish.
@@ -166,7 +188,7 @@ test.describe("i18n — language switcher", () => {
 
     await mobileMenu.getByRole("link", { name: "Português" }).click();
     await expect(page).toHaveURL(/\/pt$/);
-    await expect(page.getByText("Conhecer a Redes de Reino")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Redes de Reino", level: 1 })).toBeVisible();
   });
 });
 
@@ -229,11 +251,6 @@ test.describe("structure — Estudios Bíblicos, Actividades, Diezmos y Ofrendas
     await expect(page.locator("footer")).toBeVisible();
   });
 
-  test("the Hero's secondary CTA no longer points at the removed Contact anchor", async ({ page }) => {
-    await page.goto("/es");
-    await page.getByText("Quiero ser parte").click();
-    await expect(page.locator("#horarios")).toBeInViewport();
-  });
 });
 
 test.describe("structure — nav links work from any page, not just the home page", () => {

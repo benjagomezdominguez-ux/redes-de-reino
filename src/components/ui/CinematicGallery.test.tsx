@@ -6,8 +6,8 @@ import {
   CinematicGallery,
   AUTOPLAY_INTERVAL_MS,
   TRANSITION_DURATION_MS,
+  type GalleryImage,
 } from "./CinematicGallery";
-import type { GalleryImage } from "@/lib/site-config";
 
 const fourImages: GalleryImage[] = [
   { src: "/gallery-1.jpg" },
@@ -78,6 +78,18 @@ describe("CinematicGallery", () => {
   it("renders a labeled placeholder when a slide has no photo yet", () => {
     renderGallery([{ src: null }, { src: null }, { src: null }, { src: null }]);
     expect(screen.getAllByText("Fotografía próximamente").length).toBeGreaterThan(0);
+  });
+
+  it("uses the admin-provided alt text for a photo when set, instead of the generic fallback", () => {
+    const { container } = renderGallery([{ src: "/gallery-1.jpg", alt: "Culto de domingo" }]);
+    const img = container.querySelector("img");
+    expect(img?.getAttribute("alt")).toBe("Culto de domingo");
+  });
+
+  it("falls back to the generic generated alt text when a photo has none set", () => {
+    const { container } = renderGallery([{ src: "/gallery-1.jpg" }]);
+    const img = container.querySelector("img");
+    expect(img?.getAttribute("alt")).toMatch(/foto/i);
   });
 
   it("uses a full-width, viewport-height-based container instead of a fixed pixel width, avoiding horizontal overflow", () => {

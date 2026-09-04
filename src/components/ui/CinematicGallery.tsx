@@ -3,12 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import type { GalleryImage } from "@/lib/site-config";
 import { site } from "@/lib/site-config";
 
 // Centralized so the timing/feel can be tuned from one place.
 export const AUTOPLAY_INTERVAL_MS = 10_000;
 export const TRANSITION_DURATION_MS = 1200;
+
+export type GalleryImage = {
+  // A real, admin-uploaded photo URL, or null for an unconfigured slot
+  // (shows the "coming soon" placeholder instead of breaking).
+  src: string | null;
+  // Real per-image alt text from the admin, when set — falls back to a
+  // generic generated one below so accessibility never regresses for
+  // photos an admin hasn't filled this in for yet.
+  alt?: string | null;
+  // CSS object-position, per image, for when the subject sits off-center.
+  objectPosition?: string | null;
+};
 
 export function CinematicGallery({ images }: { images: GalleryImage[] }) {
   const t = useTranslations("gallery");
@@ -51,7 +62,7 @@ export function CinematicGallery({ images }: { images: GalleryImage[] }) {
             {image.src ? (
               <Image
                 src={image.src}
-                alt={t("imageAlt", { index: index + 1, name: site.name })}
+                alt={image.alt || t("imageAlt", { index: index + 1, name: site.name })}
                 fill
                 sizes="100vw"
                 priority={index === 0}

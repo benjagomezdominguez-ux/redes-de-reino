@@ -21,9 +21,7 @@
   },
   "hero": {
     "logoAlt": "{name} emblem, {location}",
-    "tagline": "A network of people growing in faith, united in community, living with purpose.",
-    "ctaPrimary": "Get to know Redes de Reino",
-    "ctaSecondary": "I want to join"
+    "tagline": "A network of people growing in faith, united in community, living with purpose."
   },
   "schedule": {
     "eyebrow": "Schedule",
@@ -213,7 +211,8 @@
       "users": "Users",
       "orders": "Orders",
       "whatsapp": "WhatsApp",
-      "chat": "Chat"
+      "chat": "Chat",
+      "gallery": "Gallery"
     },
     "dashboard": {
       "registeredUsers": "Registered users",
@@ -506,6 +505,38 @@
           "cancelled": "Cancelled"
         },
         "deliveryProgress": "{sent} of {total} sent · {failed} failed"
+      }
+    },
+    "gallery": {
+      "count": "{count, plural, =1 {1 photo} other {# photos}}",
+      "addNew": "Add photo",
+      "empty": "No photos uploaded yet.",
+      "untitled": "Untitled",
+      "edit": "Edit",
+      "delete": "Delete",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving…",
+      "preview": "Preview",
+      "photo": "Photo",
+      "photoRequired": "Photo (JPG, PNG or WEBP)",
+      "photoCurrent": "Already has a photo uploaded — upload another to replace it.",
+      "title": "Title (optional)",
+      "altText": "Alt text",
+      "objectPosition": "Image position (optional, e.g. center, top)",
+      "confirmDeleteTitle": "Delete this photo?",
+      "confirmDeleteBody": "This cannot be undone. The photo will be removed from the public carousel and from storage.",
+      "confirmDeleteButton": "Delete photo",
+      "deleting": "Deleting…",
+      "deleteSuccess": "Photo deleted successfully.",
+      "errors": {
+        "generic": "We could not save the changes. Please try again.",
+        "invalidFile": "We could not upload the file. Please try again.",
+        "required": "Select a photo.",
+        "notFound": "Photo not found.",
+        "unauthorized": "You do not have permission to perform this action."
       }
     }
   },
