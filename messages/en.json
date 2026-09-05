@@ -11,7 +11,8 @@
     "libros": "Books",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "ariaLabel": "Main navigation"
+    "ariaLabel": "Main navigation",
+    "devocionales": "Devotionals"
   },
   "languageSwitcher": {
     "label": "Language",
@@ -212,7 +213,8 @@
       "orders": "Orders",
       "whatsapp": "WhatsApp",
       "chat": "Chat",
-      "gallery": "Gallery"
+      "gallery": "Gallery",
+      "devotionals": "Devotionals"
     },
     "dashboard": {
       "registeredUsers": "Registered users",
@@ -538,6 +540,51 @@
         "notFound": "Photo not found.",
         "unauthorized": "You do not have permission to perform this action."
       }
+    },
+    "devotionals": {
+      "count": "{count, plural, =1 {1 devotional} other {# devotionals}}",
+      "addNew": "New devotional",
+      "empty": "You have not created any devotionals yet.",
+      "backToList": "Back to devotionals",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "confirmDeleteTitle": "Delete this devotional? This cannot be undone.",
+      "confirmDeleteButton": "Delete devotional",
+      "deleting": "Deleting…",
+      "columns": {
+        "title": "Title",
+        "status": "Status",
+        "author": "Author",
+        "created": "Created",
+        "published": "Published",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Draft",
+        "published": "Published"
+      },
+      "errors": {
+        "generic": "We could not complete the action. Please try again."
+      },
+      "form": {
+        "title": "Title",
+        "content": "Content",
+        "contentHint": "You can use **bold**, *italic*, paragraphs separated by a blank line, and lists with \"- \" at the start of each line.",
+        "saveDraft": "Save draft",
+        "saving": "Saving…",
+        "publish": "Publish",
+        "publishing": "Publishing…",
+        "saved": "Saved successfully.",
+        "errors": {
+          "required": "Fill in the title and content.",
+          "notFound": "Devotional not found.",
+          "generic": "We could not save the devotional. Please try again."
+        }
+      }
     }
   },
   "gallery": {
@@ -605,5 +652,13 @@
       "label": "Talk to Pastor Ariel",
       "ariaLabel": "Talk to Pastor Ariel via chat"
     }
+  },
+  "devotionals": {
+    "eyebrow": "Devotionals",
+    "title": "Devotionals Library",
+    "description": "Reflections to accompany your walk of faith.",
+    "empty": "No devotionals published yet. Check back soon.",
+    "read": "Read",
+    "backToLibrary": "Back to Devotionals"
   }
 }

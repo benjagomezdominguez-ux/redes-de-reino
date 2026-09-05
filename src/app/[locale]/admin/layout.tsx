@@ -77,6 +77,17 @@ export default async function AdminLayout({
                   {t("nav.chat")}
                 </Link>
               ) : null}
+              {/* Devotionals are administered exclusively by Ariel Gómez —
+                  same isChatAdmin() check already gating the Chat link
+                  above, since it's the same real person either way. */}
+              {showChatNav ? (
+                <Link
+                  href="/admin/devotionals"
+                  className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
+                >
+                  {t("nav.devotionals")}
+                </Link>
+              ) : null}
             </nav>
           </div>
           {children}

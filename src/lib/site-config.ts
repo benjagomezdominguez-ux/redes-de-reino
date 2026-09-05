@@ -18,6 +18,10 @@ export const navLinks = [
   { href: "#horarios", key: "horarios" },
   { href: "#pastores", key: "pastores" },
   { href: "#libros", key: "libros" },
+  // A real standalone page, not a homepage anchor — the concatenation
+  // `/${locale}${href}` in Navbar.tsx works identically either way, so
+  // no navigation-rendering changes were needed to add it here.
+  { href: "/devocionales", key: "devocionales" },
 ] as const;
 
 export const pastors = [
