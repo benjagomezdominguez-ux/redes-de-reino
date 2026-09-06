@@ -12,7 +12,8 @@
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "ariaLabel": "Main navigation",
-    "devocionales": "Devotionals"
+    "devocionales": "Devotionals",
+    "instalar": "📱 Install app"
   },
   "languageSwitcher": {
     "label": "Language",
@@ -202,7 +203,8 @@
     "email": "Email",
     "notSet": "—",
     "ordersLink": "My Orders",
-    "libraryLink": "My Library"
+    "libraryLink": "My Library",
+    "installLink": "📱 Install as an app"
   },
   "admin": {
     "title": "Administration",
@@ -659,6 +661,7 @@
         "unsupported": "Your browser doesn't support push notifications.",
         "needsInstallTitle": "To get notifications on this device, add the app to your Home Screen.",
         "needsInstallBody": "Tap Safari's Share button and choose \"Add to Home Screen\". Then open Redes de Reino from that icon and try enabling notifications again.",
+        "needsInstallLink": "See detailed instructions",
         "retry": "Retry"
       }
     },
@@ -684,8 +687,54 @@
       "unsupported": "Your browser does not support push notifications.",
       "needsInstallTitle": "To receive notifications on this device, add the app to your home screen.",
       "needsInstallBody": "Tap Safari's Share button and choose \"Add to Home Screen\". Then open Redes de Reino from that icon and try enabling notifications again.",
+      "needsInstallLink": "See detailed instructions",
       "retry": "Retry"
     }
+  },
+  "install": {
+    "eyebrow": "App",
+    "title": "How do I install Redes de Reino as an app?",
+    "intro": "Install Redes de Reino on your phone or computer to open it faster, just like any other app.",
+    "alreadyInstalled": "Redes de Reino is already installed on this device.",
+    "yourDevice": "Your device",
+    "ios": {
+      "title": "How to install Redes de Reino on iPhone",
+      "steps": [
+        "Open Redes de Reino in Safari.",
+        "Tap Safari's \"Share\" button.",
+        "Scroll down and tap \"Add to Home Screen\".",
+        "Tap \"Add\".",
+        "Look for the Redes de Reino icon on your home screen.",
+        "Open it from that icon to use it like an app."
+      ],
+      "note": "Once installed, Redes de Reino will appear on your home screen as an app."
+    },
+    "android": {
+      "title": "How to install Redes de Reino on Android",
+      "steps": [
+        "Open Redes de Reino in Google Chrome.",
+        "Tap the three-dot menu ⋮.",
+        "Look for \"Install app\" or \"Add to Home screen\".",
+        "Tap that option.",
+        "Confirm the install.",
+        "Look for Redes de Reino among your apps."
+      ]
+    },
+    "desktop": {
+      "title": "How to install Redes de Reino on a computer",
+      "steps": [
+        "Open Redes de Reino in a compatible browser, like Chrome or Edge.",
+        "Look for the install icon in the address bar (on the right, next to the URL).",
+        "Click that icon, or use the \"Install\" button below if it's available.",
+        "Confirm the install.",
+        "Redes de Reino will open as its own separate app, with its own icon."
+      ],
+      "note": "In compatible browsers (Chrome, Edge) the install button may appear directly in the address bar."
+    },
+    "nativeInstallButton": "Install Redes de Reino",
+    "nativeInstalling": "Installing…",
+    "nativeInstalled": "All set! Redes de Reino installed successfully.",
+    "nativeDismissed": "Not installed. You can try again anytime."
   },
   "devotionals": {
     "eyebrow": "Devotionals",

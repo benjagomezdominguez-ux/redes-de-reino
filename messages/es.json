@@ -12,7 +12,8 @@
     "openMenu": "Abrir menú",
     "closeMenu": "Cerrar menú",
     "ariaLabel": "Navegación principal",
-    "devocionales": "Devocionales"
+    "devocionales": "Devocionales",
+    "instalar": "📱 Instalar app"
   },
   "languageSwitcher": {
     "label": "Idioma",
@@ -202,7 +203,8 @@
     "email": "Email",
     "notSet": "—",
     "ordersLink": "Mis Pedidos",
-    "libraryLink": "Mi Biblioteca"
+    "libraryLink": "Mi Biblioteca",
+    "installLink": "📱 Instalar como app"
   },
   "admin": {
     "title": "Administración",
@@ -659,6 +661,7 @@
         "unsupported": "Tu navegador no soporta notificaciones push.",
         "needsInstallTitle": "Para recibir notificaciones en este dispositivo, agregá la app a tu pantalla de inicio.",
         "needsInstallBody": "Tocá el botón Compartir de Safari y elegí \"Agregar a pantalla de inicio\". Después abrí Redes de Reino desde ese ícono y volvé a intentar activar las notificaciones.",
+        "needsInstallLink": "Ver instrucciones detalladas",
         "retry": "Reintentar"
       }
     },
@@ -684,8 +687,54 @@
       "unsupported": "Tu navegador no soporta notificaciones push.",
       "needsInstallTitle": "Para recibir notificaciones en este dispositivo, agregá la app a tu pantalla de inicio.",
       "needsInstallBody": "Tocá el botón Compartir de Safari y elegí \"Agregar a pantalla de inicio\". Después abrí Redes de Reino desde ese ícono y volvé a intentar activar las notificaciones.",
+      "needsInstallLink": "Ver instrucciones detalladas",
       "retry": "Reintentar"
     }
+  },
+  "install": {
+    "eyebrow": "Aplicación",
+    "title": "¿Cómo instalar Redes de Reino como aplicación?",
+    "intro": "Instalá Redes de Reino en tu celular o computadora para abrirla más rápido, como cualquier otra aplicación.",
+    "alreadyInstalled": "Redes de Reino ya está instalada en este dispositivo.",
+    "yourDevice": "Tu dispositivo",
+    "ios": {
+      "title": "Cómo instalar Redes de Reino en iPhone",
+      "steps": [
+        "Abrí Redes de Reino desde Safari.",
+        "Tocá el botón \"Compartir\" de Safari.",
+        "Deslizá hacia abajo y tocá \"Añadir a pantalla de inicio\".",
+        "Tocá \"Añadir\".",
+        "Buscá el ícono de Redes de Reino en la pantalla de inicio.",
+        "Abrilo desde ese ícono para usarlo como una aplicación."
+      ],
+      "note": "Una vez instalada, Redes de Reino aparecerá en tu pantalla de inicio como una aplicación."
+    },
+    "android": {
+      "title": "Cómo instalar Redes de Reino en Android",
+      "steps": [
+        "Abrí Redes de Reino en Google Chrome.",
+        "Tocá el menú de los tres puntos ⋮.",
+        "Buscá \"Instalar aplicación\" o \"Añadir a pantalla de inicio\".",
+        "Tocá la opción correspondiente.",
+        "Confirmá la instalación.",
+        "Buscá Redes de Reino entre tus aplicaciones."
+      ]
+    },
+    "desktop": {
+      "title": "Cómo instalar Redes de Reino en una computadora",
+      "steps": [
+        "Abrí Redes de Reino en un navegador compatible, como Chrome o Edge.",
+        "Buscá el ícono de instalación en la barra de direcciones (a la derecha, junto a la URL).",
+        "Hacé clic en ese ícono, o usá el botón \"Instalar\" de abajo si está disponible.",
+        "Confirmá la instalación.",
+        "Redes de Reino se abrirá como una aplicación aparte, con su propio ícono."
+      ],
+      "note": "En navegadores compatibles (Chrome, Edge) puede aparecer directamente el botón de instalación en la barra de direcciones."
+    },
+    "nativeInstallButton": "Instalar Redes de Reino",
+    "nativeInstalling": "Instalando…",
+    "nativeInstalled": "¡Listo! Redes de Reino se instaló correctamente.",
+    "nativeDismissed": "No se instaló. Podés intentarlo de nuevo cuando quieras."
   },
   "devotionals": {
     "eyebrow": "Devocionales",

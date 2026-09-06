@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { subscribeToPush } from "@/lib/actions/push";
+import { isIOS, isStandalone } from "@/lib/pwa/device";
+import { Link } from "@/i18n/navigation";
 
 const DEFAULT_DISMISSED_KEY = "chat_push_banner_dismissed";
 const SUBSCRIBE_TIMEOUT_MS = 10000;
@@ -14,20 +16,6 @@ type PushState =
   | "denied"
   | "needs-install" // iOS: Notification/Push APIs don't exist until the site is added to the Home Screen and opened from there
   | "unsupported"; // genuinely unsupported browser — installing wouldn't help either
-
-function isIOS(): boolean {
-  if (typeof navigator === "undefined") return false;
-  const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  // iPadOS 13+ reports as "MacIntel" with touch support, not as iPad.
-  const isIPadOS = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-  return isAppleMobile || isIPadOS;
-}
-
-function isStandalone(): boolean {
-  if (typeof window === "undefined") return false;
-  const nav = navigator as Navigator & { standalone?: boolean };
-  return nav.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
-}
 
 function supportsPush(): boolean {
   return (
@@ -231,13 +219,21 @@ export function PushPermissionBanner({
       <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5 shadow-soft">
         <p className="text-sm font-medium text-text">{t("needsInstallTitle")}</p>
         <p className="text-sm text-muted">{t("needsInstallBody")}</p>
-        <button
-          type="button"
-          onClick={handleDismiss}
-          className="self-start text-xs font-medium text-primary-900/70 underline transition-colors hover:text-primary-900"
-        >
-          {t("notNow")}
-        </button>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            href="/instalar"
+            className="self-start text-xs font-semibold text-primary-900 underline transition-colors hover:text-primary-800"
+          >
+            {t("needsInstallLink")}
+          </Link>
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="self-start text-xs font-medium text-primary-900/70 underline transition-colors hover:text-primary-900"
+          >
+            {t("notNow")}
+          </button>
+        </div>
       </div>
     );
   }

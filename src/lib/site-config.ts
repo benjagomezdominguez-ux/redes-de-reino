@@ -22,6 +22,7 @@ export const navLinks = [
   // `/${locale}${href}` in Navbar.tsx works identically either way, so
   // no navigation-rendering changes were needed to add it here.
   { href: "/devocionales", key: "devocionales" },
+  { href: "/instalar", key: "instalar" },
 ] as const;
 
 export const pastors = [

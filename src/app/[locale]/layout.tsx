@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { siteUrl, site } from "@/lib/site-config";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { InstallPromptCapture } from "@/components/pwa/InstallPromptCapture";
 import { PastorChatFloatingButton } from "@/components/chat/PastorChatFloatingButton";
 import { GlobalPushPrompt } from "@/components/ui/GlobalPushPrompt";
 import { getAuthProfile } from "@/lib/supabase/get-profile";
@@ -110,6 +111,7 @@ export default async function LocaleLayout({
                 dead-end conversation instead of /admin/chat). */}
             {!isChatAdmin(profile) ? <PastorChatFloatingButton /> : null}
             <ServiceWorkerRegistration />
+            <InstallPromptCapture />
           </CartProvider>
         </NextIntlClientProvider>
       </body>
