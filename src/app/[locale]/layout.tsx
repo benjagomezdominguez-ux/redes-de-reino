@@ -7,6 +7,8 @@ import { routing, type Locale } from "@/i18n/routing";
 import { siteUrl, site } from "@/lib/site-config";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 import { PastorChatFloatingButton } from "@/components/chat/PastorChatFloatingButton";
+import { GlobalPushPrompt } from "@/components/ui/GlobalPushPrompt";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 import { CartProvider } from "@/lib/cart/CartContext";
 import "../globals.css";
 
@@ -89,6 +91,7 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages();
+  const profile = await getAuthProfile();
 
   return (
     <html
@@ -98,6 +101,7 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col bg-background text-text">
         <NextIntlClientProvider messages={messages}>
           <CartProvider>
+            {profile ? <GlobalPushPrompt /> : null}
             {children}
             <PastorChatFloatingButton />
             <ServiceWorkerRegistration />

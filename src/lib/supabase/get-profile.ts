@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { getSupabaseSessionClient } from "./session";
 
 export type AuthRole = "user" | "admin";
@@ -17,7 +18,12 @@ export type AuthProfile = {
 // the server. Role/status always come from the profiles row (protected by
 // RLS + a trigger — see the migration), never from anything the client
 // could have sent.
-export async function getAuthProfile(): Promise<AuthProfile | null> {
+// Wrapped in React's cache() — the root layout and most pages each render
+// their own NavbarWithAuth (and now the global push prompt), and without
+// this every one of those would independently re-hit Supabase auth for
+// the exact same request. cache() dedupes all of that down to a single
+// real call per request.
+export const getAuthProfile = cache(async (): Promise<AuthProfile | null> => {
   const supabase = await getSupabaseSessionClient();
   const {
     data: { user },
@@ -39,4 +45,4 @@ export async function getAuthProfile(): Promise<AuthProfile | null> {
     role: (profile?.role as AuthRole | undefined) ?? "user",
     status: (profile?.status as AuthStatus | undefined) ?? "active",
   };
-}
+});

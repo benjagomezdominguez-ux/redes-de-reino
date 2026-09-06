@@ -674,11 +674,11 @@
       "empty": "You have no notifications."
     },
     "push": {
-      "prompt": "Turn on notifications to hear about news, like a new devotional.",
+      "prompt": "Turn on notifications to get new devotionals and important updates from Redes de Reino.",
       "enable": "Enable notifications",
       "notNow": "Not now",
       "enabling": "Enabling…",
-      "enabled": "Notifications enabled",
+      "enabled": "All set! You'll now receive Redes de Reino notifications.",
       "error": "We could not enable notifications. Please try again.",
       "denied": "You blocked notifications for this site. You can enable them again from your browser settings.",
       "unsupported": "Your browser does not support push notifications.",

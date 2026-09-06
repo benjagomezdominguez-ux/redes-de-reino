@@ -674,11 +674,11 @@
       "empty": "Você não tem notificações."
     },
     "push": {
-      "prompt": "Ative as notificações para saber das novidades, como um novo devocional.",
+      "prompt": "Ative as notificações para receber novos devocionais e avisos importantes do Redes de Reino.",
       "enable": "Ativar notificações",
       "notNow": "Agora não",
       "enabling": "Ativando…",
-      "enabled": "Notificações ativadas",
+      "enabled": "Pronto! Você vai receber as notificações do Redes de Reino.",
       "error": "Não conseguimos ativar as notificações. Tente novamente.",
       "denied": "Você bloqueou as notificações para este site. Você pode ativá-las novamente nas configurações do navegador.",
       "unsupported": "Seu navegador não suporta notificações push.",

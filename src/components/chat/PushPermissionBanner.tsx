@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { subscribeToPush } from "@/lib/actions/push";
 
-const DISMISSED_KEY = "chat_push_banner_dismissed";
+const DEFAULT_DISMISSED_KEY = "chat_push_banner_dismissed";
 const SUBSCRIBE_TIMEOUT_MS = 10000;
 
 type PushState =
@@ -78,19 +78,42 @@ async function registerPushSubscription(): Promise<boolean> {
   }
 }
 
-// Rendered in both /account (any registered user, general notifications
-// like a new devotional) and /admin/chat (Ariel specifically, chat
-// notifications) — same subscribe/unsubscribe mechanism either way, only
-// the copy differs by namespace. Never prompts on its own — only ever in
-// response to a deliberate "Activar notificaciones" click (rule 15 of the
-// original chat prompt: no aggressive permission requests).
-export function PushPermissionBanner({ namespace = "chat.admin.push" }: { namespace?: string }) {
+// Rendered in /account (any registered user, general notifications like
+// a new devotional), /admin/chat (Ariel specifically, chat
+// notifications), and — via GlobalPushPrompt — floating on every page for
+// any logged-in user. Same subscribe/unsubscribe mechanism everywhere,
+// only the copy (namespace) and how persistently it stays visible
+// (floating) differ. Never prompts on its own — only ever in response to
+// a deliberate "Activar notificaciones" click (rule 15 of the original
+// chat prompt: no aggressive permission requests).
+//
+// `floating`: used for the site-wide prompt, where showing a permanent
+// "already enabled"/"blocked"/"unsupported" line on every single page
+// would itself be the kind of nagging rule 15 forbids — those states are
+// only ever worth surfacing on a dedicated settings surface (/account),
+// so in floating mode they render nothing instead. The states that ARE
+// still actionable (not yet asked, iOS needs the site installed first, or
+// permission granted but saving the subscription failed) still show.
+export function PushPermissionBanner({
+  namespace = "chat.admin.push",
+  floating = false,
+  dismissKey = DEFAULT_DISMISSED_KEY,
+}: {
+  namespace?: string;
+  floating?: boolean;
+  dismissKey?: string;
+}) {
   const t = useTranslations(namespace);
   const [state, setState] = useState<PushState>("loading");
   const [subscribed, setSubscribed] = useState(false);
   const [dismissed, setDismissed] = useState(true); // default true until localStorage is checked, to avoid a flash
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  // Distinguishes "silently reconfirmed an existing subscription on
+  // mount" (floating mode stays quiet — rule: don't re-nag someone
+  // already subscribed) from "the user just clicked Enable in THIS
+  // session" (floating mode still owes them the confirmation message).
+  const [justEnabled, setJustEnabled] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -99,7 +122,7 @@ export function PushPermissionBanner({ namespace = "chat.admin.push" }: { namesp
       // must not be left stuck at its `true` initial value.
       let wasDismissed = false;
       try {
-        wasDismissed = localStorage.getItem(DISMISSED_KEY) === "1";
+        wasDismissed = localStorage.getItem(dismissKey) === "1";
       } catch {
         // Private browsing / storage blocked — treat as not dismissed.
       }
@@ -120,7 +143,7 @@ export function PushPermissionBanner({ namespace = "chat.admin.push" }: { namesp
       }
     }
     init();
-  }, []);
+  }, [dismissKey]);
 
   async function handleEnable() {
     setBusy(true);
@@ -131,6 +154,7 @@ export function PushPermissionBanner({ namespace = "chat.admin.push" }: { namesp
       if (result === "granted") {
         const ok = await registerPushSubscription();
         setSubscribed(ok);
+        if (ok) setJustEnabled(true);
         if (!ok) setError(true);
       }
     } finally {
@@ -153,13 +177,20 @@ export function PushPermissionBanner({ namespace = "chat.admin.push" }: { namesp
   function handleDismiss() {
     setDismissed(true);
     try {
-      localStorage.setItem(DISMISSED_KEY, "1");
+      localStorage.setItem(dismissKey, "1");
     } catch {
       // Nothing to persist to — the banner will just show again next load.
     }
   }
 
   if (state === "loading") return null;
+
+  // Nothing left to do — showing a permanent "you're all set" banner on
+  // every page would itself be a form of nagging; a dedicated settings
+  // surface (/account) is where "already enabled" is worth confirming.
+  // Exception: right after the user just clicked Enable, they're owed the
+  // one-time confirmation before it goes quiet on future page loads.
+  if (floating && state === "granted" && subscribed && !justEnabled) return null;
 
   if (state === "granted" && subscribed) {
     return (
@@ -212,10 +243,12 @@ export function PushPermissionBanner({ namespace = "chat.admin.push" }: { namesp
   }
 
   if (state === "unsupported") {
+    if (floating) return null;
     return <p className="text-sm text-muted">{t("unsupported")}</p>;
   }
 
   if (state === "denied") {
+    if (floating) return null;
     return <p className="text-sm text-muted">{t("denied")}</p>;
   }
 
