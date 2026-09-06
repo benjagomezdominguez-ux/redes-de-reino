@@ -111,7 +111,10 @@
         "amount": "Valor a transferir",
         "reference": "Referência do seu pedido",
         "instructionsBody": "Use essa referência na descrição da transferência. Assim que confirmarmos o pagamento, seu livro vai aparecer em Minha Biblioteca.",
+        "laterNote": "Você pode enviar o comprovante agora ou mais tarde, quando quiser, em Meus Pedidos.",
+        "loadProofNow": "Enviar comprovante agora",
         "proofIntro": "Se você já fez a transferência, conte os detalhes para agilizar a verificação (opcional).",
+        "proofAlreadyOnFile": "Já recebemos um comprovante para este pedido — enviar de novo substitui o anterior.",
         "operationNumber": "Número da operação",
         "declaredAmount": "Valor transferido",
         "declaredDate": "Data da transferência",
@@ -126,6 +129,7 @@
       "placeOrder": "Confirmar pedido",
       "placingOrder": "Processando…",
       "orderCreated": "Pedido registrado!",
+      "orderPendingReview": "Seu pedido ficou pendente de revisão.",
       "orderNumber": "Número do pedido",
       "errors": {
         "outOfStock": "Esse livro está sem estoque.",
@@ -140,12 +144,15 @@
       "purchased": "Comprado",
       "access": "Acessar o livro",
       "pendingVerification": "Seu pagamento está sendo verificado.",
+      "loadProofLink": "Enviar comprovante",
       "rejected": "Compra rejeitada"
     },
     "orders": {
       "title": "Meus Pedidos",
       "empty": "Você ainda não fez nenhum pedido.",
       "orderNumber": "Pedido",
+      "viewDetail": "Ver pedido",
+      "loadProof": "Enviar comprovante",
       "status": {
         "pending": "Pendente",
         "payment_processing": "Processando pagamento",
@@ -157,6 +164,12 @@
         "refunded": "Reembolsado",
         "failed": "Falhou"
       }
+    },
+    "orderDetail": {
+      "backToList": "← Voltar para meus pedidos",
+      "paymentTitle": "Pagamento",
+      "paymentConfirmed": "Confirmamos seu pagamento — você já pode ver o livro em Minha Biblioteca.",
+      "paymentRejected": "Não conseguimos confirmar este pagamento."
     }
   },
   "auth": {

@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
+import { Link } from "@/i18n/navigation";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
 
 export default async function LibraryPage({
@@ -18,8 +19,9 @@ export default async function LibraryPage({
     product_id: string;
     products: { title: string | null; author: string | null; cover_url: string | null } | null;
   };
+  type PendingLibraryEntry = LibraryEntry & { order_id: string };
   let entitlements: LibraryEntry[] = [];
-  let pending: LibraryEntry[] = [];
+  let pending: PendingLibraryEntry[] = [];
   let rejected: LibraryEntry[] = [];
 
   const { data: granted } = await supabase
@@ -50,20 +52,30 @@ export default async function LibraryPage({
     .eq("status", "pending");
 
   type PendingOrderRow = { id: string; order_items: { product_id: string; modality: string }[] };
-  const pendingProductIds = ((pendingOrders ?? []) as unknown as PendingOrderRow[])
-    .flatMap((o) => o.order_items)
-    .filter((i) => i.modality === "digital" || i.modality === "digital_fisico")
-    .map((i) => i.product_id)
-    .filter((id) => !productIds.includes(id));
+  // Keeps the order id each pending product came from — needed to link
+  // the card to /pedidos/[id], where the buyer can load a comprobante
+  // whenever they're ready (never forced during checkout itself).
+  const pendingOrderIdByProduct = new Map<string, string>();
+  for (const o of (pendingOrders ?? []) as unknown as PendingOrderRow[]) {
+    for (const item of o.order_items) {
+      if (item.modality === "digital" || item.modality === "digital_fisico") {
+        if (!pendingOrderIdByProduct.has(item.product_id)) {
+          pendingOrderIdByProduct.set(item.product_id, o.id);
+        }
+      }
+    }
+  }
+  const pendingProductIds = [...pendingOrderIdByProduct.keys()].filter((id) => !productIds.includes(id));
 
   if (pendingProductIds.length > 0) {
     const { data: pendingProducts } = await supabase
       .from("products")
       .select("id, title, author, cover_url")
-      .in("id", [...new Set(pendingProductIds)]);
+      .in("id", pendingProductIds);
 
-    pending = [...new Set(pendingProductIds)].map((productId) => ({
+    pending = pendingProductIds.map((productId) => ({
       product_id: productId,
+      order_id: pendingOrderIdByProduct.get(productId)!,
       products: pendingProducts?.find((p) => p.id === productId) ?? null,
     }));
   }
@@ -164,6 +176,12 @@ export default async function LibraryPage({
                   <span className="text-xs font-semibold uppercase tracking-wide text-warning">
                     {t("pendingVerification")}
                   </span>
+                  <Link
+                    href={`/pedidos/${entry.order_id}`}
+                    className="mt-auto text-xs font-semibold text-primary-900 underline"
+                  >
+                    {t("loadProofLink")}
+                  </Link>
                 </div>
               ))}
 

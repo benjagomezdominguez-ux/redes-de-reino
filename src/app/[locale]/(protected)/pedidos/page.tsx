@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
+import { Link } from "@/i18n/navigation";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
 import { formatPrice } from "@/lib/books/format-price";
 
@@ -25,12 +26,15 @@ export default async function OrdersPage({
     tax_cents: number;
     total_cents: number;
     currency: string;
+    payments: { status: string }[];
   };
   const { data } = await supabase
     .from("orders")
-    .select("id, reference, created_at, status, payment_method, subtotal_cents, tax_cents, total_cents, currency")
+    .select(
+      "id, reference, created_at, status, payment_method, subtotal_cents, tax_cents, total_cents, currency, payments(status)"
+    )
     .order("created_at", { ascending: false });
-  const orders: OrderRow[] = data ?? [];
+  const orders: OrderRow[] = (data ?? []) as unknown as OrderRow[];
 
   return (
     <>
@@ -47,40 +51,56 @@ export default async function OrdersPage({
             </p>
           ) : (
             <ul className="flex flex-col gap-4">
-              {orders.map((order) => (
-                <li
-                  key={order.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 shadow-soft"
-                >
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="font-mono text-sm text-muted">
-                        {t("orderNumber")}: {order.reference ?? order.id.slice(0, 8)}
-                      </p>
-                      <p className="text-sm text-muted">
-                        {new Date(order.created_at).toLocaleDateString(locale)} ·{" "}
-                        {tCheckout(`method.${order.payment_method}`)}
-                      </p>
+              {orders.map((order) => {
+                const paymentStatus = order.payments[0]?.status;
+                const needsProof = order.payment_method === "bank_transfer" && paymentStatus === "pending";
+                return (
+                  <li
+                    key={order.id}
+                    className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 shadow-soft"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-mono text-sm text-muted">
+                          {t("orderNumber")}: {order.reference ?? order.id.slice(0, 8)}
+                        </p>
+                        <p className="text-sm text-muted">
+                          {new Date(order.created_at).toLocaleDateString(locale)} ·{" "}
+                          {tCheckout(`method.${order.payment_method}`)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="rounded-full bg-secondary-300/60 px-3 py-1 text-xs font-semibold text-secondary-700">
+                          {t(`status.${order.status}`)}
+                        </span>
+                        <span className="font-display text-lg font-medium text-primary-900">
+                          {formatPrice(order.total_cents, order.currency)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="rounded-full bg-secondary-300/60 px-3 py-1 text-xs font-semibold text-secondary-700">
-                        {t(`status.${order.status}`)}
-                      </span>
-                      <span className="font-display text-lg font-medium text-primary-900">
-                        {formatPrice(order.total_cents, order.currency)}
-                      </span>
+                    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-2">
+                      <div className="flex gap-4 text-xs text-muted">
+                        <span>
+                          {tCheckout("subtotal")}: {formatPrice(order.subtotal_cents, order.currency)}
+                        </span>
+                        <span>
+                          {tCheckout("tax")}: {formatPrice(order.tax_cents, order.currency)}
+                        </span>
+                      </div>
+                      <Link
+                        href={`/pedidos/${order.id}`}
+                        className={
+                          needsProof
+                            ? "rounded-full bg-primary-900 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-primary-800"
+                            : "text-xs font-semibold text-primary-900 underline"
+                        }
+                      >
+                        {needsProof ? t("loadProof") : t("viewDetail")}
+                      </Link>
                     </div>
-                  </div>
-                  <div className="flex gap-4 border-t border-border pt-2 text-xs text-muted">
-                    <span>
-                      {tCheckout("subtotal")}: {formatPrice(order.subtotal_cents, order.currency)}
-                    </span>
-                    <span>
-                      {tCheckout("tax")}: {formatPrice(order.tax_cents, order.currency)}
-                    </span>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Container>

@@ -6,7 +6,7 @@ import { useCart } from "@/lib/cart/CartContext";
 import { createOrder, type CheckoutState } from "@/lib/actions/checkout";
 import { bankTransfer } from "@/lib/site-config";
 import { countries } from "@/lib/checkout/countries";
-import { TransferProofForm } from "@/components/ui/TransferProofForm";
+import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/books/format-price";
 
 const initialState: CheckoutState = { status: "idle" };
@@ -41,6 +41,7 @@ export function CheckoutView({ onlinePaymentAvailable }: { onlinePaymentAvailabl
       <div className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-8 shadow-soft">
         <div className="text-center">
           <h2 className="font-display text-2xl font-medium text-primary-900">{t("orderCreated")}</h2>
+          <p className="mt-2 text-base font-medium text-text">{t("orderPendingReview")}</p>
           <p className="mt-1 text-sm text-muted">
             {t("orderNumber")}: <span className="font-mono">{state.reference}</span>
           </p>
@@ -82,7 +83,17 @@ export function CheckoutView({ onlinePaymentAvailable }: { onlinePaymentAvailabl
               <p className="mt-3 text-muted">{t("transfer.instructionsBody")}</p>
             </div>
 
-            {state.orderId ? <TransferProofForm orderId={state.orderId} /> : null}
+            <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted">
+              <p>{t("transfer.laterNote")}</p>
+              {state.orderId ? (
+                <Link
+                  href={`/pedidos/${state.orderId}`}
+                  className="mt-3 inline-flex items-center justify-center rounded-full bg-primary-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-800"
+                >
+                  {t("transfer.loadProofNow")}
+                </Link>
+              ) : null}
+            </div>
           </div>
         ) : (
           <div className="mx-auto max-w-md rounded-xl bg-surface-alt p-4 text-center text-sm text-text">

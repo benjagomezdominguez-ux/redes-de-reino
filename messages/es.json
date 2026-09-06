@@ -111,7 +111,10 @@
         "amount": "Monto a transferir",
         "reference": "Referencia de tu pedido",
         "instructionsBody": "Usá esta referencia en el concepto de la transferencia. Una vez que confirmemos el pago, vas a ver tu libro en Mi Biblioteca.",
+        "laterNote": "Podés cargar el comprobante ahora o más tarde, cuando quieras, desde Mis Pedidos.",
+        "loadProofNow": "Cargar comprobante ahora",
         "proofIntro": "Si ya hiciste la transferencia, contanos los datos para agilizar la verificación (opcional).",
+        "proofAlreadyOnFile": "Ya recibimos un comprobante para este pedido — si lo enviás de nuevo, reemplaza al anterior.",
         "operationNumber": "Número de operación",
         "declaredAmount": "Monto transferido",
         "declaredDate": "Fecha de la transferencia",
@@ -126,6 +129,7 @@
       "placeOrder": "Confirmar pedido",
       "placingOrder": "Procesando…",
       "orderCreated": "¡Pedido registrado!",
+      "orderPendingReview": "Tu pedido quedó pendiente de revisión.",
       "orderNumber": "Número de pedido",
       "errors": {
         "outOfStock": "Ese libro ya no tiene stock disponible.",
@@ -140,12 +144,15 @@
       "purchased": "Comprado",
       "access": "Acceder al libro",
       "pendingVerification": "Tu pago está siendo verificado.",
+      "loadProofLink": "Cargar comprobante",
       "rejected": "Compra rechazada"
     },
     "orders": {
       "title": "Mis Pedidos",
       "empty": "Todavía no hiciste ningún pedido.",
       "orderNumber": "Pedido",
+      "viewDetail": "Ver pedido",
+      "loadProof": "Cargar comprobante",
       "status": {
         "pending": "Pendiente",
         "payment_processing": "Procesando pago",
@@ -157,6 +164,12 @@
         "refunded": "Reembolsado",
         "failed": "Fallido"
       }
+    },
+    "orderDetail": {
+      "backToList": "← Volver a mis pedidos",
+      "paymentTitle": "Pago",
+      "paymentConfirmed": "Confirmamos tu pago — ya podés ver el libro en Mi Biblioteca.",
+      "paymentRejected": "No pudimos confirmar este pago."
     }
   },
   "auth": {

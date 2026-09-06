@@ -111,7 +111,10 @@
         "amount": "Amount to transfer",
         "reference": "Your order reference",
         "instructionsBody": "Use this reference in the transfer's description. Once we confirm the payment, your book will show up in My Library.",
+        "laterNote": "You can upload the proof now or later, whenever you're ready, from My Orders.",
+        "loadProofNow": "Upload proof now",
         "proofIntro": "If you already made the transfer, tell us the details to speed up verification (optional).",
+        "proofAlreadyOnFile": "We already received proof for this order — sending it again replaces the previous one.",
         "operationNumber": "Operation number",
         "declaredAmount": "Amount transferred",
         "declaredDate": "Transfer date",
@@ -126,6 +129,7 @@
       "placeOrder": "Confirm order",
       "placingOrder": "Processing…",
       "orderCreated": "Order placed!",
+      "orderPendingReview": "Your order is pending review.",
       "orderNumber": "Order number",
       "errors": {
         "outOfStock": "That book is out of stock.",
@@ -140,12 +144,15 @@
       "purchased": "Purchased",
       "access": "Open book",
       "pendingVerification": "Your payment is being verified.",
+      "loadProofLink": "Upload proof",
       "rejected": "Purchase rejected"
     },
     "orders": {
       "title": "My Orders",
       "empty": "You haven't placed any orders yet.",
       "orderNumber": "Order",
+      "viewDetail": "View order",
+      "loadProof": "Upload proof",
       "status": {
         "pending": "Pending",
         "payment_processing": "Processing payment",
@@ -157,6 +164,12 @@
         "refunded": "Refunded",
         "failed": "Failed"
       }
+    },
+    "orderDetail": {
+      "backToList": "← Back to my orders",
+      "paymentTitle": "Payment",
+      "paymentConfirmed": "We confirmed your payment — you can now see the book in My Library.",
+      "paymentRejected": "We couldn't confirm this payment."
     }
   },
   "auth": {

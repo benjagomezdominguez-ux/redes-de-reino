@@ -12,7 +12,25 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 const inputClasses =
   "w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-muted focus-visible:outline-2 focus-visible:outline-secondary-500";
 
-export function TransferProofForm({ orderId }: { orderId: string }) {
+export type TransferProofInitial = {
+  operationNumber: string;
+  declaredAmount: string;
+  declaredDate: string;
+  hasProof: boolean;
+};
+
+export function TransferProofForm({
+  orderId,
+  initial,
+}: {
+  orderId: string;
+  // Pre-fills a resubmission with whatever was already declared (e.g.
+  // from /pedidos/[id], visited after the buyer already submitted once)
+  // — submit_transfer_proof() itself already COALESCEs on the backend,
+  // so a blank resubmit would silently keep the old values either way;
+  // this just lets the buyer actually see and edit what's on file.
+  initial?: TransferProofInitial;
+}) {
   const t = useTranslations("books.checkout.transfer");
   const [pending, setPending] = useState(false);
   const [state, setState] = useState<TransferProofState>({ status: "idle" });
@@ -26,6 +44,15 @@ export function TransferProofForm({ orderId }: { orderId: string }) {
     formData.set("order_id", orderId);
     const file = formData.get("proof_file");
     formData.delete("proof_file");
+    // A real, pre-existing bug found live-testing this form without a
+    // file attached: "proof_path" was only ever formData.set() inside
+    // the upload branch below, so FormData.get("proof_path") came back
+    // as null (not an empty string) whenever no file was chosen —
+    // failing the Server Action's z.string().or(z.literal("")) schema
+    // and silently rejecting every proof submitted with the file field
+    // left empty. Setting a default here fixes it regardless of whether
+    // a file is attached.
+    formData.set("proof_path", "");
 
     // The proof file (often a phone screenshot, easily a few MB) goes
     // straight to Storage via a signed URL — never through this form's
@@ -66,19 +93,29 @@ export function TransferProofForm({ orderId }: { orderId: string }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <p className="text-sm text-muted">{t("proofIntro")}</p>
+      {initial?.hasProof ? (
+        <p className="text-xs text-muted">{t("proofAlreadyOnFile")}</p>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
           {t("operationNumber")}
-          <input name="operation_number" className={inputClasses} />
+          <input name="operation_number" defaultValue={initial?.operationNumber} className={inputClasses} />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
           {t("declaredAmount")}
-          <input name="declared_amount" type="number" step="0.01" min="0" className={inputClasses} />
+          <input
+            name="declared_amount"
+            type="number"
+            step="0.01"
+            min="0"
+            defaultValue={initial?.declaredAmount}
+            className={inputClasses}
+          />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
           {t("declaredDate")}
-          <input name="declared_date" type="date" className={inputClasses} />
+          <input name="declared_date" type="date" defaultValue={initial?.declaredDate} className={inputClasses} />
         </label>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
           {t("proofFile")}
