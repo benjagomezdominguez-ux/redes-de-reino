@@ -1,15 +1,15 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { FakeStore } from "@/lib/whatsapp/scheduler.test-helpers";
 
-const requireChatAdminMock = vi.fn();
+const requireUserMock = vi.fn();
 let store: FakeStore;
 
-vi.mock("@/lib/supabase/require-auth", () => ({ requireChatAdmin: requireChatAdminMock }));
+vi.mock("@/lib/supabase/require-auth", () => ({ requireUser: requireUserMock }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
 
 const { subscribeToPush, unsubscribeFromPush } = await import("./push");
 
-const ADMIN = { id: "admin-1", role: "admin" };
+const USER = { id: "user-1", role: "user" };
 const VALID_SUBSCRIPTION = {
   endpoint: "https://fcm.googleapis.com/fcm/send/abc123",
   keys: { p256dh: "test-p256dh-key", auth: "test-auth-key" },
@@ -17,13 +17,13 @@ const VALID_SUBSCRIPTION = {
 
 beforeEach(() => {
   store = new FakeStore();
-  requireChatAdminMock.mockReset();
-  requireChatAdminMock.mockResolvedValue(ADMIN);
+  requireUserMock.mockReset();
+  requireUserMock.mockResolvedValue(USER);
 });
 
 describe("subscribeToPush", () => {
-  it("CRITICAL: requires Ariel's own chat-admin session before storing anything", async () => {
-    requireChatAdminMock.mockRejectedValue(new Error("REDIRECT"));
+  it("CRITICAL: requires an authenticated session before storing anything", async () => {
+    requireUserMock.mockRejectedValue(new Error("REDIRECT"));
     await expect(subscribeToPush(VALID_SUBSCRIPTION)).rejects.toThrow("REDIRECT");
     expect(store.tables.push_subscriptions ?? []).toHaveLength(0);
   });
@@ -34,11 +34,11 @@ describe("subscribeToPush", () => {
     expect(store.tables.push_subscriptions ?? []).toHaveLength(0);
   });
 
-  it("stores the subscription tied to the real authenticated admin, never a client-supplied user id", async () => {
+  it("stores the subscription tied to the real authenticated user, never a client-supplied user id", async () => {
     const result = await subscribeToPush(VALID_SUBSCRIPTION);
     expect(result).toEqual({ ok: true });
     expect(store.tables.push_subscriptions[0]).toMatchObject({
-      user_id: ADMIN.id,
+      user_id: USER.id,
       endpoint: VALID_SUBSCRIPTION.endpoint,
       p256dh: "test-p256dh-key",
       auth_key: "test-auth-key",
@@ -53,20 +53,20 @@ describe("subscribeToPush", () => {
 });
 
 describe("unsubscribeFromPush", () => {
-  it("CRITICAL: only removes the calling admin's own subscription, never another admin's, even with the same endpoint guessed", async () => {
+  it("CRITICAL: only removes the calling user's own subscription, never another user's, even with the same endpoint guessed", async () => {
     store.seed("push_subscriptions", [
-      { id: "sub-1", user_id: "other-admin", endpoint: VALID_SUBSCRIPTION.endpoint, p256dh: "x", auth_key: "y" },
+      { id: "sub-1", user_id: "other-user", endpoint: VALID_SUBSCRIPTION.endpoint, p256dh: "x", auth_key: "y" },
     ]);
 
     const result = await unsubscribeFromPush(VALID_SUBSCRIPTION.endpoint);
 
     expect(result).toEqual({ ok: true });
-    expect(store.tables.push_subscriptions).toHaveLength(1); // untouched — belongs to a different admin
+    expect(store.tables.push_subscriptions).toHaveLength(1); // untouched — belongs to a different user
   });
 
   it("removes the caller's own subscription", async () => {
     store.seed("push_subscriptions", [
-      { id: "sub-1", user_id: ADMIN.id, endpoint: VALID_SUBSCRIPTION.endpoint, p256dh: "x", auth_key: "y" },
+      { id: "sub-1", user_id: USER.id, endpoint: VALID_SUBSCRIPTION.endpoint, p256dh: "x", auth_key: "y" },
     ]);
 
     await unsubscribeFromPush(VALID_SUBSCRIPTION.endpoint);

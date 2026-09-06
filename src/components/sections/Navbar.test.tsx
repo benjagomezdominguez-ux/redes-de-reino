@@ -23,6 +23,14 @@ vi.mock("@/components/chat/NotificationBell", () => ({
   NotificationBell: () => null,
 }));
 
+// Same reasoning: UserNotificationsBell also pulls in @/i18n/navigation
+// (useRouter). It's only rendered for a logged-in user and this file
+// renders Navbar with no user, so it's stubbed out rather than exercised
+// here.
+vi.mock("@/components/ui/UserNotificationsBell", () => ({
+  UserNotificationsBell: () => null,
+}));
+
 function renderNavbar() {
   return render(
     <NextIntlClientProvider locale="es" messages={esMessages}>

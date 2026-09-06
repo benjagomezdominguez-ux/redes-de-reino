@@ -10,7 +10,6 @@ import {
   updateGalleryImage,
   replaceGalleryImagePhoto,
   deleteGalleryImage,
-  moveGalleryImage,
 } from "@/lib/actions/admin-gallery";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { GalleryImageWithUrl } from "@/lib/gallery/queries";
@@ -24,7 +23,7 @@ const secondaryButtonClasses =
 const dangerButtonClasses =
   "inline-flex items-center justify-center rounded-full border border-error/30 px-4 py-2 text-sm font-medium text-error transition-colors hover:bg-error/10 disabled:opacity-50";
 
-type ErrorKey = "generic" | "invalidFile" | "required" | "notFound" | "unauthorized";
+type ErrorKey = "generic" | "invalidFile" | "required" | "notFound" | "unauthorized" | "alreadyExists";
 
 // Uploads directly from the browser to Storage via a short-lived signed
 // URL minted by an admin-gated Server Action — same reason as book
@@ -205,7 +204,6 @@ export function GalleryAdminPanel({ images }: { images: GalleryImageWithUrl[] })
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null);
   const [deletePending, setDeletePending] = useState(false);
-  const [movePendingId, setMovePendingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
   async function handleDelete(id: string) {
@@ -221,18 +219,11 @@ export function GalleryAdminPanel({ images }: { images: GalleryImageWithUrl[] })
     }
   }
 
-  async function handleMove(id: string, direction: "up" | "down") {
-    setMovePendingId(id);
-    await moveGalleryImage(id, direction);
-    setMovePendingId(null);
-    router.refresh();
-  }
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted">{t("count", { count: images.length })}</p>
-        {!adding ? (
+        <p className="text-sm text-muted">{t("singlePhotoHint")}</p>
+        {!adding && images.length === 0 ? (
           <button type="button" onClick={() => setAdding(true)} className={primaryButtonClasses}>
             {t("addNew")}
           </button>
@@ -247,7 +238,7 @@ export function GalleryAdminPanel({ images }: { images: GalleryImageWithUrl[] })
         <p className="rounded-2xl border border-dashed border-border p-10 text-center text-muted">{t("empty")}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {images.map((image, index) => {
+          {images.map((image) => {
             if (editingId === image.id) {
               return (
                 <div key={image.id} className="sm:col-span-2 lg:col-span-3">
@@ -310,24 +301,6 @@ export function GalleryAdminPanel({ images }: { images: GalleryImageWithUrl[] })
                     </button>
                     <button type="button" onClick={() => setConfirmingDeleteId(image.id)} className={dangerButtonClasses}>
                       {t("delete")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMove(image.id, "up")}
-                      disabled={index === 0 || movePendingId === image.id}
-                      aria-label={t("moveUp")}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-primary-900 transition-colors hover:bg-primary-900/5 disabled:opacity-30"
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleMove(image.id, "down")}
-                      disabled={index === images.length - 1 || movePendingId === image.id}
-                      aria-label={t("moveDown")}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border text-primary-900 transition-colors hover:bg-primary-900/5 disabled:opacity-30"
-                    >
-                      ↓
                     </button>
                   </div>
                 )}

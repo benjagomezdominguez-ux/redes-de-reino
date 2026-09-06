@@ -28,46 +28,40 @@ export type ChatPushPayload = {
   conversationId: string;
 };
 
-// Sends only to the given recipient's own saved subscriptions — never
-// the sender's. The `recipientId === senderId` check is a second,
-// unconditional guard here (on top of whatever resolved the recipient
-// upstream in sendMessage()): a message's sender must never receive a
-// push for their own message, full stop, regardless of who they are.
-// This is what makes the rule general rather than an "if this is Ariel,
-// skip it" special case — it holds for any account in that position.
-//
-// Best-effort and fire-and-forget per subscription — one dead
-// subscription must never stop another of the same recipient's devices
-// from being notified. A 404/410 response means the push service itself
-// says the subscription is dead (browser uninstalled, permission
-// revoked, etc.) — those get deleted so they stop being retried forever.
-export async function sendChatPush(params: {
-  recipientId: string;
-  senderId: string;
-  notification: ChatPushPayload;
-}): Promise<{ sent: number; removed: number }> {
-  if (!isPushConfigured()) return { sent: 0, removed: 0 };
-  if (params.recipientId === params.senderId) return { sent: 0, removed: 0 };
-  configureVapid();
+// A general notification for any registered user (e.g. "new devotional
+// published") — `url` is where the service worker navigates on click,
+// generalizing the chat payload's `conversationId`-specific routing (see
+// public/sw.js).
+export type BroadcastPushPayload = {
+  title: string;
+  body: string;
+  url: string;
+};
 
-  const admin = getSupabaseAdminClient();
-  const { data: subscriptions } = await admin
-    .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth_key")
-    .eq("user_id", params.recipientId);
+type SubscriptionRow = { id: string; endpoint: string; p256dh: string; auth_key: string };
 
+// Shared fan-out: best-effort and fire-and-forget per subscription — one
+// dead subscription must never stop another device from being notified.
+// A 404/410 response means the push service itself says the subscription
+// is dead (browser uninstalled, permission revoked, etc.) — those get
+// deleted so they stop being retried forever.
+async function sendToSubscriptions(
+  admin: ReturnType<typeof getSupabaseAdminClient>,
+  subscriptions: SubscriptionRow[],
+  notification: ChatPushPayload | BroadcastPushPayload
+): Promise<{ sent: number; removed: number }> {
   let sent = 0;
   let removed = 0;
 
   await Promise.all(
-    (subscriptions ?? []).map(async (sub) => {
+    subscriptions.map(async (sub) => {
       try {
         await webpush.sendNotification(
           {
             endpoint: sub.endpoint,
             keys: { p256dh: sub.p256dh, auth: sub.auth_key },
           },
-          JSON.stringify(params.notification)
+          JSON.stringify(notification)
         );
         sent += 1;
       } catch (err) {
@@ -83,4 +77,49 @@ export async function sendChatPush(params: {
   );
 
   return { sent, removed };
+}
+
+// Sends only to the given recipient's own saved subscriptions — never
+// the sender's. The `recipientId === senderId` check is a second,
+// unconditional guard here (on top of whatever resolved the recipient
+// upstream in sendMessage()): a message's sender must never receive a
+// push for their own message, full stop, regardless of who they are.
+// This is what makes the rule general rather than an "if this is Ariel,
+// skip it" special case — it holds for any account in that position.
+export async function sendChatPush(params: {
+  recipientId: string;
+  senderId: string;
+  notification: ChatPushPayload;
+}): Promise<{ sent: number; removed: number }> {
+  if (!isPushConfigured()) return { sent: 0, removed: 0 };
+  if (params.recipientId === params.senderId) return { sent: 0, removed: 0 };
+  configureVapid();
+
+  const admin = getSupabaseAdminClient();
+  const { data: subscriptions } = await admin
+    .from("push_subscriptions")
+    .select("id, endpoint, p256dh, auth_key")
+    .eq("user_id", params.recipientId);
+
+  return sendToSubscriptions(admin, subscriptions ?? [], params.notification);
+}
+
+// Broadcasts to every one of the given users' saved subscriptions (across
+// however many devices each has). Used for site-wide announcements like a
+// newly published devotional — not tied to a single sender/recipient
+// pair the way chat is.
+export async function sendPushToUsers(
+  userIds: string[],
+  notification: BroadcastPushPayload
+): Promise<{ sent: number; removed: number }> {
+  if (!isPushConfigured() || userIds.length === 0) return { sent: 0, removed: 0 };
+  configureVapid();
+
+  const admin = getSupabaseAdminClient();
+  const { data: subscriptions } = await admin
+    .from("push_subscriptions")
+    .select("id, endpoint, p256dh, auth_key")
+    .in("user_id", userIds);
+
+  return sendToSubscriptions(admin, subscriptions ?? [], notification);
 }

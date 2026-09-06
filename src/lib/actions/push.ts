@@ -1,17 +1,17 @@
 "use server";
 
 import { z } from "zod";
-import { requireChatAdmin } from "@/lib/supabase/require-auth";
+import { requireUser } from "@/lib/supabase/require-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
-// Web Push is private to Ariel specifically, same as the rest of the
-// chat's admin side — requireChatAdmin() here is the real gate:
-// push_subscriptions has no client INSERT policy at all (see the
-// migration), so this Server Action is the only path that can ever
-// write to it, and it never trusts a client-supplied "this is Ariel's
+// Web Push is available to any registered user now (originally private
+// to Ariel — the chat admin side still uses these same subscriptions via
+// sendChatPush(), unaffected by opening this up). requireUser() here is
+// the real gate: push_subscriptions has no client INSERT policy at all
+// (see the migration), so this Server Action is the only path that can
+// ever write to it, and it never trusts a client-supplied "this is my
 // subscription" claim — the subscription is always tied to whichever
-// account is actually authenticated right now, and only Ariel's account
-// can ever pass the gate to create one.
+// account is actually authenticated right now.
 
 const subscriptionSchema = z.object({
   endpoint: z.string().url(),
@@ -22,14 +22,14 @@ const subscriptionSchema = z.object({
 });
 
 export async function subscribeToPush(subscriptionJson: unknown): Promise<{ ok: boolean }> {
-  const admin_ = await requireChatAdmin();
+  const user = await requireUser();
   const parsed = subscriptionSchema.safeParse(subscriptionJson);
   if (!parsed.success) return { ok: false };
 
   const admin = getSupabaseAdminClient();
   const { error } = await admin.from("push_subscriptions").upsert(
     {
-      user_id: admin_.id,
+      user_id: user.id,
       endpoint: parsed.data.endpoint,
       p256dh: parsed.data.keys.p256dh,
       auth_key: parsed.data.keys.auth,
@@ -41,11 +41,11 @@ export async function subscribeToPush(subscriptionJson: unknown): Promise<{ ok: 
 }
 
 export async function unsubscribeFromPush(endpoint: string): Promise<{ ok: boolean }> {
-  const admin_ = await requireChatAdmin();
+  const user = await requireUser();
   const admin = getSupabaseAdminClient();
-  // Scoped to this admin's own subscription — one admin unsubscribing
-  // their browser must never delete a different admin's row, even if
+  // Scoped to this user's own subscription — one user unsubscribing
+  // their browser must never delete a different user's row, even if
   // they somehow guessed the endpoint URL.
-  const { error } = await admin.from("push_subscriptions").delete().eq("endpoint", endpoint).eq("user_id", admin_.id);
+  const { error } = await admin.from("push_subscriptions").delete().eq("endpoint", endpoint).eq("user_id", user.id);
   return { ok: !error };
 }

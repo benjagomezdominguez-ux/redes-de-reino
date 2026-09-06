@@ -115,7 +115,7 @@ src/
   components/
     sections/     # Navbar, Hero, Gallery, Schedule, Pastors, Books, Footer
     ui/            # Primitivas reutilizables (Container, Button, SectionHeading,
-                   # LanguageSwitcher, Reveal, CinematicGallery, MeetingSchedule,
+                   # LanguageSwitcher, Reveal, MeetingSchedule,
                    # BookCard, AddToCartButton, CartView, CheckoutView, AuthForm,
                    # ForgotPasswordForm, ResetPasswordForm, AdminPagination,
                    # BookForm, BookStatusButtons, TransferProofForm,
@@ -778,7 +778,9 @@ como parte del control de acceso.
 siempre) → `messages` (`sender_id`, `sender_role` snapshotteado al
 momento de enviar — igual que `sender_role` en WhatsApp, para que un
 mensaje quede correctamente etiquetado aunque la cuenta del remitente se
-borre después) → `push_subscriptions` (solo admins). RLS: SELECT-only en
+borre después) → `push_subscriptions` (cualquier usuario registrado, no solo admins desde
+que se abrió Web Push más allá del chat — ver "Notificaciones generales"
+más abajo). RLS: SELECT-only en
 `conversations`/`messages` — no existe ninguna policy de INSERT/UPDATE
 para ningún rol de cliente, así que el único camino de escritura es un
 Server Action con el cliente admin/service-role. Eso es lo que hace
@@ -824,7 +826,9 @@ directo a la conversación — derivada de la misma lista de conversaciones
 
 **Notificaciones del navegador**: `Notification` API — nunca se pide
 permiso solo al cargar la página; el banner (`PushPermissionBanner.tsx`,
-solo admin) explica y ofrece "Activar notificaciones" / "Ahora no". Si ya
+en `/account` para cualquier usuario, con copy propio por namespace —
+`chat.admin.push` para Ariel, `notifications.push` para el resto)
+explica y ofrece "Activar notificaciones" / "Ahora no". Si ya
 estaba concedido de una sesión anterior, se re-confirma en silencio sin
 mostrar nada. Se muestra cuando Ariel está en otra pestaña o en otra
 sección del panel (fuera de `/admin/chat` con foco) — si ya está viendo
@@ -842,6 +846,35 @@ usuario — sin necesidad de un listener siempre activo, coherente con la
 arquitectura serverless del resto del proyecto. Suscripciones inválidas
 (404/410) se borran solas; un error transitorio no borra la suscripción
 ni bloquea el envío a los demás admins.
+
+**Notificaciones generales (cualquier usuario, no solo chat/Ariel)**:
+mismas suscripciones `push_subscriptions` y misma infraestructura de Web
+Push de arriba, generalizadas para avisar de novedades del sitio — hoy el
+único evento es "el pastor Ariel publicó un nuevo devocional". Dos
+canales, ambos disparados server-side desde
+`notifyDevotionalPublished()` (`lib/notifications/devotionals.ts`), nunca
+por el cliente:
+- **Interna, en el sitio**: tabla `notifications`
+  (`20260906010000_create_notifications.sql`, RLS: cada usuario solo ve
+  las propias; marcar como leída pasa por la función `SECURITY DEFINER`
+  `mark_notification_read()`, nunca por un UPDATE directo del cliente) +
+  campana `UserNotificationsBell.tsx` en la navbar (visible para
+  cualquier usuario logueado, distinta de `NotificationBell.tsx` que es
+  solo para Ariel/chat). Idempotente por construcción: `unique (user_id,
+  type, resource_id)` + `upsert(..., { ignoreDuplicates: true })` — un
+  mismo devocional nunca genera una segunda notificación para el mismo
+  usuario aunque la acción de publicar se dispare dos veces.
+- **Push real (OS)**: `sendPushToUsers()` en `lib/push/web-push.ts`, la
+  misma librería `web-push` de arriba pero para una lista de
+  destinatarios en vez de uno solo. Se dispara *fire-and-forget* (no se
+  espera su resultado) — un fan-out real a potencialmente muchas
+  suscripciones no puede bloquear la acción de publicar un devocional,
+  igual que `sendChatPush()` nunca bloquea el envío de un mensaje de chat.
+  El autor del devocional nunca se notifica a sí mismo.
+
+Cualquier usuario puede activar el permiso de notificaciones desde
+`/account` (banner reutilizado, ver arriba) — antes esto solo estaba
+disponible para Ariel.
 
 **Limitación de entorno de prueba, real y documentada**: no se pudo
 verificar la entrega final de una notificación Web Push de punta a punta
@@ -891,7 +924,8 @@ con datos reales antes de producción:
 - Biografías de los pastores (fotos ya cargadas) (`pastors`).
 - Horarios de reuniones reales: día, nombre y horario de cada encuentro
   (`meetings`).
-- Las 4 fotos de la galería cinematográfica (`galleryImages`).
+- La foto de la Galería — se carga desde `/admin/gallery` (una única
+  foto, administrada ahí; no depende de `site-config.ts`).
 
 ## Estado y control de versiones
 

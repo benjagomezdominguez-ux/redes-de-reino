@@ -138,7 +138,8 @@
       "empty": "Você ainda não tem livros digitais.",
       "purchased": "Comprado",
       "access": "Acessar o livro",
-      "pendingVerification": "Seu pagamento está sendo verificado."
+      "pendingVerification": "Seu pagamento está sendo verificado.",
+      "rejected": "Compra rejeitada"
     },
     "orders": {
       "title": "Meus Pedidos",
@@ -526,14 +527,12 @@
       }
     },
     "gallery": {
-      "count": "{count, plural, =1 {1 foto} other {# fotos}}",
+      "singlePhotoHint": "A Galeria mostra uma única foto.",
       "addNew": "Adicionar foto",
       "empty": "Nenhuma foto foi enviada ainda.",
       "untitled": "Sem título",
       "edit": "Editar",
       "delete": "Excluir",
-      "moveUp": "Mover para cima",
-      "moveDown": "Mover para baixo",
       "cancel": "Cancelar",
       "save": "Salvar",
       "saving": "Salvando…",
@@ -545,7 +544,7 @@
       "altText": "Texto alternativo",
       "objectPosition": "Posição da imagem (opcional, ex: center, top)",
       "confirmDeleteTitle": "Excluir esta foto?",
-      "confirmDeleteBody": "Esta ação não pode ser desfeita. A foto será removida do carrossel público e do armazenamento.",
+      "confirmDeleteBody": "Esta ação não pode ser desfeita. A foto será removida da Galeria pública e do armazenamento.",
       "confirmDeleteButton": "Excluir foto",
       "deleting": "Excluindo…",
       "deleteSuccess": "Foto excluída com sucesso.",
@@ -554,7 +553,8 @@
         "invalidFile": "Não foi possível enviar o arquivo. Tente novamente.",
         "required": "Selecione uma foto.",
         "notFound": "Foto não encontrada.",
-        "unauthorized": "Você não tem permissão para realizar esta ação."
+        "unauthorized": "Você não tem permissão para realizar esta ação.",
+        "alreadyExists": "A Galeria já tem uma foto — exclua ou edite em vez de adicionar outra."
       }
     },
     "devotionals": {
@@ -604,8 +604,7 @@
     }
   },
   "gallery": {
-    "imageAlt": "Fotografia {index} da comunidade da {name}",
-    "goToSlide": "Ir para a fotografia {index}",
+    "imageAlt": "Fotografia da comunidade da {name}",
     "pending": "Fotografia em breve"
   },
   "footer": {
@@ -623,7 +622,6 @@
     "logoAlt": "Logo da {name}"
   },
   "chat": {
-    "navLink": "💬 Falar com Ariel",
     "headerTitle": "Chat com Ariel Gómez",
     "headerSubtitle": "Sua conversa é privada.",
     "loading": "Carregando…",
@@ -665,8 +663,28 @@
       }
     },
     "floatingButton": {
-      "label": "Falar com o Pastor Ariel",
-      "ariaLabel": "Falar com o Pastor Ariel pelo chat"
+      "label": "Fale com o pastor",
+      "ariaLabel": "Fale com o pastor pelo chat"
+    }
+  },
+  "notifications": {
+    "bell": {
+      "ariaLabel": "Notificações",
+      "title": "Notificações",
+      "empty": "Você não tem notificações."
+    },
+    "push": {
+      "prompt": "Ative as notificações para saber das novidades, como um novo devocional.",
+      "enable": "Ativar notificações",
+      "notNow": "Agora não",
+      "enabling": "Ativando…",
+      "enabled": "Notificações ativadas",
+      "error": "Não conseguimos ativar as notificações. Tente novamente.",
+      "denied": "Você bloqueou as notificações para este site. Você pode ativá-las novamente nas configurações do navegador.",
+      "unsupported": "Seu navegador não suporta notificações push.",
+      "needsInstallTitle": "Para receber notificações neste dispositivo, adicione o app à tela de início.",
+      "needsInstallBody": "Toque no botão Compartilhar do Safari e escolha \"Adicionar à Tela de Início\". Depois abra o Redes de Reino a partir desse ícone e tente ativar as notificações novamente.",
+      "retry": "Tentar novamente"
     }
   },
   "devotionals": {

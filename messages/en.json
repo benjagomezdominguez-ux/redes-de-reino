@@ -138,7 +138,8 @@
       "empty": "You don't have any digital books yet.",
       "purchased": "Purchased",
       "access": "Open book",
-      "pendingVerification": "Your payment is being verified."
+      "pendingVerification": "Your payment is being verified.",
+      "rejected": "Purchase rejected"
     },
     "orders": {
       "title": "My Orders",
@@ -526,14 +527,12 @@
       }
     },
     "gallery": {
-      "count": "{count, plural, =1 {1 photo} other {# photos}}",
+      "singlePhotoHint": "The Gallery shows a single photo.",
       "addNew": "Add photo",
       "empty": "No photos uploaded yet.",
       "untitled": "Untitled",
       "edit": "Edit",
       "delete": "Delete",
-      "moveUp": "Move up",
-      "moveDown": "Move down",
       "cancel": "Cancel",
       "save": "Save",
       "saving": "Saving…",
@@ -545,7 +544,7 @@
       "altText": "Alt text",
       "objectPosition": "Image position (optional, e.g. center, top)",
       "confirmDeleteTitle": "Delete this photo?",
-      "confirmDeleteBody": "This cannot be undone. The photo will be removed from the public carousel and from storage.",
+      "confirmDeleteBody": "This cannot be undone. The photo will be removed from the public Gallery and from storage.",
       "confirmDeleteButton": "Delete photo",
       "deleting": "Deleting…",
       "deleteSuccess": "Photo deleted successfully.",
@@ -554,7 +553,8 @@
         "invalidFile": "We could not upload the file. Please try again.",
         "required": "Select a photo.",
         "notFound": "Photo not found.",
-        "unauthorized": "You do not have permission to perform this action."
+        "unauthorized": "You do not have permission to perform this action.",
+        "alreadyExists": "The Gallery already has a photo — delete or edit it instead of adding another."
       }
     },
     "devotionals": {
@@ -604,8 +604,7 @@
     }
   },
   "gallery": {
-    "imageAlt": "Photo {index} of the {name} community",
-    "goToSlide": "Go to photo {index}",
+    "imageAlt": "Photo of the {name} community",
     "pending": "Photo coming soon"
   },
   "footer": {
@@ -623,7 +622,6 @@
     "logoAlt": "{name} logo"
   },
   "chat": {
-    "navLink": "💬 Talk to Ariel",
     "headerTitle": "Chat with Ariel Gómez",
     "headerSubtitle": "Your conversation is private.",
     "loading": "Loading…",
@@ -665,8 +663,28 @@
       }
     },
     "floatingButton": {
-      "label": "Talk to Pastor Ariel",
-      "ariaLabel": "Talk to Pastor Ariel via chat"
+      "label": "Talk to the pastor",
+      "ariaLabel": "Talk to the pastor via chat"
+    }
+  },
+  "notifications": {
+    "bell": {
+      "ariaLabel": "Notifications",
+      "title": "Notifications",
+      "empty": "You have no notifications."
+    },
+    "push": {
+      "prompt": "Turn on notifications to hear about news, like a new devotional.",
+      "enable": "Enable notifications",
+      "notNow": "Not now",
+      "enabling": "Enabling…",
+      "enabled": "Notifications enabled",
+      "error": "We could not enable notifications. Please try again.",
+      "denied": "You blocked notifications for this site. You can enable them again from your browser settings.",
+      "unsupported": "Your browser does not support push notifications.",
+      "needsInstallTitle": "To receive notifications on this device, add the app to your home screen.",
+      "needsInstallBody": "Tap Safari's Share button and choose \"Add to Home Screen\". Then open Redes de Reino from that icon and try enabling notifications again.",
+      "retry": "Retry"
     }
   },
   "devotionals": {

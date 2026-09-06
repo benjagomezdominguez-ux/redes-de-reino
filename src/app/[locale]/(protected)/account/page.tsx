@@ -45,11 +45,9 @@ export default async function AccountPage({
             ))}
           </dl>
 
-          {isChatAdmin(profile) ? (
-            <div className="mb-8">
-              <PushPermissionBanner />
-            </div>
-          ) : null}
+          <div className="mb-8">
+            <PushPermissionBanner namespace={isChatAdmin(profile) ? "chat.admin.push" : "notifications.push"} />
+          </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link

@@ -43,11 +43,12 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Web Push (chat notifications). The payload is the JSON string built by
-// sendChatPushToAdmins() (src/lib/push/web-push.ts) — { title, body,
-// conversationId }. This only ever fires for a subscription an admin
-// explicitly created (see PushPermissionBanner.tsx); nothing here can be
-// triggered without that opt-in.
+// Web Push. Two payload shapes, both built by src/lib/push/web-push.ts:
+// - chat (sendChatPush): { title, body, conversationId } — admin-only,
+//   fires only for a subscription an admin explicitly created (see
+//   PushPermissionBanner.tsx).
+// - general (sendPushToUsers): { title, body, url } — any registered
+//   user who opted in (e.g. a newly published devotional).
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -63,20 +64,23 @@ self.addEventListener("push", (event) => {
       body: payload.body || "",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: payload.conversationId ? `chat-${payload.conversationId}` : undefined,
-      data: { conversationId: payload.conversationId },
+      tag: payload.conversationId ? `chat-${payload.conversationId}` : payload.url,
+      data: { conversationId: payload.conversationId, url: payload.url },
     })
   );
 });
 
 // Clicking the OS notification focuses an already-open tab if one
-// exists, or opens a new one — either way landing on the conversation
-// that triggered it, per rule 14 ("al hacer clic, abrir directamente la
-// conversación correspondiente").
+// exists, or opens a new one — either way landing on whatever triggered
+// it: the conversation for a chat push (rule 14 of the original chat
+// prompt), or the payload's own `url` for a general one (e.g. the
+// devotional that was just published).
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const conversationId = event.notification.data && event.notification.data.conversationId;
-  const targetUrl = conversationId ? `/es/admin/chat?conversation=${conversationId}` : "/es/admin/chat";
+  const data = event.notification.data || {};
+  const targetUrl = data.conversationId
+    ? `/es/admin/chat?conversation=${data.conversationId}`
+    : data.url || "/es";
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {

@@ -28,7 +28,6 @@ const {
   updateGalleryImage,
   replaceGalleryImagePhoto,
   deleteGalleryImage,
-  moveGalleryImage,
 } = await import("./admin-gallery");
 
 const ADMIN = { id: "admin-1", role: "admin" as const };
@@ -82,11 +81,12 @@ describe("createGalleryImage", () => {
     });
   });
 
-  it("appends new photos after the current highest sort_order", async () => {
-    store.seed("gallery_images", [{ id: "g1", storage_path: "a.jpg", sort_order: 5 }]);
-    await createGalleryImage("b.jpg", { title: "", altText: "", objectPosition: "" });
-    const newRow = store.tables.gallery_images.find((r) => r.storage_path === "b.jpg");
-    expect(newRow?.sort_order).toBe(6);
+  it("CRITICAL: refuses to add a second photo — the Gallery is a single photo", async () => {
+    store.seed("gallery_images", [{ id: "g1", storage_path: "a.jpg", sort_order: 0 }]);
+    const result = await createGalleryImage("b.jpg", { title: "", altText: "", objectPosition: "" });
+    expect(result).toEqual({ ok: false, errorKey: "alreadyExists" });
+    expect(store.tables.gallery_images).toHaveLength(1);
+    expect(store.tables.gallery_images.some((r) => r.storage_path === "b.jpg")).toBe(false);
   });
 
   it("blank title/alt/objectPosition are stored as null, not empty strings", async () => {
@@ -151,43 +151,5 @@ describe("deleteGalleryImage", () => {
   it("returns notFound instead of falsely reporting success for a nonexistent image", async () => {
     const result = await deleteGalleryImage("ghost");
     expect(result).toEqual({ ok: false, errorKey: "notFound" });
-  });
-});
-
-describe("moveGalleryImage", () => {
-  beforeEach(() => {
-    store.seed("gallery_images", [
-      { id: "g1", sort_order: 0 },
-      { id: "g2", sort_order: 1 },
-      { id: "g3", sort_order: 2 },
-    ]);
-  });
-
-  it("swaps sort_order with the previous image when moving up", async () => {
-    await moveGalleryImage("g2", "up");
-    const g1 = store.tables.gallery_images.find((r) => r.id === "g1")!;
-    const g2 = store.tables.gallery_images.find((r) => r.id === "g2")!;
-    expect(g2.sort_order).toBe(0);
-    expect(g1.sort_order).toBe(1);
-  });
-
-  it("swaps sort_order with the next image when moving down", async () => {
-    await moveGalleryImage("g2", "down");
-    const g2 = store.tables.gallery_images.find((r) => r.id === "g2")!;
-    const g3 = store.tables.gallery_images.find((r) => r.id === "g3")!;
-    expect(g2.sort_order).toBe(2);
-    expect(g3.sort_order).toBe(1);
-  });
-
-  it("is a safe no-op when already at the top", async () => {
-    const result = await moveGalleryImage("g1", "up");
-    expect(result).toEqual({ ok: true });
-    expect(store.tables.gallery_images.find((r) => r.id === "g1")!.sort_order).toBe(0);
-  });
-
-  it("is a safe no-op when already at the bottom", async () => {
-    const result = await moveGalleryImage("g3", "down");
-    expect(result).toEqual({ ok: true });
-    expect(store.tables.gallery_images.find((r) => r.id === "g3")!.sort_order).toBe(2);
   });
 });

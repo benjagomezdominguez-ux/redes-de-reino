@@ -13,7 +13,7 @@ vi.mock("web-push", () => ({
 }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
 
-const { sendChatPush } = await import("./web-push");
+const { sendChatPush, sendPushToUsers } = await import("./web-push");
 
 const originalEnv = { ...process.env };
 
@@ -101,5 +101,57 @@ describe("sendChatPush", () => {
 
     expect(result).toEqual({ sent: 0, removed: 0 });
     expect(store.tables.push_subscriptions).toHaveLength(1);
+  });
+});
+
+describe("sendPushToUsers", () => {
+  const BROADCAST = { title: "Nuevo devocional", body: "Ya podés leerlo.", url: "/devocionales/d1" };
+
+  it("does nothing (never throws) when VAPID isn't configured", async () => {
+    delete process.env.VAPID_PRIVATE_KEY;
+    const result = await sendPushToUsers(["user-1"], BROADCAST);
+    expect(result).toEqual({ sent: 0, removed: 0 });
+    expect(sendNotificationMock).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when given an empty user list", async () => {
+    const result = await sendPushToUsers([], BROADCAST);
+    expect(result).toEqual({ sent: 0, removed: 0 });
+    expect(sendNotificationMock).not.toHaveBeenCalled();
+  });
+
+  it("CRITICAL: sends to every listed user's subscriptions, across multiple devices, never to an unlisted user", async () => {
+    store.seed("push_subscriptions", [
+      { id: "s1", user_id: "user-1", endpoint: "https://push.example.com/1", p256dh: "a", auth_key: "b" },
+      { id: "s2", user_id: "user-1", endpoint: "https://push.example.com/2", p256dh: "c", auth_key: "d" },
+      { id: "s3", user_id: "user-2", endpoint: "https://push.example.com/3", p256dh: "e", auth_key: "f" },
+      { id: "s4", user_id: "user-3", endpoint: "https://push.example.com/4", p256dh: "g", auth_key: "h" },
+    ]);
+    sendNotificationMock.mockResolvedValue({});
+
+    const result = await sendPushToUsers(["user-1", "user-2"], BROADCAST);
+
+    expect(result).toEqual({ sent: 3, removed: 0 });
+    const calledEndpoints = sendNotificationMock.mock.calls.map((c) => c[0].endpoint);
+    expect(calledEndpoints).not.toContain("https://push.example.com/4");
+  });
+
+  it("removes a subscription the push service reports as gone, without blocking the others", async () => {
+    store.seed("push_subscriptions", [
+      { id: "s1", user_id: "user-1", endpoint: "https://push.example.com/1", p256dh: "a", auth_key: "b" },
+      { id: "s2", user_id: "user-2", endpoint: "https://push.example.com/2", p256dh: "c", auth_key: "d" },
+    ]);
+    sendNotificationMock.mockImplementation(async (sub: { endpoint: string }) => {
+      if (sub.endpoint.endsWith("/1")) {
+        throw Object.assign(new Error("gone"), { statusCode: 404 });
+      }
+      return {};
+    });
+
+    const result = await sendPushToUsers(["user-1", "user-2"], BROADCAST);
+
+    expect(result).toEqual({ sent: 1, removed: 1 });
+    expect(store.tables.push_subscriptions).toHaveLength(1);
+    expect(store.tables.push_subscriptions[0].id).toBe("s2");
   });
 });

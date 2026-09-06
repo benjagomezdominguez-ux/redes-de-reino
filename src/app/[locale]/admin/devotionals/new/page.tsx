@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { requireChatAdmin } from "@/lib/supabase/require-auth";
 import { DevotionalForm } from "@/components/ui/DevotionalForm";
 import { Link } from "@/i18n/navigation";
 
@@ -7,6 +8,7 @@ export default async function AdminNewDevotionalPage({
 }: PageProps<"/[locale]/admin/devotionals/new">) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireChatAdmin();
   const t = await getTranslations("admin.devotionals");
 
   return (

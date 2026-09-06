@@ -2,10 +2,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { FakeStore } from "@/lib/whatsapp/scheduler.test-helpers";
 
 const requireChatAdminMock = vi.fn();
+const notifyDevotionalPublishedMock = vi.fn();
 let store: FakeStore;
 
 vi.mock("@/lib/supabase/require-auth", () => ({ requireChatAdmin: requireChatAdminMock }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
+vi.mock("@/lib/notifications/devotionals", () => ({ notifyDevotionalPublished: notifyDevotionalPublishedMock }));
 
 const { createDevotional, updateDevotional, setDevotionalStatus, deleteDevotional } = await import(
   "./admin-devotionals"
@@ -17,6 +19,8 @@ beforeEach(() => {
   store = new FakeStore();
   requireChatAdminMock.mockReset();
   requireChatAdminMock.mockResolvedValue(ARIEL);
+  notifyDevotionalPublishedMock.mockReset();
+  notifyDevotionalPublishedMock.mockResolvedValue(undefined);
 });
 
 describe("createDevotional", () => {
@@ -43,6 +47,17 @@ describe("createDevotional", () => {
     expect(store.tables.devotionals[0].published_at).not.toBeNull();
   });
 
+  it("CRITICAL: notifies users when created directly as published", async () => {
+    const result = await createDevotional({ title: "Fe", content: "Contenido real", status: "published" });
+    expect(result.ok).toBe(true);
+    expect(notifyDevotionalPublishedMock).toHaveBeenCalledWith(store.tables.devotionals[0].id, ARIEL.id);
+  });
+
+  it("never notifies when saved as a draft", async () => {
+    await createDevotional({ title: "Fe", content: "Contenido real", status: "draft" });
+    expect(notifyDevotionalPublishedMock).not.toHaveBeenCalled();
+  });
+
   it("CRITICAL: the real authenticated actor is always the author — never a client-supplied value", async () => {
     await createDevotional({ title: "Fe", content: "Contenido real", status: "draft" });
     expect(store.tables.devotionals[0].author_id).toBe(ARIEL.id);
@@ -66,11 +81,24 @@ describe("updateDevotional", () => {
     expect(store.tables.devotionals[0].published_at).not.toBeNull();
   });
 
+  it("CRITICAL: notifies users only on the first draft-to-published transition", async () => {
+    store.seed("devotionals", [{ id: "d1", title: "old", content: "old", status: "draft", published_at: null }]);
+    await updateDevotional("d1", { title: "new", content: "new content", status: "published" });
+    expect(notifyDevotionalPublishedMock).toHaveBeenCalledWith("d1", ARIEL.id);
+  });
+
   it("keeps the original published_at when editing an already-published devotional", async () => {
     const originalDate = "2026-01-01T00:00:00.000Z";
     store.seed("devotionals", [{ id: "d1", title: "old", content: "old", status: "published", published_at: originalDate }]);
     await updateDevotional("d1", { title: "edited title", content: "edited content", status: "published" });
     expect(store.tables.devotionals[0].published_at).toBe(originalDate);
+  });
+
+  it("never re-notifies when editing an already-published devotional", async () => {
+    const originalDate = "2026-01-01T00:00:00.000Z";
+    store.seed("devotionals", [{ id: "d1", title: "old", content: "old", status: "published", published_at: originalDate }]);
+    await updateDevotional("d1", { title: "edited title", content: "edited content", status: "published" });
+    expect(notifyDevotionalPublishedMock).not.toHaveBeenCalled();
   });
 
   it("keeps the historical published_at when moving from published back to draft (unpublishing via edit)", async () => {
@@ -79,6 +107,7 @@ describe("updateDevotional", () => {
     await updateDevotional("d1", { title: "old", content: "old", status: "draft" });
     expect(store.tables.devotionals[0].published_at).toBe(originalDate);
     expect(store.tables.devotionals[0].status).toBe("draft");
+    expect(notifyDevotionalPublishedMock).not.toHaveBeenCalled();
   });
 
   it("updates the updated_at timestamp and keeps the same id (no duplicate row)", async () => {
@@ -105,6 +134,12 @@ describe("setDevotionalStatus", () => {
     expect(store.tables.audit_log[0].action).toBe("devotional_published");
   });
 
+  it("CRITICAL: notifies users when publishing a draft via the status toggle", async () => {
+    store.seed("devotionals", [{ id: "d1", status: "draft", published_at: null }]);
+    await setDevotionalStatus("d1", "published");
+    expect(notifyDevotionalPublishedMock).toHaveBeenCalledWith("d1", ARIEL.id);
+  });
+
   it("unpublishing a published devotional logs devotional_unpublished and preserves published_at", async () => {
     const originalDate = "2026-01-01T00:00:00.000Z";
     store.seed("devotionals", [{ id: "d1", status: "published", published_at: originalDate }]);
@@ -113,6 +148,12 @@ describe("setDevotionalStatus", () => {
     expect(store.tables.devotionals[0].status).toBe("draft");
     expect(store.tables.devotionals[0].published_at).toBe(originalDate);
     expect(store.tables.audit_log[0].action).toBe("devotional_unpublished");
+  });
+
+  it("never notifies when unpublishing", async () => {
+    store.seed("devotionals", [{ id: "d1", status: "published", published_at: "2026-01-01T00:00:00.000Z" }]);
+    await setDevotionalStatus("d1", "draft");
+    expect(notifyDevotionalPublishedMock).not.toHaveBeenCalled();
   });
 
   it("returns ok:false for a nonexistent devotional", async () => {

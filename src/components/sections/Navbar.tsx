@@ -8,8 +8,8 @@ import { navLinks, site } from "@/lib/site-config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
 import { signOut } from "@/lib/actions/auth";
-import { ChatNavBadge } from "@/components/chat/ChatNavBadge";
 import { NotificationBell } from "@/components/chat/NotificationBell";
+import { UserNotificationsBell } from "@/components/ui/UserNotificationsBell";
 
 type NavbarUser = { email: string | null; role: "user" | "admin"; isChatAdmin: boolean } | null;
 
@@ -48,7 +48,6 @@ function AccountLinkText({ href, labelKey, className }: { href: string; labelKey
 // previously pushed the cart/language switcher off-screen once logged in).
 function AccountMenuDesktop({ user }: { user: NavbarUser }) {
   const t = useTranslations("auth");
-  const tChat = useTranslations("chat");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -115,13 +114,6 @@ function AccountMenuDesktop({ user }: { user: NavbarUser }) {
             labelKey="books.orders.title"
             className="block px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
           />
-          <Link
-            href="/chat"
-            className="flex items-center px-4 py-2 text-sm text-text transition-colors hover:bg-primary-900/5"
-          >
-            {tChat("navLink")}
-            <ChatNavBadge />
-          </Link>
           {user.role === "admin" ? (
             <AccountLinkText
               href="/admin"
@@ -218,6 +210,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
           </ul>
           <div className="flex items-center gap-3 border-l border-border pl-4">
             {user?.isChatAdmin ? <NotificationBell /> : null}
+            {user ? <UserNotificationsBell /> : null}
             <AccountMenuDesktop user={user} />
             <CartIcon count={itemCount} />
             <LanguageSwitcher />
@@ -226,6 +219,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
 
         <div className="flex items-center gap-1 lg:hidden">
           {user?.isChatAdmin ? <NotificationBell /> : null}
+          {user ? <UserNotificationsBell /> : null}
           <CartIcon count={itemCount} />
           <button
             type="button"

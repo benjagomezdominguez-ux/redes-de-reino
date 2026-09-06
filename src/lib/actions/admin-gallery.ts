@@ -24,7 +24,7 @@ const MAX_ALT_LENGTH = 300;
 
 export type GalleryActionResult =
   | { ok: true }
-  | { ok: false; errorKey: "unauthorized" | "notFound" | "invalidFile" | "generic" };
+  | { ok: false; errorKey: "unauthorized" | "notFound" | "invalidFile" | "alreadyExists" | "generic" };
 
 export type GalleryUploadUrlResult =
   | { ok: true; bucket: typeof BUCKET; path: string; token: string }
@@ -46,6 +46,11 @@ export async function requestGalleryUploadUrl(extension: string): Promise<Galler
 
 type PhotoMetadata = { title: string; altText: string; objectPosition: string };
 
+// The gallery is a single photo (Fase 12) — never a second row. The real
+// enforcement is the `gallery_images_singleton` unique index in the
+// database; this check just turns that into a clean error message
+// instead of a raw constraint-violation, and avoids the wasted upload
+// when the admin UI is out of date (e.g. a second tab left open).
 export async function createGalleryImage(
   storagePath: string,
   metadata: PhotoMetadata
@@ -53,13 +58,8 @@ export async function createGalleryImage(
   const admin_ = await requireAdmin();
   const admin = getSupabaseAdminClient();
 
-  const { data: topRow } = await admin
-    .from("gallery_images")
-    .select("sort_order")
-    .order("sort_order", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const nextOrder = (topRow?.sort_order ?? -1) + 1;
+  const { count } = await admin.from("gallery_images").select("*", { count: "exact", head: true });
+  if (count && count > 0) return { ok: false, errorKey: "alreadyExists" };
 
   const { data, error } = await admin
     .from("gallery_images")
@@ -68,7 +68,7 @@ export async function createGalleryImage(
       title: metadata.title.trim().slice(0, MAX_TITLE_LENGTH) || null,
       alt_text: metadata.altText.trim().slice(0, MAX_ALT_LENGTH) || null,
       object_position: metadata.objectPosition.trim() || null,
-      sort_order: nextOrder,
+      sort_order: 0,
     })
     .select("id")
     .single();
@@ -166,41 +166,6 @@ export async function deleteGalleryImage(id: string): Promise<GalleryActionResul
     resource_type: "gallery_image",
     resource_id: id,
     metadata: {},
-  });
-
-  return { ok: true };
-}
-
-export async function moveGalleryImage(id: string, direction: "up" | "down"): Promise<GalleryActionResult> {
-  const admin_ = await requireAdmin();
-  const admin = getSupabaseAdminClient();
-
-  const { data: rows, error } = await admin
-    .from("gallery_images")
-    .select("id, sort_order")
-    .order("sort_order", { ascending: true });
-  if (error || !rows) return { ok: false, errorKey: "generic" };
-
-  const index = rows.findIndex((r) => r.id === id);
-  if (index === -1) return { ok: false, errorKey: "notFound" };
-
-  const swapIndex = direction === "up" ? index - 1 : index + 1;
-  if (swapIndex < 0 || swapIndex >= rows.length) return { ok: true }; // already at the edge — no-op, not an error
-
-  const currentId: string = rows[index].id;
-  const currentOrder: number = rows[index].sort_order;
-  const neighborId: string = rows[swapIndex].id;
-  const neighborOrder: number = rows[swapIndex].sort_order;
-
-  await admin.from("gallery_images").update({ sort_order: neighborOrder }).eq("id", currentId);
-  await admin.from("gallery_images").update({ sort_order: currentOrder }).eq("id", neighborId);
-
-  await admin.from("audit_log").insert({
-    actor_id: admin_.id,
-    action: "gallery_image_reordered",
-    resource_type: "gallery_image",
-    resource_id: id,
-    metadata: { direction },
   });
 
   return { ok: true };

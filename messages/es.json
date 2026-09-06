@@ -138,7 +138,8 @@
       "empty": "Todavía no tenés libros digitales.",
       "purchased": "Comprado",
       "access": "Acceder al libro",
-      "pendingVerification": "Tu pago está siendo verificado."
+      "pendingVerification": "Tu pago está siendo verificado.",
+      "rejected": "Compra rechazada"
     },
     "orders": {
       "title": "Mis Pedidos",
@@ -526,14 +527,12 @@
       }
     },
     "gallery": {
-      "count": "{count, plural, =1 {1 foto} other {# fotos}}",
+      "singlePhotoHint": "La Galería muestra una única foto.",
       "addNew": "Agregar foto",
       "empty": "Todavía no cargaste ninguna foto.",
       "untitled": "Sin título",
       "edit": "Editar",
       "delete": "Eliminar",
-      "moveUp": "Subir",
-      "moveDown": "Bajar",
       "cancel": "Cancelar",
       "save": "Guardar",
       "saving": "Guardando…",
@@ -545,7 +544,7 @@
       "altText": "Texto alternativo",
       "objectPosition": "Posición de la imagen (opcional, ej: center, top)",
       "confirmDeleteTitle": "¿Eliminar esta foto?",
-      "confirmDeleteBody": "Esta acción no se puede deshacer. La foto se eliminará del carrusel público y del almacenamiento.",
+      "confirmDeleteBody": "Esta acción no se puede deshacer. La foto se eliminará de la Galería pública y del almacenamiento.",
       "confirmDeleteButton": "Eliminar foto",
       "deleting": "Eliminando…",
       "deleteSuccess": "Foto eliminada correctamente.",
@@ -554,7 +553,8 @@
         "invalidFile": "No pudimos subir el archivo. Probá de nuevo.",
         "required": "Seleccioná una fotografía.",
         "notFound": "No se encontró la fotografía.",
-        "unauthorized": "No tenés permisos para realizar esta acción."
+        "unauthorized": "No tenés permisos para realizar esta acción.",
+        "alreadyExists": "La Galería ya tiene una foto — eliminala o editala en vez de agregar otra."
       }
     },
     "devotionals": {
@@ -604,8 +604,7 @@
     }
   },
   "gallery": {
-    "imageAlt": "Fotografía {index} de la comunidad de {name}",
-    "goToSlide": "Ir a la fotografía {index}",
+    "imageAlt": "Fotografía de la comunidad de {name}",
     "pending": "Fotografía próximamente"
   },
   "footer": {
@@ -623,7 +622,6 @@
     "logoAlt": "Logo de {name}"
   },
   "chat": {
-    "navLink": "💬 Hablar con Ariel",
     "headerTitle": "Chat con Ariel Gómez",
     "headerSubtitle": "Tu conversación es privada.",
     "loading": "Cargando…",
@@ -665,8 +663,28 @@
       }
     },
     "floatingButton": {
-      "label": "Hablar con el Pastor Ariel",
-      "ariaLabel": "Hablar con el Pastor Ariel por chat"
+      "label": "Habla con el pastor",
+      "ariaLabel": "Habla con el pastor por chat"
+    }
+  },
+  "notifications": {
+    "bell": {
+      "ariaLabel": "Notificaciones",
+      "title": "Notificaciones",
+      "empty": "No tenés notificaciones."
+    },
+    "push": {
+      "prompt": "Activá las notificaciones para enterarte cuando publiquemos novedades, como un nuevo devocional.",
+      "enable": "Activar notificaciones",
+      "notNow": "Ahora no",
+      "enabling": "Activando…",
+      "enabled": "Notificaciones activadas",
+      "error": "No pudimos activar las notificaciones. Probá de nuevo.",
+      "denied": "Bloqueaste las notificaciones para este sitio. Podés habilitarlas de nuevo desde la configuración del navegador.",
+      "unsupported": "Tu navegador no soporta notificaciones push.",
+      "needsInstallTitle": "Para recibir notificaciones en este dispositivo, agregá la app a tu pantalla de inicio.",
+      "needsInstallBody": "Tocá el botón Compartir de Safari y elegí \"Agregar a pantalla de inicio\". Después abrí Redes de Reino desde ese ícono y volvé a intentar activar las notificaciones.",
+      "retry": "Reintentar"
     }
   },
   "devotionals": {

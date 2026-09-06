@@ -1,15 +1,23 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listAllDevotionals } from "@/lib/admin/devotional-queries";
+import { requireChatAdmin } from "@/lib/supabase/require-auth";
 import { Link } from "@/i18n/navigation";
 import { DevotionalStatusButton } from "@/components/ui/DevotionalStatusButton";
 import { DevotionalDeleteButton } from "@/components/ui/DevotionalDeleteButton";
 import { getDevotionalExcerpt } from "@/components/ui/DevotionalContent";
 
+// Devotionals are administered exclusively by Ariel Gómez (see the
+// migration's own rationale) — the layout above only checks the generic
+// requireAdmin(), so this page (and the edit page) must check
+// requireChatAdmin() itself, matching every mutation Server Action in
+// admin-devotionals.ts. Without this, any other admin could view drafts
+// by navigating here directly, even though they could never publish one.
 export default async function AdminDevotionalsPage({
   params,
 }: PageProps<"/[locale]/admin/devotionals">) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireChatAdmin();
   const t = await getTranslations("admin.devotionals");
 
   const devotionals = await listAllDevotionals();

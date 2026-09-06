@@ -78,12 +78,14 @@ async function registerPushSubscription(): Promise<boolean> {
   }
 }
 
-// Private to Ariel (see isChatAdmin) — rendered in both /account and
-// /admin/chat. Never prompts on its own — only ever in response to a
-// deliberate "Activar notificaciones" click (rule 15 of the original
-// chat prompt: no aggressive permission requests).
-export function PushPermissionBanner() {
-  const t = useTranslations("chat.admin.push");
+// Rendered in both /account (any registered user, general notifications
+// like a new devotional) and /admin/chat (Ariel specifically, chat
+// notifications) — same subscribe/unsubscribe mechanism either way, only
+// the copy differs by namespace. Never prompts on its own — only ever in
+// response to a deliberate "Activar notificaciones" click (rule 15 of the
+// original chat prompt: no aggressive permission requests).
+export function PushPermissionBanner({ namespace = "chat.admin.push" }: { namespace?: string }) {
+  const t = useTranslations(namespace);
   const [state, setState] = useState<PushState>("loading");
   const [subscribed, setSubscribed] = useState(false);
   const [dismissed, setDismissed] = useState(true); // default true until localStorage is checked, to avoid a flash

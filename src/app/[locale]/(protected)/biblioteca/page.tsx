@@ -20,6 +20,7 @@ export default async function LibraryPage({
   };
   let entitlements: LibraryEntry[] = [];
   let pending: LibraryEntry[] = [];
+  let rejected: LibraryEntry[] = [];
 
   const { data: granted } = await supabase
     .from("digital_entitlements")
@@ -67,6 +68,34 @@ export default async function LibraryPage({
     }));
   }
 
+  // Digital items whose bank-transfer payment was reviewed and rejected —
+  // the buyer must clearly see this never unlocked the book, rather than
+  // the purchase silently disappearing (rule from Fase 9: "el usuario ve
+  // 'Compra rechazada'"). Excludes anything already granted, e.g. a later
+  // retry on a different order that an admin did approve.
+  const { data: rejectedOrders } = await supabase
+    .from("orders")
+    .select("id, order_items(product_id, modality)")
+    .eq("status", "failed");
+
+  const rejectedProductIds = ((rejectedOrders ?? []) as unknown as PendingOrderRow[])
+    .flatMap((o) => o.order_items)
+    .filter((i) => i.modality === "digital" || i.modality === "digital_fisico")
+    .map((i) => i.product_id)
+    .filter((id) => !productIds.includes(id));
+
+  if (rejectedProductIds.length > 0) {
+    const { data: rejectedProducts } = await supabase
+      .from("products")
+      .select("id, title, author, cover_url")
+      .in("id", [...new Set(rejectedProductIds)]);
+
+    rejected = [...new Set(rejectedProductIds)].map((productId) => ({
+      product_id: productId,
+      products: rejectedProducts?.find((p) => p.id === productId) ?? null,
+    }));
+  }
+
   return (
     <>
       <NavbarWithAuth />
@@ -76,7 +105,7 @@ export default async function LibraryPage({
             {t("title")}
           </h1>
 
-          {entitlements.length === 0 && pending.length === 0 ? (
+          {entitlements.length === 0 && pending.length === 0 && rejected.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-10 text-center text-muted">
               {t("empty")}
             </p>
@@ -84,7 +113,7 @@ export default async function LibraryPage({
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {entitlements.map((entitlement) => (
                 <div
-                  key={entitlement.product_id}
+                  key={`granted-${entitlement.product_id}`}
                   className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 shadow-soft"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-alt">
@@ -115,7 +144,7 @@ export default async function LibraryPage({
 
               {pending.map((entry) => (
                 <div
-                  key={entry.product_id}
+                  key={`pending-${entry.product_id}`}
                   className="flex flex-col gap-3 rounded-2xl border border-dashed border-border bg-surface-alt p-6 opacity-80"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface">
@@ -134,6 +163,31 @@ export default async function LibraryPage({
                   <p className="text-sm text-muted">{entry.products?.author}</p>
                   <span className="text-xs font-semibold uppercase tracking-wide text-warning">
                     {t("pendingVerification")}
+                  </span>
+                </div>
+              ))}
+
+              {rejected.map((entry) => (
+                <div
+                  key={`rejected-${entry.product_id}`}
+                  className="flex flex-col gap-3 rounded-2xl border border-dashed border-error/30 bg-error/5 p-6 opacity-80"
+                >
+                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-alt">
+                    {entry.products?.cover_url ? (
+                      <Image
+                        src={entry.products.cover_url}
+                        alt={entry.products.title ?? ""}
+                        fill
+                        className="object-cover grayscale"
+                      />
+                    ) : null}
+                  </div>
+                  <h3 className="font-display text-base font-medium text-primary-900">
+                    {entry.products?.title}
+                  </h3>
+                  <p className="text-sm text-muted">{entry.products?.author}</p>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-error">
+                    {t("rejected")}
                   </span>
                 </div>
               ))}

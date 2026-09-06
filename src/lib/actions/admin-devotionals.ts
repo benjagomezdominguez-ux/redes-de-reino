@@ -2,6 +2,7 @@
 
 import { requireChatAdmin } from "@/lib/supabase/require-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { notifyDevotionalPublished } from "@/lib/notifications/devotionals";
 
 // Devotionals are administered exclusively by Ariel Gómez — the same
 // real person requireChatAdmin() already gates chat/push behind (see
@@ -51,6 +52,12 @@ export async function createDevotional(input: DevotionalInput): Promise<Devotion
     metadata: { status: input.status },
   });
 
+  // A brand-new devotional created with status "published" is always a
+  // first-time publish (there is no prior state to compare against).
+  if (input.status === "published") {
+    await notifyDevotionalPublished(data.id, admin_.id);
+  }
+
   return { ok: true, id: data.id };
 }
 
@@ -91,6 +98,10 @@ export async function updateDevotional(id: string, input: DevotionalInput): Prom
     metadata: { status: input.status },
   });
 
+  if (becomingPublished) {
+    await notifyDevotionalPublished(id, admin_.id);
+  }
+
   return { ok: true, id };
 }
 
@@ -118,6 +129,10 @@ export async function setDevotionalStatus(id: string, status: "draft" | "publish
     resource_id: id,
     metadata: { status },
   });
+
+  if (becomingPublished) {
+    await notifyDevotionalPublished(id, admin_.id);
+  }
 
   return { ok: true };
 }
