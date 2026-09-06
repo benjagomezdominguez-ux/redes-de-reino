@@ -9,6 +9,7 @@ import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistratio
 import { PastorChatFloatingButton } from "@/components/chat/PastorChatFloatingButton";
 import { GlobalPushPrompt } from "@/components/ui/GlobalPushPrompt";
 import { getAuthProfile } from "@/lib/supabase/get-profile";
+import { isChatAdmin } from "@/lib/chat/is-chat-admin";
 import { CartProvider } from "@/lib/cart/CartContext";
 import "../globals.css";
 
@@ -103,7 +104,11 @@ export default async function LocaleLayout({
           <CartProvider>
             {profile ? <GlobalPushPrompt /> : null}
             {children}
-            <PastorChatFloatingButton />
+            {/* Never shown to the chat-admin himself (see chat/page.tsx —
+                a real bug: this button's only destination, /chat, used to
+                let him accidentally reply to a real user from HIS OWN
+                dead-end conversation instead of /admin/chat). */}
+            {!isChatAdmin(profile) ? <PastorChatFloatingButton /> : null}
             <ServiceWorkerRegistration />
           </CartProvider>
         </NextIntlClientProvider>

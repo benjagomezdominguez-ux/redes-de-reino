@@ -8,9 +8,14 @@ describe("isChatAdmin", () => {
     expect(isChatAdmin(ARIEL)).toBe(true);
   });
 
-  it("is case/accent-tolerant (real stored data is lowercase, no accents)", () => {
+  it("is case-tolerant", () => {
     expect(isChatAdmin({ ...ARIEL, firstName: "ariel", lastName: "gomez" })).toBe(true);
-    expect(isChatAdmin({ ...ARIEL, firstName: "ARIEL", lastName: "GÓMEZ".replace("Ó", "O") })).toBe(true);
+    expect(isChatAdmin({ ...ARIEL, firstName: "ARIEL", lastName: "GOMEZ" })).toBe(true);
+  });
+
+  it("CRITICAL: is accent-tolerant — a real 'Gómez'/'Ariél' spelling must still match, not silently lock Ariel out", () => {
+    expect(isChatAdmin({ ...ARIEL, firstName: "Ariel", lastName: "Gómez" })).toBe(true);
+    expect(isChatAdmin({ ...ARIEL, firstName: "Ariél", lastName: "Gómez" })).toBe(true);
   });
 
   it("CRITICAL: returns false for a different real admin, even with the exact admin role/status", () => {

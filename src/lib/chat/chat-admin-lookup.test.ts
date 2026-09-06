@@ -30,4 +30,9 @@ describe("getChatAdminId", () => {
     store.seed("profiles", [{ id: "ariel-id", role: "admin", status: "inactive", first_name: "Ariel", last_name: "Gomez" }]);
     expect(await getChatAdminId()).toBeNull();
   });
+
+  it("CRITICAL: is accent-tolerant — reuses isChatAdmin() directly rather than a second hand-written matching rule", async () => {
+    store.seed("profiles", [{ id: "ariel-id", role: "admin", status: "active", first_name: "Ariel", last_name: "Gómez" }]);
+    expect(await getChatAdminId()).toBe("ariel-id");
+  });
 });

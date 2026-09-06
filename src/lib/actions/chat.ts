@@ -22,9 +22,19 @@ const RATE_LIMIT_WINDOW_SECONDS = 60;
 // Returns the caller's own conversation, creating it on first contact —
 // never anyone else's. The unique constraint on conversations.user_id is
 // the real guarantee here, not just this get-then-insert logic.
+//
+// Never creates one for the chat-admin (Ariel) — a real bug found by
+// audit: nothing used to stop him from ending up "the owner" of his own
+// conversation (e.g. by opening /chat like any regular user), which then
+// silently became a dead end no other user could ever discover or reply
+// into. /chat itself now redirects him away before this is ever called
+// (see chat/page.tsx), but this is the defense-in-depth guarantee at the
+// one function that can actually create the broken state, for any other
+// caller now or in the future.
 export async function getOrCreateConversation(): Promise<{ id: string } | null> {
   const profile = await getAuthProfile();
   if (!profile || profile.status !== "active") return null;
+  if (isChatAdmin(profile)) return null;
 
   const admin = getSupabaseAdminClient();
   const { data: existing } = await admin
@@ -49,13 +59,19 @@ type ConversationAccess = { allowed: boolean; isOwner: boolean; ownerId: string 
 // allowed in at all (owner OR Ariel specifically — not any admin, see
 // isChatAdmin), determined together because sendMessage/
 // markConversationRead both need "is this the owner?" specifically —
-// not just "is this Ariel" — to label things correctly. Ariel's account
-// IS a user account too: if he's the owner of this particular
-// conversation (e.g. he opened /chat himself), a message he sends there
-// is a message from the owner, not "Ariel replying to someone else" —
-// those are different things even though it's the same person.
-// `ownerId` is also returned — sendMessage() needs the real owner's id
-// to resolve who the OTHER party is when an admin (not the owner) sends.
+// not just "is this Ariel" — to label things correctly. `ownerId` is
+// also returned — sendMessage() needs the real owner's id to resolve who
+// the OTHER party is when an admin (not the owner) sends.
+//
+// Ariel can no longer end up owning a conversation (getOrCreateConversation()
+// refuses to create one for him, and /chat redirects him to /admin/chat
+// before ever calling it) — historically he could, which is exactly what
+// caused a real bug: his replies, sent while accidentally "the owner",
+// went into a dead-end conversation only he could see. `isOwner` staying
+// possible-in-principle here (rather than asserting it can't happen) is
+// deliberate belt-and-braces: this function must still behave correctly
+// against whatever a conversation row actually says, not just against
+// what "should" be true upstream.
 async function getConversationAccess(conversationId: string, profile: AuthProfile): Promise<ConversationAccess> {
   const admin = getSupabaseAdminClient();
   const { data } = await admin.from("conversations").select("user_id").eq("id", conversationId).maybeSingle();
@@ -95,10 +111,9 @@ export async function sendMessage(conversationId: string, content: string): Prom
     return { status: "error", errorKey: "rateLimited" };
   }
 
-  // The conversation's own owner is always "user", even when that same
-  // account also happens to hold the admin role (e.g. Ariel testing his
-  // own /chat) — see the comment on getConversationAccess(). Only
-  // someone else, an admin stepping in on this conversation, is "admin".
+  // The conversation's own owner is always "user" — see the comment on
+  // getConversationAccess(). Only someone else, an admin stepping in on
+  // this conversation, is "admin".
   const senderRole = access.isOwner ? "user" : "admin";
 
   // content is stored and ever rendered as plain text (React escapes it
@@ -128,11 +143,7 @@ export async function sendMessage(conversationId: string, content: string): Prom
   // only two possible parties, and whichever one is NOT the sender is
   // the recipient. sendChatPush() itself refuses recipientId === senderId
   // as a second guard, so a sender never gets pushed their own message —
-  // a general rule, not a "skip it if this is Ariel" special case: it's
-  // exactly this general rule that stops Ariel from being pushed when he
-  // sends a message inside his own /chat conversation (there, isOwner is
-  // true, so the resolved recipient is "the chat admin" — which is also
-  // Ariel — and the two ids match, so nothing gets sent).
+  // a general rule, not a special case for any one account.
   const recipientId = access.isOwner ? await getChatAdminId() : access.ownerId;
   if (recipientId && recipientId !== profile.id) {
     const senderName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email || "Alguien";

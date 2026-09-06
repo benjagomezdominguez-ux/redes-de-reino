@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 import { getMyUnreadCount } from "@/lib/actions/chat";
 import { getSupabaseBrowserSessionClientReady } from "@/lib/supabase/browser-session";
 
@@ -17,12 +17,30 @@ export function ChatNavBadge() {
   useEffect(() => {
     let active = true;
     let channel: RealtimeChannel | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    let retryDelayMs = 2000;
+    let conversationId: string | null = null;
 
-    async function load() {
+    // Same reconnect gap as ChatWindow.tsx (see its comment) — without
+    // this, a dropped channel means the unread badge silently freezes.
+    function scheduleReconnect() {
+      if (!active || retryTimeout || !conversationId) return;
+      retryTimeout = setTimeout(() => {
+        retryTimeout = null;
+        if (!active) return;
+        channel?.unsubscribe();
+        channel = null;
+        retryDelayMs = Math.min(retryDelayMs * 1.5, 15000);
+        connect();
+      }, retryDelayMs);
+    }
+
+    async function connect() {
       const result = await getMyUnreadCount();
       if (!active) return;
       setCount(result.count);
-      if (!result.conversationId) return;
+      conversationId = result.conversationId;
+      if (!conversationId) return;
 
       // See ChatWindow.tsx for why this await is required before opening
       // any channel — otherwise it subscribes with no error but never
@@ -31,21 +49,29 @@ export function ChatNavBadge() {
       if (!active) return;
 
       channel = supabase
-        .channel(`nav-unread:${result.conversationId}:${instanceId}`)
+        .channel(`nav-unread:${conversationId}:${instanceId}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${result.conversationId}` },
+          { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
           async () => {
             const refreshed = await getMyUnreadCount();
             if (active) setCount(refreshed.count);
           }
         )
-        .subscribe();
+        .subscribe((status: `${REALTIME_SUBSCRIBE_STATES}`) => {
+          if (!active) return;
+          if (status === "SUBSCRIBED") {
+            retryDelayMs = 2000;
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            scheduleReconnect();
+          }
+        });
     }
-    load();
+    connect();
 
     return () => {
       active = false;
+      if (retryTimeout) clearTimeout(retryTimeout);
       channel?.unsubscribe();
     };
   }, [instanceId]);

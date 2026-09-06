@@ -3,10 +3,12 @@ import { getSupabaseSessionClient } from "@/lib/supabase/session";
 
 // Session client + RLS, not the admin/service-role client — same
 // reasoning as the rest of lib/admin/queries.ts: access is granted by
-// the "... admins see all" policies added in the chat migration, scoped
-// to is_admin(auth.uid()). Even a bug in the page-level requireAdmin()
-// gate couldn't leak another user's conversation, because Postgres
-// itself re-checks the caller's role on every query.
+// the "... only Ariel sees all" policies added in the chat migration,
+// scoped to is_chat_admin(auth.uid()) (private to Ariel specifically —
+// NOT is_admin(), any other admin gets nothing back). Even a bug in the
+// page-level requireChatAdmin() gate couldn't leak another user's
+// conversation, because Postgres itself re-checks the caller's identity
+// on every query.
 
 export type AdminConversationListItem = {
   id: string;

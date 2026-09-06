@@ -47,8 +47,47 @@ export function ChatWindow({
   useEffect(() => {
     let active = true;
     let channel: RealtimeChannel | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    let retryDelayMs = 2000;
 
-    async function setup() {
+    // Merges rather than replaces — a message that already arrived via
+    // realtime while this fetch was in flight (most likely right after a
+    // reconnect, see below) must never be dropped by an overwrite here.
+    // Also what actually closes the gap a dead/reconnecting channel would
+    // otherwise leave: every (re)connect re-syncs the full history, so a
+    // message that arrived while disconnected is never permanently lost.
+    async function fetchAndMerge(supabase: Awaited<ReturnType<typeof getSupabaseBrowserSessionClientReady>>) {
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true });
+      if (!active) return;
+      const fetched = (data as Message[] | null) ?? [];
+      setMessages((prev) => {
+        const byId = new Map((prev ?? []).map((m) => [m.id, m]));
+        for (const m of fetched) byId.set(m.id, m);
+        return [...byId.values()].sort((a, b) => a.created_at.localeCompare(b.created_at));
+      });
+    }
+
+    // Schedules exactly one reconnect attempt (guarded by retryTimeout so
+    // a burst of CHANNEL_ERROR/TIMED_OUT callbacks can't stack multiple
+    // timers), with a capped backoff — a dead channel used to mean "stuck
+    // until the user reloads the page"; this is what actually recovers it.
+    function scheduleReconnect() {
+      if (!active || retryTimeout) return;
+      retryTimeout = setTimeout(() => {
+        retryTimeout = null;
+        if (!active) return;
+        channel?.unsubscribe();
+        channel = null;
+        retryDelayMs = Math.min(retryDelayMs * 1.5, 15000);
+        connect();
+      }, retryDelayMs);
+    }
+
+    async function connect() {
       // Must resolve before opening the channel — a session restored
       // from cookies (as this client does) doesn't propagate to
       // Realtime's websocket auth until getSession() is awaited once.
@@ -57,13 +96,8 @@ export function ChatWindow({
       const supabase = await getSupabaseBrowserSessionClientReady();
       if (!active) return;
 
-      const { data } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+      await fetchAndMerge(supabase);
       if (!active) return;
-      setMessages((data as Message[] | null) ?? []);
       markConversationRead(conversationId);
 
       channel = supabase
@@ -92,14 +126,21 @@ export function ChatWindow({
           }
         )
         .subscribe((status: `${REALTIME_SUBSCRIBE_STATES}`) => {
-          if (status === "SUBSCRIBED") setConnection("connected");
-          else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setConnection("disconnected");
+          if (!active) return;
+          if (status === "SUBSCRIBED") {
+            setConnection("connected");
+            retryDelayMs = 2000; // reset backoff after a real recovery
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            setConnection("disconnected");
+            scheduleReconnect();
+          }
         });
     }
-    setup();
+    connect();
 
     return () => {
       active = false;
+      if (retryTimeout) clearTimeout(retryTimeout);
       channel?.unsubscribe();
     };
   }, [conversationId, viewerRole]);
@@ -123,20 +164,30 @@ export function ChatWindow({
     }
 
     // Optimistic local echo — don't wait on the realtime round trip to
-    // show the message as sent. The idempotency guard on the INSERT
-    // handler above skips it again when the real event arrives.
-    setMessages((prev) => [
-      ...(prev ?? []),
-      {
-        id: result.messageId,
-        conversation_id: conversationId,
-        sender_id: currentUserId,
-        sender_role: viewerRole,
-        content,
-        created_at: new Date().toISOString(),
-        read_at: null,
-      },
-    ]);
+    // show the message as sent. Keyed on the real server-assigned id
+    // (returned by the insert, not a temp/random client id), and guarded
+    // the same way the realtime INSERT handler is: the two are racing
+    // independent round trips (the Server Action's HTTP response vs. the
+    // websocket event), and either can arrive first. Without this guard,
+    // a realtime event landing first would insert the row unconditionally,
+    // then this block would append a second, identically-keyed entry —
+    // a real, confirmed duplicate-render bug.
+    setMessages((prev) => {
+      const base = prev ?? [];
+      if (base.some((m) => m.id === result.messageId)) return base;
+      return [
+        ...base,
+        {
+          id: result.messageId,
+          conversation_id: conversationId,
+          sender_id: currentUserId,
+          sender_role: viewerRole,
+          content,
+          created_at: new Date().toISOString(),
+          read_at: null,
+        },
+      ];
+    });
     setDraft("");
     textareaRef.current?.focus();
   }

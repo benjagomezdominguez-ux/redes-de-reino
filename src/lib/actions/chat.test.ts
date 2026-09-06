@@ -3,11 +3,16 @@ import { FakeStore } from "@/lib/whatsapp/scheduler.test-helpers";
 
 const getAuthProfileMock = vi.fn();
 const sendChatPushMock = vi.fn();
+const getChatAdminIdMock = vi.fn();
 let store: FakeStore;
 
 vi.mock("@/lib/supabase/get-profile", () => ({ getAuthProfile: getAuthProfileMock }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
 vi.mock("@/lib/push/web-push", () => ({ sendChatPush: sendChatPushMock }));
+// getChatAdminId() itself is a thin RPC wrapper (see
+// chat-admin-lookup.test.ts) — mocked here so sendMessage()'s own
+// recipient-resolution logic is what's under test, not the RPC lookup.
+vi.mock("@/lib/chat/chat-admin-lookup", () => ({ getChatAdminId: getChatAdminIdMock }));
 
 const { getOrCreateConversation, sendMessage, markConversationRead, refreshAdminConversations, getMyUnreadCount } =
   await import("./chat");
@@ -34,10 +39,8 @@ beforeEach(() => {
   getAuthProfileMock.mockReset();
   sendChatPushMock.mockReset();
   sendChatPushMock.mockResolvedValue({ sent: 0, removed: 0 });
-  // getChatAdminId() queries this for real (not mocked) — seed the one
-  // real chat-admin account (Ariel) the same way it exists in production,
-  // so recipient resolution behaves exactly as it does for real.
-  store.seed("profiles", [{ id: ADMIN.id, role: "admin", status: "active", first_name: "Ariel", last_name: "Gomez" }]);
+  getChatAdminIdMock.mockReset();
+  getChatAdminIdMock.mockResolvedValue(ADMIN.id);
 });
 
 describe("getOrCreateConversation", () => {
@@ -62,6 +65,20 @@ describe("getOrCreateConversation", () => {
 
     expect(result?.id).toBe(CONVERSATION_ID);
     expect(store.tables.conversations).toHaveLength(1);
+  });
+
+  it("CRITICAL: root-cause fix — refuses to create a conversation for the chat-admin (Ariel) himself", async () => {
+    // A real, confirmed bug: nothing used to stop Ariel from opening
+    // /chat like any regular user, which created a conversation where HE
+    // was the owner — a dead end no real user could ever discover or
+    // reply into, since his real replies belong in THEIR conversation via
+    // /admin/chat, not a new one of his own.
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+
+    const result = await getOrCreateConversation();
+
+    expect(result).toBeNull();
+    expect(store.tables.conversations ?? []).toHaveLength(0);
   });
 });
 
@@ -201,7 +218,7 @@ describe("sendMessage", () => {
     // If a user's own conversation somehow had no resolvable chat-admin
     // recipient (e.g. getChatAdminId() finds nothing), no push should be
     // attempted at all — never fall back to notifying the sender.
-    store.tables.profiles = [];
+    getChatAdminIdMock.mockResolvedValue(null);
     getAuthProfileMock.mockResolvedValue(USER);
 
     await sendMessage(CONVERSATION_ID, "mensaje de usuario");

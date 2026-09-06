@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import type { RealtimeChannel, RealtimePostgresChangesPayload, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { refreshAdminConversations } from "@/lib/actions/chat";
@@ -42,11 +42,27 @@ export function NotificationBell() {
   useEffect(() => {
     let active = true;
     let channel: RealtimeChannel | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    let retryDelayMs = 2000;
 
     async function refresh() {
       const next = await refreshAdminConversations();
       if (active) setConversations(next);
       return next;
+    }
+
+    // Same reconnect gap as ChatWindow.tsx (see its comment) — without
+    // this, a dropped channel means this bell silently stops updating.
+    function scheduleReconnect() {
+      if (!active || retryTimeout) return;
+      retryTimeout = setTimeout(() => {
+        retryTimeout = null;
+        if (!active) return;
+        channel?.unsubscribe();
+        channel = null;
+        retryDelayMs = Math.min(retryDelayMs * 1.5, 15000);
+        setup();
+      }, retryDelayMs);
     }
 
     async function setup() {
@@ -57,6 +73,7 @@ export function NotificationBell() {
       if (!active) return;
 
       await refresh();
+      if (!active) return;
 
       channel = supabase
         .channel(`admin-chat-notifications:${instanceId}`)
@@ -94,12 +111,20 @@ export function NotificationBell() {
             }
           }
         )
-        .subscribe();
+        .subscribe((status: `${REALTIME_SUBSCRIBE_STATES}`) => {
+          if (!active) return;
+          if (status === "SUBSCRIBED") {
+            retryDelayMs = 2000;
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+            scheduleReconnect();
+          }
+        });
     }
     setup();
 
     return () => {
       active = false;
+      if (retryTimeout) clearTimeout(retryTimeout);
       channel?.unsubscribe();
     };
   }, [t, locale, instanceId]);
