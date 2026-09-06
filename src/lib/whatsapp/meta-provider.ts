@@ -2,7 +2,13 @@ import "server-only";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { WhatsAppProvider, WhatsAppSendResult } from "./provider";
 
-const GRAPH_VERSION = "v21.0";
+// Meta deprecates each Graph API version ~2 years after release — pinned
+// to the latest stable version at the time of writing (v26.0, July 2026)
+// rather than an older one nearing its own end-of-support date, so this
+// keeps working for as long as possible without needing a revisit. The
+// endpoints used here (/media, /messages) have been stable across
+// versions; bump this periodically as newer versions ship.
+const GRAPH_VERSION = "v26.0";
 
 function graphUrl(path: string): string {
   return `https://graph.facebook.com/${GRAPH_VERSION}/${path}`;
