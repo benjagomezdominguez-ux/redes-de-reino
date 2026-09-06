@@ -52,11 +52,37 @@ describe("Navbar", () => {
     const mobileMenu = document.getElementById("mobile-menu");
     expect(mobileMenu).not.toBeNull();
     expect(
-      within(mobileMenu!).getByRole("link", { name: "Libros" })
+      within(mobileMenu!).getByRole("link", { name: "Devocionales" })
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Cerrar menú" }));
     expect(document.getElementById("mobile-menu")).toBeNull();
+  });
+
+  it("shows exactly Inicio, Devocionales, Instalar App — Galería/Horarios/Pastores/Libros are gone from both desktop and mobile nav", async () => {
+    const user = userEvent.setup();
+    renderNavbar();
+
+    const removed = ["Galería", "Horarios", "Pastores", "Libros"];
+
+    const kept = ["Inicio", "Devocionales", "📱 Instalar app"];
+
+    const desktopNav = screen.getByRole("navigation", { name: "Navegación principal" });
+    for (const label of kept) {
+      expect(within(desktopNav).getByRole("link", { name: label })).toBeInTheDocument();
+    }
+    for (const label of removed) {
+      expect(within(desktopNav).queryByRole("link", { name: label })).toBeNull();
+    }
+
+    await user.click(screen.getByRole("button", { name: "Abrir menú" }));
+    const mobileMenu = document.getElementById("mobile-menu")!;
+    for (const label of kept) {
+      expect(within(mobileMenu).getByRole("link", { name: label })).toBeInTheDocument();
+    }
+    for (const label of removed) {
+      expect(within(mobileMenu).queryByRole("link", { name: label })).toBeNull();
+    }
   });
 
   it("offers all three languages in the mobile menu's language switcher", async () => {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { navLinks, site } from "@/lib/site-config";
+import { topNavLinks, site } from "@/lib/site-config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
 import { signOut } from "@/lib/actions/auth";
@@ -197,7 +197,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
 
         <div className="hidden items-center gap-4 lg:flex xl:gap-6">
           <ul className="flex items-center gap-4 xl:gap-6">
-            {navLinks.map((link) => (
+            {topNavLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={`/${locale}${link.href}`}
@@ -255,7 +255,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
           className="border-t border-border/80 bg-background px-6 pb-6 lg:hidden"
         >
           <ul className="flex flex-col gap-1 pt-4">
-            {navLinks.map((link) => (
+            {topNavLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={`/${locale}${link.href}`}

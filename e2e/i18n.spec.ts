@@ -12,9 +12,13 @@ test.describe("i18n — Spanish (default)", () => {
 
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(page.getByRole("heading", { name: "Redes de Reino", level: 1 })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Galería" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Horarios" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Libros" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Inicio" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Devocionales" })).toBeVisible();
+    // Galería/Horarios/Pastores/Libros still exist as real page sections
+    // and footer links — they're just no longer in the top nav.
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Galería" })).toBeVisible();
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Horarios" })).toBeVisible();
+    await expect(page.getByRole("contentinfo").getByRole("link", { name: "Libros" })).toBeVisible();
   });
 
   test("a visitor whose browser doesn't match any supported language falls back to Spanish", async ({
@@ -45,15 +49,18 @@ test.describe("i18n — English", () => {
 
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await expect(nav(page).getByRole("link", { name: "Home" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Gallery" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Schedule" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Pastors" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Books" })).toBeVisible();
+    // Gallery/Schedule/Pastors/Books are no longer top-nav links — they
+    // still exist as real sections, reachable from the footer.
+    const footer = page.getByRole("contentinfo");
+    await expect(footer.getByRole("link", { name: "Gallery" })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Schedule" })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Pastors" })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Books" })).toBeVisible();
 
-    await nav(page).getByRole("link", { name: "Schedule" }).click();
+    await footer.getByRole("link", { name: "Schedule" }).click();
     await expect(page.getByRole("heading", { name: "Meeting Times" })).toBeVisible();
 
-    await nav(page).getByRole("link", { name: "Pastors" }).click();
+    await footer.getByRole("link", { name: "Pastors" }).click();
     await expect(page.getByRole("heading", { name: "Our Pastors" })).toBeVisible();
     await expect(page.getByText("Ariel Gómez")).toBeVisible();
   });
@@ -65,11 +72,14 @@ test.describe("i18n — Portuguese", () => {
 
     await expect(page.locator("html")).toHaveAttribute("lang", "pt");
     await expect(nav(page).getByRole("link", { name: "Início" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Galeria" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Horários" })).toBeVisible();
-    await expect(nav(page).getByRole("link", { name: "Livros" })).toBeVisible();
+    // Galeria/Horários/Livros are no longer top-nav links — they still
+    // exist as real sections, reachable from the footer.
+    const footer = page.getByRole("contentinfo");
+    await expect(footer.getByRole("link", { name: "Galeria" })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Horários" })).toBeVisible();
+    await expect(footer.getByRole("link", { name: "Livros" })).toBeVisible();
 
-    await nav(page).getByRole("link", { name: "Horários" }).click();
+    await footer.getByRole("link", { name: "Horários" }).click();
     await expect(page.getByRole("heading", { name: "Horários das Reuniões" })).toBeVisible();
   });
 });
@@ -204,14 +214,16 @@ test.describe("structure — Membresía replaced by Libros (books store)", () =>
     }
   });
 
-  test("the Libros section sits where Membresía used to and the nav link points at it", async ({ page }) => {
+  test("the Libros section sits where Membresía used to and the footer link points at it", async ({ page }) => {
     await page.goto("/es");
 
     const libros = page.locator("#libros");
     await expect(libros).toBeVisible();
     await expect(libros.getByRole("heading", { name: "Libros de Redes de Reino" })).toBeVisible();
 
-    await nav(page).getByRole("link", { name: "Libros" }).click();
+    // "Libros" is no longer a top-nav link (Task 7) — it's still reachable
+    // from the footer, which shares the same underlying navLinks data.
+    await page.getByRole("contentinfo").getByRole("link", { name: "Libros" }).click();
     await expect(page.locator("#libros")).toBeInViewport();
   });
 
@@ -254,18 +266,31 @@ test.describe("structure — Estudios Bíblicos, Actividades, Diezmos y Ofrendas
 });
 
 test.describe("structure — nav links work from any page, not just the home page", () => {
-  test("clicking a section link (e.g. Horarios) from a non-home page navigates to the home page and scrolls there", async ({
+  test("clicking a section link (e.g. Inicio) from a non-home page navigates to the home page and scrolls there", async ({
     page,
   }) => {
     // /es/403 is a real, public, non-home page that shares the same
-    // Navbar. These links used to be bare "#horarios" anchors, which only
+    // Navbar. These links used to be bare "#inicio" anchors, which only
     // ever worked when already on the home page — from anywhere else,
     // clicking did nothing (no navigation, since a fragment-only href
     // never leaves the current page).
     await page.goto("/es/403");
-    await nav(page).getByRole("link", { name: "Horarios" }).click();
-    await expect(page).toHaveURL(/\/es#horarios$/);
-    await expect(page.locator("#horarios")).toBeInViewport();
+    await nav(page).getByRole("link", { name: "Inicio" }).click();
+    await expect(page).toHaveURL(/\/es#inicio$/);
+    await expect(page.locator("#inicio")).toBeInViewport();
+  });
+
+  test("the top nav shows exactly Inicio, Devocionales, Instalar App — Galería/Horarios/Pastores/Libros no longer appear there", async ({
+    page,
+  }) => {
+    await page.goto("/es");
+    for (const label of ["Galería", "Horarios", "Pastores", "Libros"]) {
+      await expect(nav(page).getByRole("link", { name: label, exact: true })).toHaveCount(0);
+    }
+    for (const label of ["Inicio", "Devocionales"]) {
+      await expect(nav(page).getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+    await expect(nav(page).getByRole("link", { name: "Instalar app" })).toBeVisible();
   });
 
   test("the logo link also returns to the home page from a non-home page", async ({ page }) => {

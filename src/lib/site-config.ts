@@ -12,6 +12,9 @@ export const site = {
   location: "Salta, Argentina",
 };
 
+// Full link set — still shown in the footer (Galería/Horarios/Pastores/
+// Libros stay reachable from there even though the top nav no longer
+// shows them; those sections themselves are untouched).
 export const navLinks = [
   { href: "#inicio", key: "inicio" },
   { href: "#galeria", key: "galeria" },
@@ -24,6 +27,11 @@ export const navLinks = [
   { href: "/devocionales", key: "devocionales" },
   { href: "/instalar", key: "instalar" },
 ] as const;
+
+// Top/header nav shows only this subset — a filtered view of navLinks,
+// not a second data source, so both stay in sync automatically.
+const topNavKeys = new Set(["inicio", "devocionales", "instalar"]);
+export const topNavLinks = navLinks.filter((link) => topNavKeys.has(link.key));
 
 export const pastors = [
   {
