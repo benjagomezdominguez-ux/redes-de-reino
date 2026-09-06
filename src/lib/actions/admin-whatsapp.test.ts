@@ -2,12 +2,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { FakeStore } from "@/lib/whatsapp/scheduler.test-helpers";
 
 const requireAdminMock = vi.fn();
-const isWhatsAppConfiguredMock = vi.fn();
+const checkWhatsAppConnectionMock = vi.fn();
 let store: FakeStore;
 
 vi.mock("@/lib/supabase/require-auth", () => ({ requireAdmin: requireAdminMock }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
-vi.mock("@/lib/whatsapp/provider", () => ({ isWhatsAppConfigured: isWhatsAppConfiguredMock }));
+vi.mock("@/lib/whatsapp/meta-provider", () => ({ checkWhatsAppConnection: checkWhatsAppConnectionMock }));
 
 const {
   createGroup,
@@ -47,9 +47,14 @@ const CAMPAIGN_ID = "22222222-2222-4222-8222-222222222222";
 beforeEach(() => {
   store = new FakeStore();
   requireAdminMock.mockReset();
-  isWhatsAppConfiguredMock.mockReset();
+  checkWhatsAppConnectionMock.mockReset();
   requireAdminMock.mockResolvedValue({ id: "admin-1", role: "admin" });
-  isWhatsAppConfiguredMock.mockReturnValue(true);
+  checkWhatsAppConnectionMock.mockResolvedValue({
+    tokenConfigured: true,
+    phoneNumberIdConfigured: true,
+    businessAccountIdConfigured: true,
+    connectionStatus: "ok",
+  });
 });
 
 describe("groups", () => {
@@ -203,12 +208,33 @@ function seedActivatableCampaign() {
 
 describe("activateCampaign — rule 39, never activates an incomplete campaign", () => {
   it("CRITICAL: refuses when the official WhatsApp integration isn't configured", async () => {
-    isWhatsAppConfiguredMock.mockReturnValue(false);
+    checkWhatsAppConnectionMock.mockResolvedValue({
+      tokenConfigured: false,
+      phoneNumberIdConfigured: false,
+      businessAccountIdConfigured: false,
+      connectionStatus: "not_configured",
+    });
     seedActivatableCampaign();
 
     const result = await activateCampaign(CAMPAIGN_ID);
 
     expect(result).toEqual({ ok: false, errorKey: "notConfigured" });
+    expect(store.tables.whatsapp_campaigns[0].status).toBe("draft");
+  });
+
+  it("CRITICAL: refuses when the credentials are present but Meta rejects them as invalid (e.g. an expired/revoked token) — never just checks that the env vars exist", async () => {
+    checkWhatsAppConnectionMock.mockResolvedValue({
+      tokenConfigured: true,
+      phoneNumberIdConfigured: true,
+      businessAccountIdConfigured: true,
+      connectionStatus: "invalid",
+      connectionError: "Invalid OAuth access token",
+    });
+    seedActivatableCampaign();
+
+    const result = await activateCampaign(CAMPAIGN_ID);
+
+    expect(result).toEqual({ ok: false, errorKey: "invalidConfig" });
     expect(store.tables.whatsapp_campaigns[0].status).toBe("draft");
   });
 

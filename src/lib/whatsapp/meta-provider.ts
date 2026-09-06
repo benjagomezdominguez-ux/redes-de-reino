@@ -45,6 +45,62 @@ async function uploadMedia(imageStoragePath: string, token: string, phoneNumberI
 
 type MetaErrorBody = { error?: { code?: number; message?: string } };
 
+export type WhatsAppConnectionStatus = "not_configured" | "invalid" | "ok";
+
+export type WhatsAppConfigCheck = {
+  tokenConfigured: boolean;
+  phoneNumberIdConfigured: boolean;
+  businessAccountIdConfigured: boolean;
+  connectionStatus: WhatsAppConnectionStatus;
+  // A short, real error message from Meta (e.g. "Invalid OAuth access
+  // token") when connectionStatus is "invalid" — never the token itself,
+  // never a raw response dump, just the same error.message field the
+  // send path already surfaces.
+  connectionError?: string;
+};
+
+// A live, read-only, side-effect-free check against Meta's own API — the
+// only way to actually confirm the token/phone number id are valid
+// (rather than merely present), for the admin dashboard's status panel.
+// Skips the network call entirely when the env vars aren't even set, so
+// this costs nothing in the current, real "not configured" state.
+export async function checkWhatsAppConnection(): Promise<WhatsAppConfigCheck> {
+  const token = process.env.WHATSAPP_CLOUD_API_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const businessAccountId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
+
+  const base: Omit<WhatsAppConfigCheck, "connectionStatus" | "connectionError"> = {
+    tokenConfigured: Boolean(token),
+    phoneNumberIdConfigured: Boolean(phoneNumberId),
+    businessAccountIdConfigured: Boolean(businessAccountId),
+  };
+
+  if (!token || !phoneNumberId || !businessAccountId) {
+    return { ...base, connectionStatus: "not_configured" };
+  }
+
+  try {
+    const response = await fetch(graphUrl(`${phoneNumberId}?fields=verified_name,display_phone_number`), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const body = (await response.json()) as MetaErrorBody & { id?: string };
+
+    if (!response.ok || !body.id) {
+      return {
+        ...base,
+        connectionStatus: "invalid",
+        connectionError: body.error?.message ?? `HTTP ${response.status}`,
+      };
+    }
+
+    return { ...base, connectionStatus: "ok" };
+  } catch {
+    // A network-level failure (DNS, timeout, etc.) — never expose the
+    // raw exception, which could include request internals.
+    return { ...base, connectionStatus: "invalid", connectionError: "No se pudo conectar con Meta." };
+  }
+}
+
 export const metaCloudApiProvider: WhatsAppProvider = {
   name: "meta_cloud_api",
   async sendMessage({ to, text, imageStoragePath, templateName, templateLanguage }): Promise<WhatsAppSendResult> {

@@ -401,12 +401,27 @@
       },
       "dashboard": {
         "addGroup": "Agregar grupo",
-        "notConfiguredWarning": "La integración oficial de WhatsApp (Meta Cloud API) todavía no está configurada — las campañas no pueden activarse hasta que lo esté. Ver el informe de configuración en el README.",
         "emailNotConfiguredWarning": "No hay un proveedor de email configurado — la alerta de \"5 días antes\" no podrá enviarse hasta que se configure uno (ver README).",
         "activeGroups": "Grupos activos",
         "activeCampaigns": "Campañas activas",
         "nextMessage": "Próximo mensaje",
-        "nextAlert": "Próxima alerta"
+        "nextAlert": "Próxima alerta",
+        "status": {
+          "title": "Estado de WhatsApp",
+          "ok": "Configurado y operativo",
+          "invalid": "Configuración inválida",
+          "missing": "Falta configuración",
+          "token": "Token",
+          "phoneNumberId": "Phone Number ID",
+          "businessAccountId": "Business Account ID",
+          "connection": "Conexión con Meta",
+          "configured": "Configurado",
+          "notConfigured": "No configurado",
+          "connectionOk": "OK",
+          "connectionError": "Error: {message}",
+          "connectionNotVerified": "No verificada — completá la configuración primero",
+          "hint": "Ver el informe de configuración en el README."
+        }
       },
       "groups": {
         "count": "{count, plural, =1 {1 grupo} other {# grupos}}",
@@ -482,7 +497,8 @@
           "notConfigured": "No se puede activar: la integración oficial de WhatsApp todavía no está configurada.",
           "incomplete": "No se puede activar: faltan los 4 mensajes completos (título, texto, imagen y horario) en las posiciones 1 a 4.",
           "noContacts": "No se puede activar: el grupo no tiene contactos.",
-          "generic": "No pudimos activar la campaña."
+          "generic": "No pudimos activar la campaña.",
+          "invalidConfig": "No se puede activar: las credenciales de WhatsApp están configuradas pero Meta las rechazó como inválidas — revisá el token y el Phone Number ID."
         }
       },
       "messageForm": {

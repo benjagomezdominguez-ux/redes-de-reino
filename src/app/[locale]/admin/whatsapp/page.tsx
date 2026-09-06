@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getWhatsAppDashboardCounts } from "@/lib/admin/whatsapp-queries";
-import { isWhatsAppConfigured } from "@/lib/whatsapp/provider";
 import { isEmailConfigured } from "@/lib/email/provider";
+import { WhatsAppStatusPanel } from "@/components/ui/WhatsAppStatusPanel";
 import { Link } from "@/i18n/navigation";
 
 export default async function AdminWhatsAppDashboardPage({
@@ -12,7 +12,6 @@ export default async function AdminWhatsAppDashboardPage({
   const t = await getTranslations("admin.whatsapp");
 
   const counts = await getWhatsAppDashboardCounts();
-  const whatsappConfigured = isWhatsAppConfigured();
   const emailConfigured = isEmailConfigured();
 
   return (
@@ -32,11 +31,7 @@ export default async function AdminWhatsAppDashboardPage({
         </Link>
       </div>
 
-      {!whatsappConfigured ? (
-        <p className="rounded-2xl border border-dashed border-error/40 bg-error/5 p-5 text-sm text-error">
-          {t("dashboard.notConfiguredWarning")}
-        </p>
-      ) : null}
+      <WhatsAppStatusPanel />
       {!emailConfigured ? (
         <p className="rounded-2xl border border-dashed border-border bg-surface-alt p-5 text-sm text-muted">
           {t("dashboard.emailNotConfiguredWarning")}

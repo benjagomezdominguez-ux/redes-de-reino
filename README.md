@@ -527,17 +527,30 @@ Bucket privado `whatsapp-media`, tamaño/tipo validados en el bucket mismo
 
 **Envío — WhatsApp Business Platform (Meta Cloud API)**:
 `lib/whatsapp/meta-provider.ts` implementa las llamadas reales a la API
-oficial de Meta (`graph.facebook.com`) — sube la imagen al endpoint de
-Media para obtener un `media_id` (nunca manda una URL externa) y después
-envía el mensaje. Fuera de una ventana de 24hs en la que el contacto le
-escribió primero a la cuenta, Meta exige una **plantilla aprobada**
-("Message Template") para poder enviar — no se puede mandar texto libre a
-un contacto frío de forma automática, es una restricción de la
-plataforma, no de este código. Por eso cada mensaje tiene un campo
+oficial de Meta (`graph.facebook.com/v26.0`, la versión estable vigente al
+momento de escribir esto — Meta da soporte a cada versión por ~2 años
+desde su release, así que conviene revisar el [calendario de versiones de
+Graph API](https://developers.facebook.com/docs/graph-api/changelog) de
+tanto en tanto y subir el valor de `GRAPH_VERSION` en ese archivo antes de
+que la versión en uso deje de tener soporte) — sube la imagen al endpoint
+de Media para obtener un `media_id` (nunca manda una URL externa) y
+después envía el mensaje. Fuera de una ventana de 24hs en la que el
+contacto le escribió primero a la cuenta, Meta exige una **plantilla
+aprobada** ("Message Template") para poder enviar — no se puede mandar
+texto libre a un contacto frío de forma automática, es una restricción de
+la plataforma, no de este código. Por eso cada mensaje tiene un campo
 opcional "nombre de la plantilla aprobada en Meta Business Manager": si
 se completa, el envío usa esa plantilla (con el texto como variable del
 cuerpo y la imagen como header); si se deja vacío, intenta un envío libre
 que Meta solo va a aceptar dentro de esa ventana de 24hs.
+
+Esta integración es exclusivamente de **envío saliente** (broadcast) — no
+recibe ni procesa mensajes entrantes de los contactos, así que **no
+requiere configurar ningún webhook** en Meta for Developers. Si en el
+futuro se necesitara leer respuestas de los contactos (por ejemplo, para
+manejar opt-outs automáticos), eso exigiría dar de alta un webhook nuevo
+(`WHATSAPP_WEBHOOK_VERIFY_TOKEN` + una ruta `GET`/`POST` que lo valide) —
+hoy no existe ni hace falta.
 
 **Scheduler — backend, no depende de ningún navegador abierto**:
 `GET /api/cron/whatsapp` (protegido con `CRON_SECRET`, que Vercel manda
@@ -583,31 +596,108 @@ configurados, `isEmailConfigured()` es `false` y no se manda nada.
 implementada (una sola función `fetch`, sin SDK) — alcanza con configurar
 las variables de entorno para que funcione, sin tocar código.
 
-**Panel**: `/admin/whatsapp` (dashboard: grupos/campañas activas, próximo
-mensaje, próxima alerta) → `/admin/whatsapp/groups` (listado, crear grupo)
-→ `/admin/whatsapp/groups/[id]` (contactos, campañas del grupo, activar
+**Panel**: `/admin/whatsapp` (dashboard: estado de la integración,
+grupos/campañas activas, próximo mensaje, próxima alerta) →
+`/admin/whatsapp/groups` (listado, crear grupo) →
+`/admin/whatsapp/groups/[id]` (contactos, campañas del grupo, activar
 grupo) → `/admin/whatsapp/campaigns/[id]` (los 4 mensajes, cada uno
 editable con su imagen, y los controles de ciclo de vida: activar,
 pausar, reanudar, cancelar). **Activar una campaña** (rule 39) se rechaza
 explícitamente — nunca queda en `ACTIVE` sin poder mandar de verdad — si
-falta la integración de WhatsApp, si el grupo no tiene contactos, o si no
-están los 4 mensajes completos (título, texto, imagen y horario en las
-posiciones 1 a 4); verificado en `admin-whatsapp.test.ts`.
+falta la integración de WhatsApp, si Meta rechaza las credenciales como
+inválidas (token vencido/revocado, ver más abajo), si el grupo no tiene
+contactos, o si no están los 4 mensajes completos (título, texto, imagen y
+horario en las posiciones 1 a 4); verificado en `admin-whatsapp.test.ts`.
 
-**Variables de entorno necesarias** (ninguna existe hoy en este
-proyecto):
+**Estado de la integración — verificación real, no solo "¿existe la
+variable?"**: el dashboard (`WhatsAppStatusPanel`,
+`lib/whatsapp/meta-provider.ts#checkWhatsAppConnection`) hace una llamada
+de solo lectura a la propia API de Meta (`GET
+/{phoneNumberId}?fields=verified_name,display_phone_number`) para
+confirmar que el token y el Phone Number ID son válidos *ahora mismo*, no
+solo que las tres variables están seteadas. Muestra uno de tres estados,
+nunca el valor de ningún secreto:
+
+- 🔴 **Falta configuración** — alguna de las tres variables no está
+  seteada; no se intenta ninguna llamada de red.
+- 🟠 **Configuración inválida** — las tres variables están seteadas pero
+  Meta rechazó la conexión (token expirado/revocado, Phone Number ID
+  incorrecto, etc.) — se muestra el mensaje de error real que devolvió
+  Meta, para poder diagnosticar sin exponer nada sensible.
+- 🟢 **Configurado y operativo** — Meta confirmó la conexión.
+
+`activateCampaign()` usa esta misma verificación en vivo como primer
+filtro (antes de mirar la campaña) — una campaña nunca puede quedar
+`ACTIVE` con credenciales presentes pero inválidas, evita el escenario
+silencioso de "activada pero cada envío falla".
+(`getWhatsAppProvider()`, el punto de inyección de dependencias interno
+del scheduler, sigue usando el chequeo liviano de solo-presencia
+`isWhatsAppConfigured()` — el scheduler ya tolera bien un envío
+individual fallido, así que no necesita la llamada de red extra en cada
+corrida; solo las superficies de cara al admin necesitan la verificación
+fuerte).
+
+**Variables de entorno necesarias** (ninguna existe hoy en Vercel
+Production — confirmado con `vercel env ls production`):
 
 - `WHATSAPP_CLOUD_API_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
   `WHATSAPP_BUSINESS_ACCOUNT_ID` — de un WhatsApp Business Platform / Meta
-  Cloud API real (Meta for Developers → WhatsApp → API Setup). Sin esto,
-  `isWhatsAppConfigured()` es `false` y ninguna campaña puede activarse.
-- Al menos una plantilla de mensaje aprobada en Meta Business Manager, por
-  cada mensaje que se vaya a enviar fuera de la ventana de 24hs (el caso
-  normal de una campaña programada).
+  Cloud API real. Sin esto, el panel muestra 🔴 y ninguna campaña puede
+  activarse. Nunca se inventan ni se generan estos valores automáticamente
+  — son credenciales reales de una cuenta de Meta que solo el dueño del
+  proyecto puede obtener y cargar.
+
+  **Dónde conseguirlos** (Meta for Developers,
+  developers.facebook.com/apps → la app de WhatsApp Business del
+  proyecto → sección **WhatsApp → API Setup**):
+  - `WHATSAPP_CLOUD_API_TOKEN`: el "Temporary access token" que aparece en
+    esa misma pantalla sirve para probar, pero expira en 24hs — para
+    producción hace falta generar un **token permanente** vía **System
+    User** (Business Settings → Users → System Users → crear uno, asignarle
+    el activo de WhatsApp con permiso `whatsapp_business_messaging`, y
+    generar el token desde ahí, sin fecha de expiración).
+  - `WHATSAPP_PHONE_NUMBER_ID`: en la misma pantalla de API Setup, bajo
+    "From" — es el ID interno del número de teléfono ya conectado a la
+    cuenta, no el número de teléfono en sí.
+  - `WHATSAPP_BUSINESS_ACCOUNT_ID`: también en API Setup, o en Business
+    Settings → Accounts → WhatsApp Accounts — es el ID de la cuenta de
+    WhatsApp Business (WABA), no el de la app de Meta.
+  - **Nunca compartir estos tres valores en un chat, ticket, captura de
+    pantalla ni commit** — quien tenga el token puede mandar mensajes
+    desde el número real de la iglesia.
+- Al menos una plantilla de mensaje aprobada en Meta Business Manager
+  (WhatsApp Manager → Message Templates), por cada mensaje que se vaya a
+  enviar fuera de la ventana de 24hs (el caso normal de una campaña
+  programada).
 - `EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` — para
   que la alerta de 5 días le llegue de verdad a Benjamín Gómez por email.
 - `CRON_SECRET` — ya configurado en producción (Vercel), es lo que
   autoriza al cron diario a llamar a `/api/cron/whatsapp`.
+
+**Cargar las variables en Vercel** (una vez obtenidas de Meta, arriba):
+Vercel → proyecto → Settings → Environment Variables → agregar las tres
+(`WHATSAPP_CLOUD_API_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
+`WHATSAPP_BUSINESS_ACCOUNT_ID`) marcando explícitamente el scope
+**Production** (no alcanza con Preview/Development si lo que se quiere es
+que funcione en `https://redes-de-reino.vercel.app`). Después de
+guardarlas, Vercel no las aplica solo con guardar — hace falta un
+**deployment nuevo** de Production para que el runtime las lea (un
+`git push` a la rama de producción, o "Redeploy" desde el dashboard de
+Vercel sobre el último deployment). El panel `/admin/whatsapp` en
+producción es la forma más simple de confirmar que quedó bien: pasa de
+🔴 a 🟢 apenas el deployment nuevo está activo y Meta confirma la
+conexión.
+
+**Pruebas**: `meta-provider.test.ts` (envío de texto/plantilla/imagen,
+manejo de errores de Meta, y `checkWhatsAppConnection` con las tres
+variables faltantes/válidas/rechazadas por Meta — todo con `fetch`
+mockeado, nunca pega contra la red real) y `admin-whatsapp.test.ts`
+(activación bloqueada por cada precondición, incluida la nueva
+`invalidConfig`). Para probar el camino de red real sin mandar un mensaje
+real, alcanza con levantar `next start` local con variables
+`WHATSAPP_*` falsas (scopeadas solo a ese proceso, nunca en
+`.env.local` ni en Vercel) — Meta rechaza el token falso de verdad,
+probando el camino de error real sin ningún riesgo de enviar nada.
 
 ## Tiendanube — conexión OAuth (`/admin` → sección Tiendanube)
 

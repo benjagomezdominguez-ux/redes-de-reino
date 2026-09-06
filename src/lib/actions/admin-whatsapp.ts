@@ -4,7 +4,7 @@ import { z } from "zod";
 import { randomUUID } from "node:crypto";
 import { requireAdmin } from "@/lib/supabase/require-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { isWhatsAppConfigured } from "@/lib/whatsapp/provider";
+import { checkWhatsAppConnection } from "@/lib/whatsapp/meta-provider";
 
 // Every action here starts with requireAdmin() (rule 3: no client-side
 // authorization, ever) and writes through the admin/service-role client,
@@ -279,16 +279,26 @@ export async function attachMessageImage(messageId: string, path: string): Promi
 
 // ---------- Campaign lifecycle ----------
 
-export type ActivateResult = { ok: boolean; errorKey?: "notConfigured" | "incomplete" | "noContacts" };
+export type ActivateResult = {
+  ok: boolean;
+  errorKey?: "notConfigured" | "invalidConfig" | "incomplete" | "noContacts";
+};
 
 // Rule 39: refuses to activate unless every precondition actually holds
 // — never lets a campaign show as ACTIVE while unable to really send.
+// Uses a live check against Meta (not just "are the env vars present")
+// so a token that's present but expired/revoked is caught here too,
+// rather than only surfacing later as every delivery silently failing.
 export async function activateCampaign(campaignId: string): Promise<ActivateResult> {
   const admin_ = await requireAdmin();
   const admin = getSupabaseAdminClient();
 
-  if (!isWhatsAppConfigured()) {
+  const connection = await checkWhatsAppConnection();
+  if (connection.connectionStatus === "not_configured") {
     return { ok: false, errorKey: "notConfigured" };
+  }
+  if (connection.connectionStatus === "invalid") {
+    return { ok: false, errorKey: "invalidConfig" };
   }
 
   const { data: campaign } = await admin

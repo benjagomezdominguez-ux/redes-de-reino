@@ -401,12 +401,27 @@
       },
       "dashboard": {
         "addGroup": "Adicionar grupo",
-        "notConfiguredWarning": "A integração oficial do WhatsApp (Meta Cloud API) ainda não está configurada — as campanhas não podem ser ativadas até que esteja. Veja as notas de configuração no README.",
         "emailNotConfiguredWarning": "Nenhum provedor de email está configurado — o alerta de \"5 dias antes\" não poderá ser enviado até que um seja configurado (veja o README).",
         "activeGroups": "Grupos ativos",
         "activeCampaigns": "Campanhas ativas",
         "nextMessage": "Próxima mensagem",
-        "nextAlert": "Próximo alerta"
+        "nextAlert": "Próximo alerta",
+        "status": {
+          "title": "Status do WhatsApp",
+          "ok": "Configurado e operacional",
+          "invalid": "Configuração inválida",
+          "missing": "Configuração ausente",
+          "token": "Token",
+          "phoneNumberId": "Phone Number ID",
+          "businessAccountId": "Business Account ID",
+          "connection": "Conexão com a Meta",
+          "configured": "Configurado",
+          "notConfigured": "Não configurado",
+          "connectionOk": "OK",
+          "connectionError": "Erro: {message}",
+          "connectionNotVerified": "Não verificada — complete a configuração primeiro",
+          "hint": "Veja o relatório de configuração no README."
+        }
       },
       "groups": {
         "count": "{count, plural, =1 {1 grupo} other {# grupos}}",
@@ -482,7 +497,8 @@
           "notConfigured": "Não é possível ativar: a integração oficial do WhatsApp ainda não está configurada.",
           "incomplete": "Não é possível ativar: as 4 mensagens completas (título, texto, imagem e horário) devem existir nas posições 1 a 4.",
           "noContacts": "Não é possível ativar: o grupo não tem contatos.",
-          "generic": "Não conseguimos ativar a campanha."
+          "generic": "Não conseguimos ativar a campanha.",
+          "invalidConfig": "Não é possível ativar: as credenciais do WhatsApp estão configuradas, mas a Meta as rejeitou como inválidas — verifique o token e o Phone Number ID."
         }
       },
       "messageForm": {

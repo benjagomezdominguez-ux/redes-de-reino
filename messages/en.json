@@ -401,12 +401,27 @@
       },
       "dashboard": {
         "addGroup": "Add group",
-        "notConfiguredWarning": "The official WhatsApp integration (Meta Cloud API) isn't configured yet — campaigns can't be activated until it is. See the setup notes in the README.",
         "emailNotConfiguredWarning": "No email provider is configured — the \"5 days before\" alert won't be able to send until one is set up (see README).",
         "activeGroups": "Active groups",
         "activeCampaigns": "Active campaigns",
         "nextMessage": "Next message",
-        "nextAlert": "Next alert"
+        "nextAlert": "Next alert",
+        "status": {
+          "title": "WhatsApp status",
+          "ok": "Configured and operational",
+          "invalid": "Invalid configuration",
+          "missing": "Missing configuration",
+          "token": "Token",
+          "phoneNumberId": "Phone Number ID",
+          "businessAccountId": "Business Account ID",
+          "connection": "Connection with Meta",
+          "configured": "Configured",
+          "notConfigured": "Not configured",
+          "connectionOk": "OK",
+          "connectionError": "Error: {message}",
+          "connectionNotVerified": "Not verified — complete the configuration first",
+          "hint": "See the configuration report in the README."
+        }
       },
       "groups": {
         "count": "{count, plural, =1 {1 group} other {# groups}}",
@@ -482,7 +497,8 @@
           "notConfigured": "Can't activate: the official WhatsApp integration isn't configured yet.",
           "incomplete": "Can't activate: all 4 messages (title, text, image, and schedule) must be complete in positions 1 to 4.",
           "noContacts": "Can't activate: this group has no contacts.",
-          "generic": "We couldn't activate the campaign."
+          "generic": "We couldn't activate the campaign.",
+          "invalidConfig": "Cannot activate: WhatsApp credentials are configured but Meta rejected them as invalid — check the token and Phone Number ID."
         }
       },
       "messageForm": {

@@ -7,7 +7,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 
-const { metaCloudApiProvider } = await import("./meta-provider");
+const { metaCloudApiProvider, checkWhatsAppConnection } = await import("./meta-provider");
 
 const originalEnv = { ...process.env };
 const fetchMock = vi.fn();
@@ -176,5 +176,72 @@ describe("metaCloudApiProvider.sendMessage", () => {
     const result = await metaCloudApiProvider.sendMessage(BASE_PARAMS);
 
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("checkWhatsAppConnection", () => {
+  beforeEach(() => {
+    process.env.WHATSAPP_BUSINESS_ACCOUNT_ID = "9876543210";
+  });
+
+  it("CRITICAL: is not_configured and never calls fetch when any of the three required env vars is missing", async () => {
+    delete process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
+
+    const result = await checkWhatsAppConnection();
+
+    expect(result).toEqual({
+      tokenConfigured: true,
+      phoneNumberIdConfigured: true,
+      businessAccountIdConfigured: false,
+      connectionStatus: "not_configured",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("CRITICAL: calls the correct read-only Graph API endpoint with the Bearer token, and reports ok when Meta confirms the phone number", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, { id: "1234567890", verified_name: "Redes de Reino" }));
+
+    const result = await checkWhatsAppConnection();
+
+    expect(result).toEqual({
+      tokenConfigured: true,
+      phoneNumberIdConfigured: true,
+      businessAccountIdConfigured: true,
+      connectionStatus: "ok",
+    });
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://graph.facebook.com/v26.0/1234567890?fields=verified_name,display_phone_number");
+    expect(options.headers.Authorization).toBe("Bearer test-token");
+  });
+
+  it("CRITICAL: reports invalid (not ok) with Meta's real error message when the token is rejected — never a false 'operational' state", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(401, { error: { message: "Invalid OAuth access token" } }));
+
+    const result = await checkWhatsAppConnection();
+
+    expect(result).toEqual({
+      tokenConfigured: true,
+      phoneNumberIdConfigured: true,
+      businessAccountIdConfigured: true,
+      connectionStatus: "invalid",
+      connectionError: "Invalid OAuth access token",
+    });
+  });
+
+  it("reports invalid on a network-level failure without leaking the raw exception", async () => {
+    fetchMock.mockRejectedValue(new Error("fetch failed: getaddrinfo ENOTFOUND graph.facebook.com"));
+
+    const result = await checkWhatsAppConnection();
+
+    expect(result.connectionStatus).toBe("invalid");
+    expect(result.connectionError).not.toContain("ENOTFOUND");
+  });
+
+  it("treats a 200 response missing the expected id field as invalid, not ok", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, {}));
+
+    const result = await checkWhatsAppConnection();
+
+    expect(result.connectionStatus).toBe("invalid");
   });
 });
