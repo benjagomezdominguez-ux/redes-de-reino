@@ -27,6 +27,8 @@ const {
   createGalleryImage,
   updateGalleryImage,
   replaceGalleryImagePhoto,
+  replaceGalleryMobileImage,
+  removeGalleryMobileImage,
   deleteGalleryImage,
 } = await import("./admin-gallery");
 
@@ -98,6 +100,17 @@ describe("createGalleryImage", () => {
     await createGalleryImage("x.jpg", { title: "", altText: "", objectPosition: "" });
     expect(store.tables.audit_log[0]).toMatchObject({ actor_id: ADMIN.id, action: "gallery_image_created", resource_type: "gallery_image" });
   });
+
+  it("stores the optional mobile image path alongside the desktop one", async () => {
+    const result = await createGalleryImage("desktop.jpg", { title: "", altText: "", objectPosition: "" }, "mobile.jpg");
+    expect(result).toEqual({ ok: true });
+    expect(store.tables.gallery_images[0]).toMatchObject({ storage_path: "desktop.jpg", mobile_storage_path: "mobile.jpg" });
+  });
+
+  it("stores mobile_storage_path as null when no mobile image is provided", async () => {
+    await createGalleryImage("desktop.jpg", { title: "", altText: "", objectPosition: "" });
+    expect(store.tables.gallery_images[0]).toMatchObject({ storage_path: "desktop.jpg", mobile_storage_path: null });
+  });
 });
 
 describe("updateGalleryImage", () => {
@@ -136,16 +149,65 @@ describe("replaceGalleryImagePhoto", () => {
   });
 });
 
-describe("deleteGalleryImage", () => {
-  beforeEach(() => {
-    store.seed("gallery_images", [{ id: "g1", storage_path: "a.jpg", sort_order: 0 }]);
+describe("replaceGalleryMobileImage", () => {
+  it("CRITICAL: sets mobile_storage_path and deletes the OLD mobile file — never touches storage_path", async () => {
+    store.seed("gallery_images", [{ id: "g1", storage_path: "desktop.jpg", mobile_storage_path: "old-mobile.jpg", sort_order: 0 }]);
+    const result = await replaceGalleryMobileImage("g1", "new-mobile.jpg");
+    expect(result).toEqual({ ok: true });
+    expect(store.tables.gallery_images[0]).toMatchObject({ storage_path: "desktop.jpg", mobile_storage_path: "new-mobile.jpg" });
+    expect(storageRemoveMock).toHaveBeenCalledWith(["old-mobile.jpg"]);
   });
 
+  it("does not attempt storage cleanup when there was no previous mobile image", async () => {
+    store.seed("gallery_images", [{ id: "g1", storage_path: "desktop.jpg", mobile_storage_path: null, sort_order: 0 }]);
+    const result = await replaceGalleryMobileImage("g1", "new-mobile.jpg");
+    expect(result).toEqual({ ok: true });
+    expect(store.tables.gallery_images[0].mobile_storage_path).toBe("new-mobile.jpg");
+    expect(storageRemoveMock).not.toHaveBeenCalled();
+  });
+
+  it("returns notFound for a nonexistent image", async () => {
+    const result = await replaceGalleryMobileImage("ghost", "new-mobile.jpg");
+    expect(result).toEqual({ ok: false, errorKey: "notFound" });
+  });
+});
+
+describe("removeGalleryMobileImage", () => {
+  it("CRITICAL: clears mobile_storage_path and deletes the storage object — desktop image untouched", async () => {
+    store.seed("gallery_images", [{ id: "g1", storage_path: "desktop.jpg", mobile_storage_path: "mobile.jpg", sort_order: 0 }]);
+    const result = await removeGalleryMobileImage("g1");
+    expect(result).toEqual({ ok: true });
+    expect(store.tables.gallery_images[0]).toMatchObject({ storage_path: "desktop.jpg", mobile_storage_path: null });
+    expect(storageRemoveMock).toHaveBeenCalledWith(["mobile.jpg"]);
+  });
+
+  it("is a harmless no-op when there was no mobile image to begin with", async () => {
+    store.seed("gallery_images", [{ id: "g1", storage_path: "desktop.jpg", mobile_storage_path: null, sort_order: 0 }]);
+    const result = await removeGalleryMobileImage("g1");
+    expect(result).toEqual({ ok: true });
+    expect(storageRemoveMock).not.toHaveBeenCalled();
+  });
+
+  it("returns notFound for a nonexistent image", async () => {
+    const result = await removeGalleryMobileImage("ghost");
+    expect(result).toEqual({ ok: false, errorKey: "notFound" });
+  });
+});
+
+describe("deleteGalleryImage", () => {
   it("CRITICAL: deletes the row and the storage object", async () => {
+    store.seed("gallery_images", [{ id: "g1", storage_path: "a.jpg", mobile_storage_path: null, sort_order: 0 }]);
     const result = await deleteGalleryImage("g1");
     expect(result).toEqual({ ok: true });
     expect(store.tables.gallery_images).toHaveLength(0);
     expect(storageRemoveMock).toHaveBeenCalledWith(["a.jpg"]);
+  });
+
+  it("CRITICAL: also deletes the mobile storage object when one exists — no orphaned file", async () => {
+    store.seed("gallery_images", [{ id: "g1", storage_path: "a.jpg", mobile_storage_path: "a-mobile.jpg", sort_order: 0 }]);
+    const result = await deleteGalleryImage("g1");
+    expect(result).toEqual({ ok: true });
+    expect(storageRemoveMock).toHaveBeenCalledWith(["a.jpg", "a-mobile.jpg"]);
   });
 
   it("returns notFound instead of falsely reporting success for a nonexistent image", async () => {

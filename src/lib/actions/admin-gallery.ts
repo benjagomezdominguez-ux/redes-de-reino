@@ -53,7 +53,10 @@ type PhotoMetadata = { title: string; altText: string; objectPosition: string };
 // when the admin UI is out of date (e.g. a second tab left open).
 export async function createGalleryImage(
   storagePath: string,
-  metadata: PhotoMetadata
+  metadata: PhotoMetadata,
+  // Optional from day one — the mobile variant is never required to
+  // create the (still singleton) gallery entry, only the desktop one.
+  mobileStoragePath?: string | null
 ): Promise<GalleryActionResult> {
   const admin_ = await requireAdmin();
   const admin = getSupabaseAdminClient();
@@ -65,6 +68,7 @@ export async function createGalleryImage(
     .from("gallery_images")
     .insert({
       storage_path: storagePath,
+      mobile_storage_path: mobileStoragePath ?? null,
       title: metadata.title.trim().slice(0, MAX_TITLE_LENGTH) || null,
       alt_text: metadata.altText.trim().slice(0, MAX_ALT_LENGTH) || null,
       object_position: metadata.objectPosition.trim() || null,
@@ -140,24 +144,95 @@ export async function replaceGalleryImagePhoto(id: string, newStoragePath: strin
   return { ok: true };
 }
 
+// Replaces just the mobile (9:16) variant, mirroring
+// replaceGalleryImagePhoto() above but for mobile_storage_path — never
+// touches storage_path (the desktop image).
+export async function replaceGalleryMobileImage(id: string, newStoragePath: string): Promise<GalleryActionResult> {
+  const admin_ = await requireAdmin();
+  const admin = getSupabaseAdminClient();
+
+  const { data: existing } = await admin
+    .from("gallery_images")
+    .select("mobile_storage_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existing) return { ok: false, errorKey: "notFound" };
+  const oldMobilePath: string | null = existing.mobile_storage_path;
+
+  const { error } = await admin.from("gallery_images").update({ mobile_storage_path: newStoragePath }).eq("id", id);
+  if (error) return { ok: false, errorKey: "generic" };
+
+  if (oldMobilePath && oldMobilePath !== newStoragePath) {
+    await admin.storage.from(BUCKET).remove([oldMobilePath]);
+  }
+
+  await admin.from("audit_log").insert({
+    actor_id: admin_.id,
+    action: "gallery_mobile_image_replaced",
+    resource_type: "gallery_image",
+    resource_id: id,
+    metadata: {},
+  });
+
+  return { ok: true };
+}
+
+// Clears the mobile variant only — the public section then falls back
+// to the desktop image on mobile again (Gallery.tsx), never leaving the
+// section empty. Never touches storage_path or the row itself.
+export async function removeGalleryMobileImage(id: string): Promise<GalleryActionResult> {
+  const admin_ = await requireAdmin();
+  const admin = getSupabaseAdminClient();
+
+  const { data: existing } = await admin
+    .from("gallery_images")
+    .select("mobile_storage_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existing) return { ok: false, errorKey: "notFound" };
+  const oldMobilePath: string | null = existing.mobile_storage_path;
+  if (!oldMobilePath) return { ok: true };
+
+  const { error } = await admin.from("gallery_images").update({ mobile_storage_path: null }).eq("id", id);
+  if (error) return { ok: false, errorKey: "generic" };
+
+  await admin.storage.from(BUCKET).remove([oldMobilePath]);
+
+  await admin.from("audit_log").insert({
+    actor_id: admin_.id,
+    action: "gallery_mobile_image_removed",
+    resource_type: "gallery_image",
+    resource_id: id,
+    metadata: {},
+  });
+
+  return { ok: true };
+}
+
 export async function deleteGalleryImage(id: string): Promise<GalleryActionResult> {
   const admin_ = await requireAdmin();
   const admin = getSupabaseAdminClient();
 
-  const { data: existing } = await admin.from("gallery_images").select("storage_path").eq("id", id).maybeSingle();
+  const { data: existing } = await admin
+    .from("gallery_images")
+    .select("storage_path, mobile_storage_path")
+    .eq("id", id)
+    .maybeSingle();
   if (!existing) return { ok: false, errorKey: "notFound" };
   const storagePath: string = existing.storage_path;
+  const mobileStoragePath: string | null = existing.mobile_storage_path;
 
   const { error } = await admin.from("gallery_images").delete().eq("id", id);
   if (error) return { ok: false, errorKey: "generic" };
 
   // Row is gone first, storage cleanup second — if this fails, we've
   // still correctly removed the carousel entry (no false "still there"
-  // state), just with a harmless orphaned object logged for cleanup,
+  // state), just with harmless orphaned objects logged for cleanup,
   // rather than the row surviving while claiming to be deleted.
-  const { error: storageError } = await admin.storage.from(BUCKET).remove([storagePath]);
+  const pathsToRemove = mobileStoragePath ? [storagePath, mobileStoragePath] : [storagePath];
+  const { error: storageError } = await admin.storage.from(BUCKET).remove(pathsToRemove);
   if (storageError) {
-    console.error("gallery photo removed from DB but storage cleanup failed", storagePath, storageError);
+    console.error("gallery photo removed from DB but storage cleanup failed", pathsToRemove, storageError);
   }
 
   await admin.from("audit_log").insert({
