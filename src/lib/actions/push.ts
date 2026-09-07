@@ -37,6 +37,14 @@ export async function subscribeToPush(subscriptionJson: unknown): Promise<{ ok: 
     { onConflict: "endpoint" }
   );
 
+  if (error) {
+    // Surfaced server-side only (Vercel function logs) — the client only
+    // ever sees { ok: false }, never this. No secrets here: just the
+    // Postgres error code/message, which is what's actually needed to
+    // diagnose a rejected upsert (RLS, constraint, etc).
+    console.error("[push] push_subscriptions upsert failed", error.code, error.message);
+  }
+
   return { ok: !error };
 }
 

@@ -41,27 +41,91 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
+// Real root cause (found live, against production, with a real Chrome
+// browser and the real deployed VAPID key): PushPermissionBanner mounts
+// TWICE on some pages at once — its own instance (e.g. /account,
+// /admin/chat) plus GlobalPushPrompt's floating instance, which is
+// mounted on every page. Both instances' mount-time effects independently
+// call registerPushSubscription() whenever Notification.permission is
+// already "granted" (the "silently reconfirm" path). Two concurrent
+// registration.pushManager.subscribe() calls on the SAME registration
+// race each other in Chrome — confirmed live via instrumenting the real
+// PushManager.subscribe(): both calls start in the same millisecond and
+// neither one ever settles, until the 10s SUBSCRIBE_TIMEOUT_MS here fires
+// and the whole thing is reported as a failure. A single, uncontested
+// retry immediately afterward always succeeds — exactly the reported
+// "permiso concedido, pero falla" symptom.
+//
+// Fix: a module-level in-flight lock so every caller — regardless of how
+// many banner instances are mounted — shares the SAME underlying
+// subscribe attempt instead of starting a second, colliding one.
+let inFlightSubscribe: Promise<boolean> | null = null;
+
 // Registers (or confirms) the push subscription and saves it server-side.
 // Returns whether a subscription actually ended up saved — permission
 // being "granted" is not the same thing as the subscription existing:
 // the service worker might not be ready, or the save call could fail.
-async function registerPushSubscription(): Promise<boolean> {
-  if (!supportsPush()) return false;
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-  if (!publicKey) return false;
+function registerPushSubscription(): Promise<boolean> {
+  if (inFlightSubscribe) return inFlightSubscribe;
+  inFlightSubscribe = registerPushSubscriptionOnce().finally(() => {
+    inFlightSubscribe = null;
+  });
+  return inFlightSubscribe;
+}
 
+// Every failure path logs which stage failed and the real browser/server
+// error (name + message only — never a full stack with potentially
+// sensitive request internals, and nothing server-side like the VAPID
+// private key ever reaches this file at all). This is what section 2 of
+// the push audit asked for: no more blanket try/catch hiding the cause.
+async function registerPushSubscriptionOnce(): Promise<boolean> {
+  if (!supportsPush()) {
+    console.error("[push] unsupported: Notification/serviceWorker/PushManager not available in this browser");
+    return false;
+  }
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  if (!publicKey) {
+    console.error("[push] NEXT_PUBLIC_VAPID_PUBLIC_KEY is missing from this build");
+    return false;
+  }
+
+  let registration: ServiceWorkerRegistration;
   try {
-    const registration = await withTimeout(navigator.serviceWorker.ready, SUBSCRIBE_TIMEOUT_MS);
-    let subscription = await registration.pushManager.getSubscription();
-    if (!subscription) {
+    registration = await withTimeout(navigator.serviceWorker.ready, SUBSCRIBE_TIMEOUT_MS);
+  } catch (err) {
+    console.error("[push] service worker did not become ready in time", err instanceof Error ? err.message : err);
+    return false;
+  }
+
+  let subscription: PushSubscription | null;
+  try {
+    subscription = await registration.pushManager.getSubscription();
+  } catch (err) {
+    console.error("[push] pushManager.getSubscription() failed", err instanceof Error ? err.message : err);
+    return false;
+  }
+
+  if (!subscription) {
+    try {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
       });
+    } catch (err) {
+      console.error(
+        "[push] pushManager.subscribe() failed",
+        err instanceof Error ? { name: err.name, message: err.message } : err
+      );
+      return false;
     }
+  }
+
+  try {
     const result = await subscribeToPush(subscription.toJSON());
+    if (!result.ok) console.error("[push] backend rejected the subscription (subscribeToPush returned ok:false)");
     return result.ok;
-  } catch {
+  } catch (err) {
+    console.error("[push] subscribeToPush() Server Action threw", err instanceof Error ? err.message : err);
     return false;
   }
 }
