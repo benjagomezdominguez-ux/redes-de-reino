@@ -40,7 +40,7 @@ export const pastors = [
     photo: "/pastor-ariel.jpg" as string | null,
   },
   {
-    name: "Gabriela de Gómez",
+    name: "Gabriela Gómez",
     roleKey: "pastora",
     photo: "/pastora-gabriela.jpg" as string | null,
   },

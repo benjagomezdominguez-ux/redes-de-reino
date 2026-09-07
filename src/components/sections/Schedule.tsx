@@ -21,11 +21,12 @@ export async function Schedule() {
   return (
     <section id="horarios" className="bg-surface-alt py-20 sm:py-28">
       <Container className="flex flex-col gap-12">
-        <SectionHeading
-          eyebrow={t("eyebrow")}
-          title={t("title")}
-          description={t("description")}
-        />
+        <div className="flex flex-col gap-4">
+          <SectionHeading eyebrow={t("eyebrow")} title={t("title")} />
+          <p className="mx-auto max-w-2xl text-center text-lg sm:text-xl text-balance text-muted">
+            {t("description")}
+          </p>
+        </div>
 
         <MeetingSchedule
           meetings={meetings}
