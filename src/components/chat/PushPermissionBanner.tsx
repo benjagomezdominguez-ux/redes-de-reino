@@ -106,11 +106,18 @@ async function registerPushSubscriptionOnce(): Promise<boolean> {
   }
 
   if (!subscription) {
+    // This is a real network round-trip to the browser's push service
+    // (FCM/autopush/etc), unlike .ready above — bounded the same way, so
+    // a slow/stuck registration reports a clean, retryable failure
+    // instead of hanging the UI forever with no feedback.
     try {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
-      });
+      subscription = await withTimeout(
+        registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey) as BufferSource,
+        }),
+        SUBSCRIBE_TIMEOUT_MS
+      );
     } catch (err) {
       console.error(
         "[push] pushManager.subscribe() failed",
