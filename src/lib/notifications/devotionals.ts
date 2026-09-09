@@ -49,3 +49,21 @@ export async function notifyDevotionalPublished(devotionalId: string, authorId: 
     console.error("devotional publish push failed", err)
   );
 }
+
+// Real, live-reproduced bug: deleting or unpublishing a devotional left
+// its "devotional_published" notification rows in place, still pointing
+// at /devocionales/<id>. Clicking one of those old notifications later —
+// exactly what several real users' account history shows — hits
+// getPublishedDevotionalById(id), finds nothing, and genuinely 404s
+// (correctly, per how that page is built; the bug was the stale
+// notification existing at all, not the 404 page itself). Called from
+// deleteDevotional() and from the unpublish path in
+// updateDevotional()/setDevotionalStatus() so this can't recur.
+export async function removeDevotionalNotifications(devotionalId: string): Promise<void> {
+  const admin = getSupabaseAdminClient();
+  await admin
+    .from("notifications")
+    .delete()
+    .eq("type", "devotional_published")
+    .eq("resource_id", devotionalId);
+}

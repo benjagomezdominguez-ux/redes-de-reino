@@ -3,11 +3,15 @@ import { FakeStore } from "@/lib/whatsapp/scheduler.test-helpers";
 
 const requireChatAdminMock = vi.fn();
 const notifyDevotionalPublishedMock = vi.fn();
+const removeDevotionalNotificationsMock = vi.fn();
 let store: FakeStore;
 
 vi.mock("@/lib/supabase/require-auth", () => ({ requireChatAdmin: requireChatAdminMock }));
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
-vi.mock("@/lib/notifications/devotionals", () => ({ notifyDevotionalPublished: notifyDevotionalPublishedMock }));
+vi.mock("@/lib/notifications/devotionals", () => ({
+  notifyDevotionalPublished: notifyDevotionalPublishedMock,
+  removeDevotionalNotifications: removeDevotionalNotificationsMock,
+}));
 
 const { createDevotional, updateDevotional, setDevotionalStatus, deleteDevotional } = await import(
   "./admin-devotionals"
@@ -21,6 +25,8 @@ beforeEach(() => {
   requireChatAdminMock.mockResolvedValue(ARIEL);
   notifyDevotionalPublishedMock.mockReset();
   notifyDevotionalPublishedMock.mockResolvedValue(undefined);
+  removeDevotionalNotificationsMock.mockReset();
+  removeDevotionalNotificationsMock.mockResolvedValue(undefined);
 });
 
 describe("createDevotional", () => {
@@ -110,6 +116,18 @@ describe("updateDevotional", () => {
     expect(notifyDevotionalPublishedMock).not.toHaveBeenCalled();
   });
 
+  it("CRITICAL: unpublishing via edit removes its stale notifications — real bug: an old notification pointing at a now-unpublished devotional 404s when clicked", async () => {
+    store.seed("devotionals", [{ id: "d1", title: "old", content: "old", status: "published", published_at: "2026-01-01T00:00:00.000Z" }]);
+    await updateDevotional("d1", { title: "old", content: "old", status: "draft" });
+    expect(removeDevotionalNotificationsMock).toHaveBeenCalledWith("d1");
+  });
+
+  it("does not touch notifications when a draft is saved as a draft again (never published)", async () => {
+    store.seed("devotionals", [{ id: "d1", title: "old", content: "old", status: "draft", published_at: null }]);
+    await updateDevotional("d1", { title: "old", content: "old", status: "draft" });
+    expect(removeDevotionalNotificationsMock).not.toHaveBeenCalled();
+  });
+
   it("updates the updated_at timestamp and keeps the same id (no duplicate row)", async () => {
     store.seed("devotionals", [{ id: "d1", title: "old", content: "old", status: "draft", published_at: null, updated_at: "2020-01-01T00:00:00.000Z" }]);
     await updateDevotional("d1", { title: "new", content: "new content", status: "draft" });
@@ -156,6 +174,18 @@ describe("setDevotionalStatus", () => {
     expect(notifyDevotionalPublishedMock).not.toHaveBeenCalled();
   });
 
+  it("CRITICAL: unpublishing removes its stale notifications", async () => {
+    store.seed("devotionals", [{ id: "d1", status: "published", published_at: "2026-01-01T00:00:00.000Z" }]);
+    await setDevotionalStatus("d1", "draft");
+    expect(removeDevotionalNotificationsMock).toHaveBeenCalledWith("d1");
+  });
+
+  it("does not touch notifications when publishing (nothing stale to remove)", async () => {
+    store.seed("devotionals", [{ id: "d1", status: "draft", published_at: null }]);
+    await setDevotionalStatus("d1", "published");
+    expect(removeDevotionalNotificationsMock).not.toHaveBeenCalled();
+  });
+
   it("returns ok:false for a nonexistent devotional", async () => {
     const result = await setDevotionalStatus("ghost", "published");
     expect(result).toEqual({ ok: false });
@@ -176,6 +206,17 @@ describe("deleteDevotional", () => {
     expect(result).toEqual({ ok: true });
     expect(store.tables.devotionals).toHaveLength(0);
     expect(store.tables.audit_log[0]).toMatchObject({ action: "devotional_deleted", resource_id: "d1" });
+  });
+
+  it("CRITICAL: also removes its stale notifications — real bug: deleting a devotional left old notifications pointing at a dead /devocionales/<id> link, which real users then clicked and got a genuine 404", async () => {
+    store.seed("devotionals", [{ id: "d1", title: "Fe" }]);
+    await deleteDevotional("d1");
+    expect(removeDevotionalNotificationsMock).toHaveBeenCalledWith("d1");
+  });
+
+  it("does not attempt notification cleanup for a nonexistent devotional", async () => {
+    await deleteDevotional("ghost");
+    expect(removeDevotionalNotificationsMock).not.toHaveBeenCalled();
   });
 
   it("returns notFound-style failure instead of falsely reporting success for a nonexistent devotional", async () => {

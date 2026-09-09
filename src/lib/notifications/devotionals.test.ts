@@ -7,7 +7,7 @@ let store: FakeStore;
 vi.mock("@/lib/supabase/admin", () => ({ getSupabaseAdminClient: () => store.client() }));
 vi.mock("@/lib/push/web-push", () => ({ sendPushToUsers: sendPushToUsersMock }));
 
-const { notifyDevotionalPublished } = await import("./devotionals");
+const { notifyDevotionalPublished, removeDevotionalNotifications } = await import("./devotionals");
 
 beforeEach(() => {
   store = new FakeStore();
@@ -64,5 +64,26 @@ describe("notifyDevotionalPublished", () => {
     store.seed("profiles", []);
     await expect(notifyDevotionalPublished("devotional-1", "ariel-1")).resolves.toBeUndefined();
     expect(sendPushToUsersMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("removeDevotionalNotifications", () => {
+  it("CRITICAL: deletes only the devotional_published notifications for that specific devotional", async () => {
+    store.seed("notifications", [
+      { id: "n1", user_id: "user-1", type: "devotional_published", resource_id: "devotional-1", link_path: "/devocionales/devotional-1" },
+      { id: "n2", user_id: "user-2", type: "devotional_published", resource_id: "devotional-1", link_path: "/devocionales/devotional-1" },
+      { id: "n3", user_id: "user-1", type: "devotional_published", resource_id: "devotional-2", link_path: "/devocionales/devotional-2" },
+    ]);
+
+    await removeDevotionalNotifications("devotional-1");
+
+    const remaining = store.tables.notifications ?? [];
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].resource_id).toBe("devotional-2");
+  });
+
+  it("is a safe no-op when there are no notifications for that devotional", async () => {
+    store.seed("notifications", []);
+    await expect(removeDevotionalNotifications("devotional-1")).resolves.toBeUndefined();
   });
 });

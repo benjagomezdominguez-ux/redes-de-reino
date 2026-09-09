@@ -2,7 +2,7 @@
 
 import { requireChatAdmin } from "@/lib/supabase/require-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { notifyDevotionalPublished } from "@/lib/notifications/devotionals";
+import { notifyDevotionalPublished, removeDevotionalNotifications } from "@/lib/notifications/devotionals";
 
 // Devotionals are administered exclusively by Ariel Gómez — the same
 // real person requireChatAdmin() already gates chat/push behind (see
@@ -69,12 +69,16 @@ export async function updateDevotional(id: string, input: DevotionalInput): Prom
   const { data: existing } = await admin.from("devotionals").select("status, published_at").eq("id", id).maybeSingle();
   if (!existing) return { ok: false, errorKey: "notFound" };
 
+  // Captured before the update below — never read existing.status after
+  // that point.
+  const previousStatus = existing.status;
+
   const nowIso = new Date().toISOString();
   // Only stamp published_at the moment a devotional first becomes
   // published — editing an already-published one, or one that was
   // published before and is being republished, keeps its original date
   // rather than looking newly posted every time it's touched.
-  const becomingPublished = input.status === "published" && existing.status !== "published";
+  const becomingPublished = input.status === "published" && previousStatus !== "published";
   const publishedAt = becomingPublished ? nowIso : existing.published_at;
 
   const { error } = await admin
@@ -100,6 +104,11 @@ export async function updateDevotional(id: string, input: DevotionalInput): Prom
 
   if (becomingPublished) {
     await notifyDevotionalPublished(id, admin_.id);
+  } else if (previousStatus === "published" && input.status === "draft") {
+    // Unpublishing via edit makes it inaccessible the same way deleting
+    // it does (getPublishedDevotionalById returns null either way) — a
+    // stale notification pointing at it would 404 just the same.
+    await removeDevotionalNotifications(id);
   }
 
   return { ok: true, id };
@@ -112,8 +121,12 @@ export async function setDevotionalStatus(id: string, status: "draft" | "publish
   const { data: existing } = await admin.from("devotionals").select("status, published_at").eq("id", id).maybeSingle();
   if (!existing) return { ok: false };
 
+  // Captured before the update below — never read existing.status after
+  // that point.
+  const previousStatus = existing.status;
+
   const nowIso = new Date().toISOString();
-  const becomingPublished = status === "published" && existing.status !== "published";
+  const becomingPublished = status === "published" && previousStatus !== "published";
   const publishedAt = becomingPublished ? nowIso : existing.published_at;
 
   const { error } = await admin
@@ -132,6 +145,8 @@ export async function setDevotionalStatus(id: string, status: "draft" | "publish
 
   if (becomingPublished) {
     await notifyDevotionalPublished(id, admin_.id);
+  } else if (previousStatus === "published" && status === "draft") {
+    await removeDevotionalNotifications(id);
   }
 
   return { ok: true };
@@ -146,6 +161,12 @@ export async function deleteDevotional(id: string): Promise<{ ok: boolean }> {
 
   const { error } = await admin.from("devotionals").delete().eq("id", id);
   if (error) return { ok: false };
+
+  // The devotional is gone — any notification still pointing at it would
+  // now 404 if clicked (this is the real bug that was reported: stale
+  // notifications from earlier deletes, never cleaned up, sent real
+  // users to a dead link).
+  await removeDevotionalNotifications(id);
 
   await admin.from("audit_log").insert({
     actor_id: admin_.id,
