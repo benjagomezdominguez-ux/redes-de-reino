@@ -69,6 +69,7 @@ async function sendToSubscriptions(
         if (status === 404 || status === 410) {
           await admin.from("push_subscriptions").delete().eq("id", sub.id);
           removed += 1;
+          console.log(`[web-push] subscription ${sub.id} dead (status ${status}) — removed`);
         } else {
           console.error("web-push send failed", sub.id, status, err instanceof Error ? err.message : err);
         }
@@ -76,6 +77,7 @@ async function sendToSubscriptions(
     })
   );
 
+  console.log(`[web-push] attempted=${subscriptions.length} sent=${sent} removed=${removed}`);
   return { sent, removed };
 }
 
@@ -91,15 +93,24 @@ export async function sendChatPush(params: {
   senderId: string;
   notification: ChatPushPayload;
 }): Promise<{ sent: number; removed: number }> {
-  if (!isPushConfigured()) return { sent: 0, removed: 0 };
-  if (params.recipientId === params.senderId) return { sent: 0, removed: 0 };
+  if (!isPushConfigured()) {
+    console.log("[chat push] VAPID not configured — skipping");
+    return { sent: 0, removed: 0 };
+  }
+  if (params.recipientId === params.senderId) {
+    console.log("[chat push] recipient === sender — refusing to self-notify");
+    return { sent: 0, removed: 0 };
+  }
   configureVapid();
 
   const admin = getSupabaseAdminClient();
-  const { data: subscriptions } = await admin
+  const { data: subscriptions, error } = await admin
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth_key")
     .eq("user_id", params.recipientId);
+
+  if (error) console.error("[chat push] push_subscriptions query failed", error.code, error.message);
+  console.log(`[chat push] recipient=${params.recipientId} subscriptions found=${subscriptions?.length ?? 0}`);
 
   return sendToSubscriptions(admin, subscriptions ?? [], params.notification);
 }

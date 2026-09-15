@@ -145,6 +145,11 @@ export async function sendMessage(conversationId: string, content: string): Prom
   // as a second guard, so a sender never gets pushed their own message —
   // a general rule, not a special case for any one account.
   const recipientId = access.isOwner ? await getChatAdminId() : access.ownerId;
+  // Diagnostic only — ids, not message content. Helps answer "who sent,
+  // who should receive, did we even attempt a push" without guessing.
+  console.log(
+    `[chat push] sender=${profile.id} isOwner=${access.isOwner} recipient=${recipientId ?? "null"} conversation=${conversationId}`
+  );
   if (recipientId && recipientId !== profile.id) {
     const senderName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email || "Alguien";
     // Fire-and-forget on purpose — a push failure (or nothing configured
@@ -158,6 +163,8 @@ export async function sendMessage(conversationId: string, content: string): Prom
         conversationId,
       },
     }).catch((err) => console.error("chat push notify failed", err));
+  } else {
+    console.log(`[chat push] skipped — recipientId=${recipientId ?? "null"} senderId=${profile.id}`);
   }
 
   return { status: "success", messageId: message.id };
