@@ -43,12 +43,18 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Web Push. Two payload shapes, both built by src/lib/push/web-push.ts:
-// - chat (sendChatPush): { title, body, conversationId } — admin-only,
-//   fires only for a subscription an admin explicitly created (see
-//   PushPermissionBanner.tsx).
-// - general (sendPushToUsers): { title, body, url } — any registered
-//   user who opted in (e.g. a newly published devotional).
+// Web Push. Two payload shapes, both built by src/lib/push/web-push.ts,
+// both carrying their own `url` now — chat (sendChatPush):
+// { title, body, conversationId, url }, general (sendPushToUsers):
+// { title, body, url }. `url` is always computed server-side, where the
+// real recipient (and, for chat, their real role — Ariel vs a regular
+// user) is actually known. This service worker has no notion of role at
+// all, so it must never guess a destination itself — a real bug found
+// here: this used to hardcode every chat notification's click target to
+// /admin/chat, which only Ariel can open; any regular user's chat push
+// (now much more common — Ariel can start a conversation with anyone,
+// not just reply to one) sent them to a page they'd immediately get
+// redirected away from.
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -65,22 +71,18 @@ self.addEventListener("push", (event) => {
       icon: "/icon-192.png",
       badge: "/icon-192.png",
       tag: payload.conversationId ? `chat-${payload.conversationId}` : payload.url,
-      data: { conversationId: payload.conversationId, url: payload.url },
+      data: { url: payload.url },
     })
   );
 });
 
 // Clicking the OS notification focuses an already-open tab if one
-// exists, or opens a new one — either way landing on whatever triggered
-// it: the conversation for a chat push (rule 14 of the original chat
-// prompt), or the payload's own `url` for a general one (e.g. the
-// devotional that was just published).
+// exists, or opens a new one — either way landing on the payload's own
+// `url`, never a URL this file computes itself.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const data = event.notification.data || {};
-  const targetUrl = data.conversationId
-    ? `/es/admin/chat?conversation=${data.conversationId}`
-    : data.url || "/es";
+  const targetUrl = data.url || "/es";
 
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {

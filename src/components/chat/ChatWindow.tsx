@@ -210,7 +210,9 @@ export function ChatWindow({
         {messages === null ? (
           <p className="mt-8 text-center text-sm text-muted">{t("loading")}</p>
         ) : messages.length === 0 ? (
-          <p className="mt-8 text-center text-sm text-muted">{t("empty")}</p>
+          <p className="mt-8 text-center text-sm text-muted">
+            {viewerRole === "admin" ? t("admin.emptyAdmin") : t("empty")}
+          </p>
         ) : (
           <ul className="flex flex-col gap-3">
             {messages.map((m) => {

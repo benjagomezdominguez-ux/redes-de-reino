@@ -658,6 +658,25 @@
       "noConversations": "No conversations yet.",
       "noMessagesYet": "No messages yet.",
       "selectConversation": "Pick a conversation to get started.",
+      "emptyAdmin": "No messages yet. Write the first one.",
+      "tabs": {
+        "conversations": "Conversations",
+        "newChat": "New message"
+      },
+      "newChat": {
+        "searchPlaceholder": "Search by name or email…",
+        "empty": "No registered users yet.",
+        "noResults": "No users found.",
+        "hasConversation": "Already has a conversation",
+        "openConversation": "Open conversation",
+        "sendMessage": "Send message",
+        "starting": "Opening…",
+        "errors": {
+          "unauthorized": "You don't have permission to start this conversation.",
+          "invalidTarget": "That user isn't available to chat with.",
+          "generic": "We couldn't start the conversation. Try again."
+        }
+      },
       "bell": {
         "ariaLabel": "Notifications",
         "title": "New messages",

@@ -17,7 +17,7 @@ const { sendChatPush, sendPushToUsers } = await import("./web-push");
 
 const originalEnv = { ...process.env };
 
-const NOTIFICATION = { title: "Nuevo mensaje", body: "hola", conversationId: "c1" };
+const NOTIFICATION = { title: "Nuevo mensaje", body: "hola", conversationId: "c1", url: "/chat" };
 
 beforeEach(() => {
   store = new FakeStore();

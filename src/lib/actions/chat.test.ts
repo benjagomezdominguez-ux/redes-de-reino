@@ -14,8 +14,14 @@ vi.mock("@/lib/push/web-push", () => ({ sendChatPush: sendChatPushMock }));
 // recipient-resolution logic is what's under test, not the RPC lookup.
 vi.mock("@/lib/chat/chat-admin-lookup", () => ({ getChatAdminId: getChatAdminIdMock }));
 
-const { getOrCreateConversation, sendMessage, markConversationRead, refreshAdminConversations, getMyUnreadCount } =
-  await import("./chat");
+const {
+  getOrCreateConversation,
+  adminStartConversation,
+  sendMessage,
+  markConversationRead,
+  refreshAdminConversations,
+  getMyUnreadCount,
+} = await import("./chat");
 
 const USER = { id: "user-1", email: "user@example.com", firstName: "Ana", lastName: "Gómez", role: "user" as const, status: "active" as const };
 const ADMIN = { id: "admin-1", email: "admin@example.com", firstName: "Ariel", lastName: "Gomez", role: "admin" as const, status: "active" as const };
@@ -79,6 +85,102 @@ describe("getOrCreateConversation", () => {
 
     expect(result).toBeNull();
     expect(store.tables.conversations ?? []).toHaveLength(0);
+  });
+});
+
+describe("adminStartConversation", () => {
+  it("CRITICAL: requires the chat-admin (Ariel) specifically — a regular user can never use this to start chats with other users (IDOR)", async () => {
+    getAuthProfileMock.mockResolvedValue(USER);
+
+    const result = await adminStartConversation("some-other-user-id");
+
+    expect(result).toEqual({ ok: false, errorKey: "unauthorized" });
+    expect(store.tables.conversations ?? []).toHaveLength(0);
+  });
+
+  it("CRITICAL: a different real admin (not Ariel) is refused exactly like a non-admin — this chat feature is private to Ariel specifically", async () => {
+    getAuthProfileMock.mockResolvedValue(OTHER_ADMIN);
+
+    const result = await adminStartConversation("some-user-id");
+
+    expect(result).toEqual({ ok: false, errorKey: "unauthorized" });
+    expect(store.tables.conversations ?? []).toHaveLength(0);
+  });
+
+  it("a deactivated admin is refused, not treated as Ariel", async () => {
+    getAuthProfileMock.mockResolvedValue({ ...ADMIN, status: "inactive" as const });
+
+    const result = await adminStartConversation("some-user-id");
+
+    expect(result).toEqual({ ok: false, errorKey: "unauthorized" });
+  });
+
+  it("CRITICAL: creates a brand-new conversation for a real user who never wrote first — the actual feature this adds", async () => {
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+    store.seed("profiles", [
+      { id: USER.id, first_name: USER.firstName, last_name: USER.lastName, role: "user", status: "active" },
+    ]);
+
+    const result = await adminStartConversation(USER.id);
+
+    expect(result.ok).toBe(true);
+    expect(store.tables.conversations).toHaveLength(1);
+    expect(store.tables.conversations[0]).toMatchObject({ user_id: USER.id });
+  });
+
+  it("CRITICAL: reuses the existing conversation instead of creating a duplicate when one already exists", async () => {
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+    store.seed("profiles", [
+      { id: USER.id, first_name: USER.firstName, last_name: USER.lastName, role: "user", status: "active" },
+    ]);
+    store.seed("conversations", [{ id: CONVERSATION_ID, user_id: USER.id }]);
+
+    const result = await adminStartConversation(USER.id);
+
+    expect(result).toEqual({ ok: true, conversationId: CONVERSATION_ID });
+    expect(store.tables.conversations).toHaveLength(1);
+  });
+
+  it("rejects a nonexistent target id instead of creating a conversation with no real owner", async () => {
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+
+    const result = await adminStartConversation("ghost-user-id");
+
+    expect(result).toEqual({ ok: false, errorKey: "invalidTarget" });
+    expect(store.tables.conversations ?? []).toHaveLength(0);
+  });
+
+  it("rejects a deactivated target account", async () => {
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+    store.seed("profiles", [{ id: USER.id, first_name: USER.firstName, last_name: USER.lastName, role: "user", status: "inactive" }]);
+
+    const result = await adminStartConversation(USER.id);
+
+    expect(result).toEqual({ ok: false, errorKey: "invalidTarget" });
+  });
+
+  it("CRITICAL: Ariel can never start a conversation with himself, even by targeting his own real id directly", async () => {
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+    store.seed("profiles", [{ id: ADMIN.id, first_name: ADMIN.firstName, last_name: ADMIN.lastName, role: "admin", status: "active" }]);
+
+    const result = await adminStartConversation(ADMIN.id);
+
+    expect(result).toEqual({ ok: false, errorKey: "invalidTarget" });
+    expect(store.tables.conversations ?? []).toHaveLength(0);
+  });
+
+  it("keeps separate conversations completely independent when Ariel starts chats with several different users", async () => {
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+    store.seed("profiles", [
+      { id: "user-a", first_name: "Ana", last_name: "Gómez", role: "user", status: "active" },
+      { id: "user-b", first_name: "Beto", last_name: "Diaz", role: "user", status: "active" },
+    ]);
+
+    const resultA = await adminStartConversation("user-a");
+    const resultB = await adminStartConversation("user-b");
+
+    expect(resultA.ok && resultB.ok && resultA.conversationId !== resultB.conversationId).toBe(true);
+    expect(store.tables.conversations).toHaveLength(2);
   });
 });
 
@@ -176,7 +278,7 @@ describe("sendMessage", () => {
     expect(result).toEqual({ status: "error", errorKey: "rateLimited" });
   });
 
-  it("a user's message pushes the real chat-admin account (Ariel), never the sender", async () => {
+  it("a user's message pushes the real chat-admin account (Ariel), never the sender, with a click target only Ariel can open", async () => {
     getAuthProfileMock.mockResolvedValue(USER);
     await sendMessage(CONVERSATION_ID, "mensaje de usuario");
 
@@ -184,11 +286,11 @@ describe("sendMessage", () => {
     expect(sendChatPushMock.mock.calls[0][0]).toMatchObject({
       recipientId: ADMIN.id,
       senderId: USER.id,
-      notification: { conversationId: CONVERSATION_ID },
+      notification: { conversationId: CONVERSATION_ID, url: `/admin/chat?conversation=${CONVERSATION_ID}` },
     });
   });
 
-  it("an admin's reply pushes the conversation's owner (the user), not the admin", async () => {
+  it("CRITICAL (regression): an admin's reply pushes the conversation's owner (the user), not the admin, with a click target the USER can actually open — the real bug: this used to always point at /admin/chat, which redirects a regular user away", async () => {
     getAuthProfileMock.mockResolvedValue(ADMIN);
     await sendMessage(CONVERSATION_ID, "respuesta de admin");
 
@@ -196,7 +298,36 @@ describe("sendMessage", () => {
     expect(sendChatPushMock.mock.calls[0][0]).toMatchObject({
       recipientId: USER.id,
       senderId: ADMIN.id,
-      notification: { conversationId: CONVERSATION_ID },
+      notification: { conversationId: CONVERSATION_ID, url: "/chat" },
+    });
+  });
+
+  it("CRITICAL (end-to-end, Case 1+5 of the audit): Ariel starts a conversation with a user who never wrote first, then sends the first message — it saves correctly and pushes the new user, not Ariel", async () => {
+    // A fresh conversation, not the one seeded by this describe block's
+    // beforeEach — exactly what adminStartConversation() produces for a
+    // user with no prior history.
+    const NEW_USER_ID = "brand-new-user";
+    store.seed("profiles", [{ id: NEW_USER_ID, first_name: "Nuevo", last_name: "Usuario", role: "user", status: "active" }]);
+    getAuthProfileMock.mockResolvedValue(ADMIN);
+
+    const started = await adminStartConversation(NEW_USER_ID);
+    expect(started.ok).toBe(true);
+    if (!started.ok) return;
+
+    const result = await sendMessage(started.conversationId, "¡Hola! Quería escribirte.");
+
+    expect(result.status).toBe("success");
+    expect(store.tables.messages).toHaveLength(1);
+    expect(store.tables.messages[0]).toMatchObject({
+      conversation_id: started.conversationId,
+      sender_id: ADMIN.id,
+      sender_role: "admin",
+    });
+    expect(sendChatPushMock).toHaveBeenCalledTimes(1);
+    expect(sendChatPushMock.mock.calls[0][0]).toMatchObject({
+      recipientId: NEW_USER_ID,
+      senderId: ADMIN.id,
+      notification: { url: "/chat" },
     });
   });
 

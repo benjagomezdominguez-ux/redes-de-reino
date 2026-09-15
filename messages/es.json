@@ -658,6 +658,25 @@
       "noConversations": "Todavía no hay conversaciones.",
       "noMessagesYet": "Sin mensajes todavía.",
       "selectConversation": "Elegí una conversación para empezar.",
+      "emptyAdmin": "Todavía no hay mensajes. Escribí el primer mensaje.",
+      "tabs": {
+        "conversations": "Conversaciones",
+        "newChat": "Nuevo mensaje"
+      },
+      "newChat": {
+        "searchPlaceholder": "Buscar por nombre o email…",
+        "empty": "No hay usuarios registrados todavía.",
+        "noResults": "No se encontraron usuarios.",
+        "hasConversation": "Ya tenés una conversación",
+        "openConversation": "Abrir conversación",
+        "sendMessage": "Enviar mensaje",
+        "starting": "Abriendo…",
+        "errors": {
+          "unauthorized": "No tenés permisos para iniciar esta conversación.",
+          "invalidTarget": "Ese usuario no está disponible para chatear.",
+          "generic": "No pudimos iniciar la conversación. Probá de nuevo."
+        }
+      },
       "bell": {
         "ariaLabel": "Notificaciones",
         "title": "Mensajes nuevos",

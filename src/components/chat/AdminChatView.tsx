@@ -5,9 +5,12 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import type { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 import { ChatWindow } from "@/components/chat/ChatWindow";
+import { NewChatPanel } from "@/components/chat/NewChatPanel";
 import { refreshAdminConversations } from "@/lib/actions/chat";
-import type { AdminConversationListItem } from "@/lib/admin/chat-queries";
+import type { AdminConversationListItem, NewChatCandidate } from "@/lib/admin/chat-queries";
 import { getSupabaseBrowserSessionClientReady } from "@/lib/supabase/browser-session";
+
+type Tab = "conversations" | "newChat";
 
 export function AdminChatView({
   initialConversations,
@@ -22,6 +25,7 @@ export function AdminChatView({
   const [selectedId, setSelectedId] = useState<string | null>(
     searchParams.get("conversation") ?? initialConversations[0]?.id ?? null
   );
+  const [tab, setTab] = useState<Tab>("conversations");
 
   useEffect(() => {
     let active = true;
@@ -91,35 +95,101 @@ export function AdminChatView({
 
   const selected = conversations.find((c) => c.id === selectedId) ?? null;
 
+  // Ariel picked (or was just given, via adminStartConversation) a
+  // conversation from the "Nuevo mensaje" tab. Switch to it immediately
+  // with an optimistic stub row instead of waiting on
+  // refreshAdminConversations() first (that's a full list reload —
+  // conversations + profiles + last messages + unread counts — slow
+  // enough in practice, confirmed by live testing, to leave the
+  // PREVIOUSLY selected conversation's live textarea on screen for
+  // several seconds after the click. A message typed in that window
+  // would silently land in the wrong, unrelated conversation — this is
+  // exactly what a live test run caught happening for real). The stub
+  // has everything ChatWindow needs (id, name, email); the follow-up
+  // refresh only reconciles accurate unread counts / last-message
+  // preview afterward, never blocks the switch itself.
+  function handleNewConversationReady(conversationId: string, candidate: NewChatCandidate) {
+    setConversations((prev) => {
+      if (prev.some((c) => c.id === conversationId)) return prev;
+      return [
+        {
+          id: conversationId,
+          userId: candidate.id,
+          userName: candidate.name,
+          userEmail: candidate.email,
+          lastMessage: null,
+          lastMessageAt: null,
+          unreadCount: 0,
+        },
+        ...prev,
+      ];
+    });
+    setSelectedId(conversationId);
+    setTab("conversations");
+
+    refreshAdminConversations().then(setConversations);
+  }
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-      <div className="flex max-h-[70vh] flex-col overflow-y-auto rounded-2xl border border-border bg-surface shadow-soft">
-        {conversations.length === 0 ? (
-          <p className="p-6 text-center text-sm text-muted">{t("admin.noConversations")}</p>
+      <div className="flex flex-col gap-3">
+        <div className="flex gap-2 rounded-full border border-border bg-surface p-1 shadow-soft" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "conversations"}
+            onClick={() => setTab("conversations")}
+            className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+              tab === "conversations" ? "bg-primary-900 text-white" : "text-primary-900/80 hover:bg-primary-900/5"
+            }`}
+          >
+            {t("admin.tabs.conversations")}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "newChat"}
+            onClick={() => setTab("newChat")}
+            className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+              tab === "newChat" ? "bg-primary-900 text-white" : "text-primary-900/80 hover:bg-primary-900/5"
+            }`}
+          >
+            {t("admin.tabs.newChat")}
+          </button>
+        </div>
+
+        {tab === "newChat" ? (
+          <NewChatPanel onConversationReady={handleNewConversationReady} />
         ) : (
-          <ul className="divide-y divide-border">
-            {conversations.map((c) => (
-              <li key={c.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedId(c.id)}
-                  className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors hover:bg-primary-900/5 ${
-                    selectedId === c.id ? "bg-primary-900/10" : ""
-                  }`}
-                >
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-text">{c.userName}</span>
-                    {c.unreadCount > 0 ? (
-                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1.5 text-[11px] font-semibold text-white">
-                        {c.unreadCount}
+          <div className="flex max-h-[70vh] flex-col overflow-y-auto rounded-2xl border border-border bg-surface shadow-soft">
+            {conversations.length === 0 ? (
+              <p className="p-6 text-center text-sm text-muted">{t("admin.noConversations")}</p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {conversations.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(c.id)}
+                      className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors hover:bg-primary-900/5 ${
+                        selectedId === c.id ? "bg-primary-900/10" : ""
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-text">{c.userName}</span>
+                        {c.unreadCount > 0 ? (
+                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1.5 text-[11px] font-semibold text-white">
+                            {c.unreadCount}
+                          </span>
+                        ) : null}
                       </span>
-                    ) : null}
-                  </span>
-                  <span className="line-clamp-1 text-xs text-muted">{c.lastMessage ?? t("admin.noMessagesYet")}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+                      <span className="line-clamp-1 text-xs text-muted">{c.lastMessage ?? t("admin.noMessagesYet")}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </div>
 

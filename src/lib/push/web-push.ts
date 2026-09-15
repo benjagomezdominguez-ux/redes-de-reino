@@ -26,6 +26,11 @@ export type ChatPushPayload = {
   title: string;
   body: string;
   conversationId: string;
+  // Where notificationclick navigates — computed by the caller (which
+  // knows the recipient's real role: Ariel vs a regular user), never
+  // guessed here or in the service worker. See sendMessage() in
+  // src/lib/actions/chat.ts.
+  url: string;
 };
 
 // A general notification for any registered user (e.g. "new devotional

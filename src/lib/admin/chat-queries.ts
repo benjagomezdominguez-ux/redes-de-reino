@@ -1,5 +1,6 @@
 import "server-only";
 import { getSupabaseSessionClient } from "@/lib/supabase/session";
+import { isChatAdmin } from "@/lib/chat/is-chat-admin";
 
 // Session client + RLS, not the admin/service-role client — same
 // reasoning as the rest of lib/admin/queries.ts: access is granted by
@@ -94,4 +95,55 @@ export async function getTotalUnreadForAdmin(): Promise<number> {
     .eq("sender_role", "user")
     .is("read_at", null);
   return count ?? 0;
+}
+
+export type NewChatCandidate = {
+  id: string;
+  name: string;
+  email: string | null;
+  // Set when this person already has a conversation — the UI uses this
+  // to show "Abrir conversación" instead of "Enviar mensaje", but the
+  // actual open-or-create decision is always re-made server-side in
+  // adminStartConversation() (src/lib/actions/chat.ts), never trusted
+  // from this list alone.
+  existingConversationId: string | null;
+};
+
+// Every real, active, registered account Ariel could start a chat with
+// — i.e. everyone except himself (or any other account that happens to
+// match the chat-admin name pattern, same exclusion
+// getOrCreateConversation()/adminStartConversation() already enforce).
+// Session client + RLS, same reasoning as the rest of this file — the
+// "any admin sees every profile" policy already backs the existing
+// /admin/users page, reused as-is rather than adding a second, narrower
+// policy for what is functionally the same read.
+export async function listUsersForNewChat(): Promise<NewChatCandidate[]> {
+  const supabase = await getSupabaseSessionClient();
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, email, role, status")
+    .eq("status", "active")
+    .order("first_name", { ascending: true });
+
+  const candidates = (profiles ?? []).filter(
+    (p) =>
+      !isChatAdmin({
+        role: p.role,
+        status: p.status,
+        firstName: p.first_name,
+        lastName: p.last_name,
+      })
+  );
+  if (candidates.length === 0) return [];
+
+  const { data: conversations } = await supabase.from("conversations").select("id, user_id");
+  const conversationIdByUser = new Map((conversations ?? []).map((c) => [c.user_id, c.id as string]));
+
+  return candidates.map((p) => ({
+    id: p.id,
+    name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.email || "Usuario",
+    email: p.email,
+    existingConversationId: conversationIdByUser.get(p.id) ?? null,
+  }));
 }

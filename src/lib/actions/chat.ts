@@ -3,7 +3,12 @@
 import { getAuthProfile, type AuthProfile } from "@/lib/supabase/get-profile";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendChatPush } from "@/lib/push/web-push";
-import { listConversationsForAdmin, type AdminConversationListItem } from "@/lib/admin/chat-queries";
+import {
+  listConversationsForAdmin,
+  listUsersForNewChat,
+  type AdminConversationListItem,
+  type NewChatCandidate,
+} from "@/lib/admin/chat-queries";
 import { isChatAdmin } from "@/lib/chat/is-chat-admin";
 import { getChatAdminId } from "@/lib/chat/chat-admin-lookup";
 
@@ -51,6 +56,72 @@ export async function getOrCreateConversation(): Promise<{ id: string } | null> 
     .single();
   if (error || !created) return null;
   return created;
+}
+
+export type AdminStartConversationResult =
+  | { ok: true; conversationId: string }
+  | { ok: false; errorKey: "unauthorized" | "invalidTarget" | "generic" };
+
+// Lets Ariel start a conversation with any real, active, registered user
+// — even one who has never written to him first. Reuses the exact same
+// conversations table/shape as getOrCreateConversation() above (one row
+// per non-admin user, unique on user_id): this is deliberately NOT a
+// second conversation system, just a second, admin-only way to arrive at
+// the same row. Idempotent — selecting an already-messaged user finds
+// and returns their existing conversation rather than creating a
+// duplicate, same guarantee getOrCreateConversation() gives a user
+// opening /chat more than once.
+//
+// requireChatAdmin()-equivalent check first, unconditionally: the
+// targetUserId a client sends is never trusted as-is — every property
+// that makes a target valid (exists, active, not the chat-admin himself)
+// is re-verified here against the real profiles row, server-side, every
+// call.
+export async function adminStartConversation(targetUserId: string): Promise<AdminStartConversationResult> {
+  const profile = await getAuthProfile();
+  if (!profile || profile.status !== "active" || !isChatAdmin(profile)) {
+    return { ok: false, errorKey: "unauthorized" };
+  }
+
+  const admin = getSupabaseAdminClient();
+
+  const { data: target } = await admin
+    .from("profiles")
+    .select("id, first_name, last_name, role, status")
+    .eq("id", targetUserId)
+    .maybeSingle();
+  if (!target || target.status !== "active") {
+    return { ok: false, errorKey: "invalidTarget" };
+  }
+  // Never a conversation with himself, or with some other account that
+  // happens to also match the chat-admin name pattern — same rule
+  // getOrCreateConversation() enforces for the "user opens /chat" side.
+  if (
+    isChatAdmin({
+      role: target.role,
+      status: target.status,
+      firstName: target.first_name,
+      lastName: target.last_name,
+    })
+  ) {
+    return { ok: false, errorKey: "invalidTarget" };
+  }
+
+  const { data: existing } = await admin
+    .from("conversations")
+    .select("id")
+    .eq("user_id", targetUserId)
+    .maybeSingle();
+  if (existing) return { ok: true, conversationId: existing.id };
+
+  const { data: created, error } = await admin
+    .from("conversations")
+    .insert({ user_id: targetUserId })
+    .select("id")
+    .single();
+  if (error || !created) return { ok: false, errorKey: "generic" };
+
+  return { ok: true, conversationId: created.id };
 }
 
 type ConversationAccess = { allowed: boolean; isOwner: boolean; ownerId: string | null };
@@ -152,6 +223,16 @@ export async function sendMessage(conversationId: string, content: string): Prom
   );
   if (recipientId && recipientId !== profile.id) {
     const senderName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || profile.email || "Alguien";
+    // Real bug fixed here: the service worker has no notion of "role",
+    // so it can't tell a chat push meant for Ariel apart from one meant
+    // for a regular user just from conversationId alone — it used to
+    // always send whoever clicked the notification to /admin/chat,
+    // which 403s/redirects a regular user (requireChatAdmin()-gated).
+    // The URL is computed HERE instead, where the recipient's identity
+    // is actually known: access.isOwner true means the sender is the
+    // conversation's own user, so the recipient is the chat-admin
+    // (Ariel) — otherwise the recipient is the conversation's user.
+    const url = access.isOwner ? `/admin/chat?conversation=${conversationId}` : "/chat";
     // Fire-and-forget on purpose — a push failure (or nothing configured
     // yet) must never fail the message send itself.
     sendChatPush({
@@ -161,6 +242,7 @@ export async function sendMessage(conversationId: string, content: string): Prom
         title: "Nuevo mensaje",
         body: `${senderName}: ${trimmed.slice(0, 120)}`,
         conversationId,
+        url,
       },
     }).catch((err) => console.error("chat push notify failed", err));
   } else {
@@ -199,6 +281,15 @@ export async function refreshAdminConversations(): Promise<AdminConversationList
   const profile = await getAuthProfile();
   if (!isChatAdmin(profile)) return [];
   return listConversationsForAdmin();
+}
+
+// Same reasoning as refreshAdminConversations() above — the "start a new
+// chat" user picker (a Client Component) needs a callable wrapper around
+// the plain server-only listUsersForNewChat().
+export async function listUsersToStartChat(): Promise<NewChatCandidate[]> {
+  const profile = await getAuthProfile();
+  if (!isChatAdmin(profile)) return [];
+  return listUsersForNewChat();
 }
 
 // For the Navbar's unread badge — deliberately does NOT call

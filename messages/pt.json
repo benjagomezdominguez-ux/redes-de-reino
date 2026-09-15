@@ -658,6 +658,25 @@
       "noConversations": "Ainda não há conversas.",
       "noMessagesYet": "Ainda não há mensagens.",
       "selectConversation": "Escolha uma conversa para começar.",
+      "emptyAdmin": "Ainda não há mensagens. Escreva a primeira.",
+      "tabs": {
+        "conversations": "Conversas",
+        "newChat": "Nova mensagem"
+      },
+      "newChat": {
+        "searchPlaceholder": "Buscar por nome ou email…",
+        "empty": "Ainda não há usuários registrados.",
+        "noResults": "Nenhum usuário encontrado.",
+        "hasConversation": "Já tem uma conversa",
+        "openConversation": "Abrir conversa",
+        "sendMessage": "Enviar mensagem",
+        "starting": "Abrindo…",
+        "errors": {
+          "unauthorized": "Você não tem permissão para iniciar esta conversa.",
+          "invalidTarget": "Esse usuário não está disponível para conversar.",
+          "generic": "Não conseguimos iniciar a conversa. Tente novamente."
+        }
+      },
       "bell": {
         "ariaLabel": "Notificações",
         "title": "Novas mensagens",
