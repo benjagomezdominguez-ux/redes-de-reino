@@ -33,6 +33,12 @@ export const navLinks = [
 const topNavKeys = new Set(["inicio", "devocionales", "instalar"]);
 export const topNavLinks = navLinks.filter((link) => topNavKeys.has(link.key));
 
+// The official Instagram profile — external, so it's rendered separately
+// from topNavLinks (target="_blank", absolute URL) rather than folded
+// into that internal-route data shape. Exactly the link given; never
+// invent or guess a different handle.
+export const instagramUrl = "https://www.instagram.com/rdrsalta?stkn=aWgxbmJ0ZHhqcjBw";
+
 export const pastors = [
   {
     name: "Ariel Gómez",

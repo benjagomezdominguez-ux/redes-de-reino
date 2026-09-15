@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { topNavLinks, site } from "@/lib/site-config";
+import { topNavLinks, site, instagramUrl } from "@/lib/site-config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
 import { signOut } from "@/lib/actions/auth";
@@ -12,6 +12,21 @@ import { NotificationBell } from "@/components/chat/NotificationBell";
 import { UserNotificationsBell } from "@/components/ui/UserNotificationsBell";
 
 type NavbarUser = { email: string | null; role: "user" | "admin"; isChatAdmin: boolean } | null;
+
+// Line-art glyph (matches CartIcon/account icon's stroke style below) —
+// deliberately not the traditional multicolor gradient. currentColor
+// means it inherits the same navy as every other nav item's text/hover
+// state, so it reads as part of Redes de Reino's own design rather than
+// a logo pasted in from Instagram itself.
+function InstagramIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.1" cy="6.9" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 function CartIcon({ count }: { count: number }) {
   return (
@@ -207,6 +222,17 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
                 </Link>
               </li>
             ))}
+            <li>
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium text-primary-900/80 transition-colors hover:text-primary-900"
+              >
+                <InstagramIcon />
+                {t("instagram")}
+              </a>
+            </li>
           </ul>
           <div className="flex items-center gap-3 border-l border-border pl-4">
             {user?.isChatAdmin ? <NotificationBell /> : null}
@@ -266,6 +292,18 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
                 </Link>
               </li>
             ))}
+            <li>
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 rounded-md px-3 py-3 text-base font-medium text-primary-900 hover:bg-primary-900/5"
+              >
+                <InstagramIcon />
+                {t("instagram")}
+              </a>
+            </li>
           </ul>
           <div className="mt-2 border-t border-border/80 pt-2">
             <AccountMenuMobile user={user} />

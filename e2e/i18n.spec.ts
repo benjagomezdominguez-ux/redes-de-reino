@@ -280,7 +280,7 @@ test.describe("structure — nav links work from any page, not just the home pag
     await expect(page.locator("#inicio")).toBeInViewport();
   });
 
-  test("the top nav shows exactly Inicio, Devocionales, Instalar App — Galería/Horarios/Pastores/Libros no longer appear there", async ({
+  test("the top nav shows exactly Inicio, Devocionales, Instalar app, Instagram — Galería/Horarios/Pastores/Libros no longer appear there", async ({
     page,
   }) => {
     await page.goto("/es");
@@ -290,7 +290,12 @@ test.describe("structure — nav links work from any page, not just the home pag
     for (const label of ["Inicio", "Devocionales"]) {
       await expect(nav(page).getByRole("link", { name: label, exact: true })).toBeVisible();
     }
-    await expect(nav(page).getByRole("link", { name: "Instalar app" })).toBeVisible();
+    await expect(nav(page).getByRole("link", { name: "Instalar app", exact: true })).toBeVisible();
+
+    const instagramLink = nav(page).getByRole("link", { name: "Instagram", exact: true });
+    await expect(instagramLink).toBeVisible();
+    await expect(instagramLink).toHaveAttribute("href", "https://www.instagram.com/rdrsalta?stkn=aWgxbmJ0ZHhqcjBw");
+    await expect(instagramLink).toHaveAttribute("target", "_blank");
   });
 
   test("the logo link also returns to the home page from a non-home page", async ({ page }) => {

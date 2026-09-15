@@ -59,13 +59,12 @@ describe("Navbar", () => {
     expect(document.getElementById("mobile-menu")).toBeNull();
   });
 
-  it("shows exactly Inicio, Devocionales, Instalar App — Galería/Horarios/Pastores/Libros are gone from both desktop and mobile nav", async () => {
+  it("shows exactly Inicio, Devocionales, Instalar app, Instagram — Galería/Horarios/Pastores/Libros are gone from both desktop and mobile nav", async () => {
     const user = userEvent.setup();
     renderNavbar();
 
     const removed = ["Galería", "Horarios", "Pastores", "Libros"];
-
-    const kept = ["Inicio", "Devocionales", "📱 Instalar app"];
+    const kept = ["Inicio", "Devocionales", "Instalar app", "Instagram"];
 
     const desktopNav = screen.getByRole("navigation", { name: "Navegación principal" });
     for (const label of kept) {
@@ -74,6 +73,15 @@ describe("Navbar", () => {
     for (const label of removed) {
       expect(within(desktopNav).queryByRole("link", { name: label })).toBeNull();
     }
+    // No phone emoji left on "Instalar app" — the accessible name above
+    // already asserts the exact text, but this double-checks no stray
+    // emoji character exists anywhere in the desktop nav's own text.
+    expect(within(desktopNav).queryByText("📱", { exact: false })).toBeNull();
+
+    const instagramDesktopLink = within(desktopNav).getByRole("link", { name: "Instagram" });
+    expect(instagramDesktopLink).toHaveAttribute("href", "https://www.instagram.com/rdrsalta?stkn=aWgxbmJ0ZHhqcjBw");
+    expect(instagramDesktopLink).toHaveAttribute("target", "_blank");
+    expect(instagramDesktopLink).toHaveAttribute("rel", "noopener noreferrer");
 
     await user.click(screen.getByRole("button", { name: "Abrir menú" }));
     const mobileMenu = document.getElementById("mobile-menu")!;
@@ -83,6 +91,9 @@ describe("Navbar", () => {
     for (const label of removed) {
       expect(within(mobileMenu).queryByRole("link", { name: label })).toBeNull();
     }
+
+    const instagramMobileLink = within(mobileMenu).getByRole("link", { name: "Instagram" });
+    expect(instagramMobileLink).toHaveAttribute("href", "https://www.instagram.com/rdrsalta?stkn=aWgxbmJ0ZHhqcjBw");
   });
 
   it("offers all three languages in the mobile menu's language switcher", async () => {
