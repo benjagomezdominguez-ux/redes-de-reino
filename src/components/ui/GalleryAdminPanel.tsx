@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -9,8 +9,6 @@ import {
   createGalleryImage,
   updateGalleryImage,
   replaceGalleryImagePhoto,
-  replaceGalleryMobileImage,
-  removeGalleryMobileImage,
   deleteGalleryImage,
 } from "@/lib/actions/admin-gallery";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -42,71 +40,7 @@ async function uploadPhoto(file: File): Promise<string | null> {
   return urlResult.path;
 }
 
-type PhotoFormInitial = {
-  id: string;
-  title: string;
-  altText: string;
-  objectPosition: string;
-  url: string;
-  mobileUrl: string | null;
-};
-
-// One labeled file input + its own live preview — used twice below, once
-// for the desktop (16:9) variant and once for the mobile (9:16) one. The
-// hint text is purely visual guidance (per spec: "no debe impedir cargar
-// una imagen si el sistema actual permite otros formatos") — it never
-// blocks or validates the actual aspect ratio.
-function ImageVariantField({
-  label,
-  hint,
-  currentUrl,
-  currentNote,
-  objectPosition,
-  onFileChange,
-  previewUrl,
-  extra,
-}: {
-  label: string;
-  hint: string;
-  currentUrl: string | null;
-  currentNote: string | null;
-  objectPosition: string;
-  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  previewUrl: string | null;
-  extra?: ReactNode;
-}) {
-  const t = useTranslations("admin.gallery");
-  const displayedPreview = previewUrl ?? currentUrl;
-
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
-        {label}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={onFileChange}
-          className={inputClasses}
-        />
-      </label>
-      <p className="text-xs text-muted">{hint}</p>
-      {currentNote ? <p className="text-xs text-muted">{currentNote}</p> : null}
-      {displayedPreview ? (
-        <div className="relative h-40 w-full max-w-xs overflow-hidden rounded-lg bg-surface">
-          <Image
-            src={displayedPreview}
-            alt={t("preview")}
-            fill
-            unoptimized={Boolean(previewUrl)}
-            className="object-cover"
-            style={{ objectPosition: objectPosition || "center" }}
-          />
-        </div>
-      ) : null}
-      {extra}
-    </div>
-  );
-}
+type PhotoFormInitial = { id: string; title: string; altText: string; objectPosition: string; url: string };
 
 function PhotoForm({
   mode,
@@ -124,69 +58,31 @@ function PhotoForm({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [altText, setAltText] = useState(initial?.altText ?? "");
   const [objectPosition, setObjectPosition] = useState(initial?.objectPosition ?? "");
-  const [desktopFile, setDesktopFile] = useState<File | null>(null);
-  const [desktopPreviewUrl, setDesktopPreviewUrl] = useState<string | null>(null);
-  const [mobileFile, setMobileFile] = useState<File | null>(null);
-  const [mobilePreviewUrl, setMobilePreviewUrl] = useState<string | null>(null);
-  // True once the admin explicitly asks to remove the mobile image in
-  // this edit session — distinct from "never had one", so the removal
-  // Server Action is only called when there's actually something to
-  // remove.
-  const [mobileRemoved, setMobileRemoved] = useState(false);
-  const [removingMobile, setRemovingMobile] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [errorKey, setErrorKey] = useState<ErrorKey | null>(null);
 
-  // Revoke the previous object URLs whenever they're replaced or the
-  // form unmounts — they're only ever used for these in-progress
-  // previews.
+  // Revoke the previous object URL whenever it's replaced or the form
+  // unmounts — it's only ever used for this in-progress preview.
   useEffect(() => {
     return () => {
-      if (desktopPreviewUrl) URL.revokeObjectURL(desktopPreviewUrl);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
-  }, [desktopPreviewUrl]);
-  useEffect(() => {
-    return () => {
-      if (mobilePreviewUrl) URL.revokeObjectURL(mobilePreviewUrl);
-    };
-  }, [mobilePreviewUrl]);
+  }, [previewUrl]);
 
-  function handleDesktopFileChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selected = event.target.files?.[0] ?? null;
-    if (desktopPreviewUrl) URL.revokeObjectURL(desktopPreviewUrl);
-    setDesktopFile(selected);
-    setDesktopPreviewUrl(selected ? URL.createObjectURL(selected) : null);
-  }
-
-  function handleMobileFileChange(event: ChangeEvent<HTMLInputElement>) {
-    const selected = event.target.files?.[0] ?? null;
-    if (mobilePreviewUrl) URL.revokeObjectURL(mobilePreviewUrl);
-    setMobileFile(selected);
-    setMobilePreviewUrl(selected ? URL.createObjectURL(selected) : null);
-    if (selected) setMobileRemoved(false);
-  }
-
-  async function handleRemoveMobile() {
-    if (!initial) return;
-    setRemovingMobile(true);
-    const result = await removeGalleryMobileImage(initial.id);
-    setRemovingMobile(false);
-    if (!result.ok) {
-      setErrorKey(result.errorKey);
-      return;
-    }
-    if (mobilePreviewUrl) URL.revokeObjectURL(mobilePreviewUrl);
-    setMobileFile(null);
-    setMobilePreviewUrl(null);
-    setMobileRemoved(true);
-    router.refresh();
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setFile(selected);
+    setPreviewUrl(selected ? URL.createObjectURL(selected) : null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorKey(null);
 
-    if (mode === "create" && !desktopFile) {
+    if (mode === "create" && !file) {
       setErrorKey("required");
       return;
     }
@@ -195,50 +91,27 @@ function PhotoForm({
     const metadata = { title, altText, objectPosition };
 
     if (mode === "create") {
-      const uploadedDesktopPath = await uploadPhoto(desktopFile!);
-      if (!uploadedDesktopPath) {
+      const uploadedPath = await uploadPhoto(file!);
+      if (!uploadedPath) {
         setErrorKey("invalidFile");
         setPending(false);
         return;
       }
-      let uploadedMobilePath: string | null = null;
-      if (mobileFile) {
-        uploadedMobilePath = await uploadPhoto(mobileFile);
-        if (!uploadedMobilePath) {
-          setErrorKey("invalidFile");
-          setPending(false);
-          return;
-        }
-      }
-      const result = await createGalleryImage(uploadedDesktopPath, metadata, uploadedMobilePath);
+      const result = await createGalleryImage(uploadedPath, metadata);
       if (!result.ok) {
         setErrorKey(result.errorKey);
         setPending(false);
         return;
       }
     } else if (initial) {
-      if (desktopFile) {
-        const uploadedPath = await uploadPhoto(desktopFile);
+      if (file) {
+        const uploadedPath = await uploadPhoto(file);
         if (!uploadedPath) {
           setErrorKey("invalidFile");
           setPending(false);
           return;
         }
         const replaceResult = await replaceGalleryImagePhoto(initial.id, uploadedPath);
-        if (!replaceResult.ok) {
-          setErrorKey(replaceResult.errorKey);
-          setPending(false);
-          return;
-        }
-      }
-      if (mobileFile) {
-        const uploadedPath = await uploadPhoto(mobileFile);
-        if (!uploadedPath) {
-          setErrorKey("invalidFile");
-          setPending(false);
-          return;
-        }
-        const replaceResult = await replaceGalleryMobileImage(initial.id, uploadedPath);
         if (!replaceResult.ok) {
           setErrorKey(replaceResult.errorKey);
           setPending(false);
@@ -258,50 +131,36 @@ function PhotoForm({
     onSaved();
   }
 
-  const hasMobile = Boolean(mobileFile || (initial?.mobileUrl && !mobileRemoved));
+  const displayedPreview = previewUrl ?? initial?.url ?? null;
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-alt p-5">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <ImageVariantField
-          label={t("desktopPhoto")}
-          hint={t("desktopPhotoHint")}
-          currentUrl={initial?.url ?? null}
-          currentNote={initial?.url && !desktopPreviewUrl ? t("photoCurrent") : null}
-          objectPosition={objectPosition}
-          onFileChange={handleDesktopFileChange}
-          previewUrl={desktopPreviewUrl}
-        />
-        <ImageVariantField
-          label={t("mobilePhoto")}
-          hint={`${t("mobilePhotoHint")} — ${t("mobilePhotoOptional")}`}
-          currentUrl={initial?.mobileUrl && !mobileRemoved ? initial.mobileUrl : null}
-          currentNote={
-            !hasMobile
-              ? t("mobilePhotoNotSet")
-              : initial?.mobileUrl && !mobilePreviewUrl && !mobileRemoved
-                ? t("photoCurrent")
-                : null
-          }
-          objectPosition={objectPosition}
-          onFileChange={handleMobileFileChange}
-          previewUrl={mobilePreviewUrl}
-          extra={
-            mode === "edit" && initial?.mobileUrl && !mobileRemoved ? (
-              <button
-                type="button"
-                onClick={handleRemoveMobile}
-                disabled={removingMobile}
-                className={`${dangerButtonClasses} self-start`}
-              >
-                {removingMobile ? t("removingMobilePhoto") : t("removeMobilePhoto")}
-              </button>
-            ) : null
-          }
-        />
-      </div>
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
+            {mode === "create" ? t("photoRequired") : t("photo")}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileChange}
+              className={inputClasses}
+            />
+          </label>
+          <p className="text-xs text-muted">{t("photoAnyFormat")}</p>
+          {initial?.url && !previewUrl ? <p className="text-xs text-muted">{t("photoCurrent")}</p> : null}
+          {displayedPreview ? (
+            <div className="relative w-full max-w-xs overflow-hidden rounded-lg bg-surface">
+              <Image
+                src={displayedPreview}
+                alt={t("preview")}
+                width={320}
+                height={320}
+                unoptimized={Boolean(previewUrl)}
+                className="h-auto max-h-60 w-full object-contain"
+              />
+            </div>
+          ) : null}
+        </div>
         <label className="flex flex-col gap-1.5 text-sm font-medium text-primary-900">
           {t("title")}
           <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClasses} />
@@ -392,7 +251,6 @@ export function GalleryAdminPanel({ images }: { images: GalleryImageWithUrl[] })
                       altText: image.alt_text ?? "",
                       objectPosition: image.object_position ?? "",
                       url: image.url,
-                      mobileUrl: image.mobileUrl,
                     }}
                     onCancel={() => setEditingId(null)}
                     onSaved={() => setEditingId(null)}
@@ -403,33 +261,13 @@ export function GalleryAdminPanel({ images }: { images: GalleryImageWithUrl[] })
 
             return (
               <div key={image.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 shadow-soft">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <div className="relative h-40 w-full overflow-hidden rounded-lg bg-surface-alt">
-                      <Image
-                        src={image.url}
-                        alt={image.alt_text ?? ""}
-                        fill
-                        className="object-cover"
-                        style={{ objectPosition: image.object_position ?? "center" }}
-                      />
-                    </div>
-                    <p className="text-center text-xs text-muted">{t("desktopPhoto")}</p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <div className="relative h-40 w-full overflow-hidden rounded-lg bg-surface-alt">
-                      <Image
-                        src={image.mobileUrl ?? image.url}
-                        alt={image.alt_text ?? ""}
-                        fill
-                        className="object-cover"
-                        style={{ objectPosition: image.object_position ?? "center" }}
-                      />
-                    </div>
-                    <p className="text-center text-xs text-muted">
-                      {image.mobileUrl ? t("mobilePhoto") : t("mobilePhotoNotSet")}
-                    </p>
-                  </div>
+                <div className="relative h-40 w-full overflow-hidden rounded-lg bg-surface-alt">
+                  <Image
+                    src={image.url}
+                    alt={image.alt_text ?? ""}
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <p className="truncate text-sm font-medium text-text">{image.title || t("untitled")}</p>
 
