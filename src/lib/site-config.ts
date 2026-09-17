@@ -80,10 +80,11 @@ export const meetings: Meeting[] = [
   { dayKey: "miercoles", title: "Trascender", time: "20:00 PM", description: null },
 ];
 
-// Only the CBU was actually provided — never invent a bank name or
-// account holder to go with it (rule 59). Shown to the buyer only inside
-// the checkout's bank-transfer step.
+// Only the alias was actually provided — never invent a bank name or
+// account holder to go with it (rule 59; this used to be a CBU, replaced
+// per explicit request — the alias is not a secret). Shown to the buyer
+// only inside the checkout's bank-transfer step.
 export const bankTransfer = {
-  cbu: "5333 0500 1537 5571",
+  alias: "redeslibros.mp",
 };
 

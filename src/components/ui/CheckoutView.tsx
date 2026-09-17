@@ -7,6 +7,7 @@ import { createOrder, type CheckoutState } from "@/lib/actions/checkout";
 import { bankTransfer } from "@/lib/site-config";
 import { countries } from "@/lib/checkout/countries";
 import { Link } from "@/i18n/navigation";
+import { CopyAliasButton } from "@/components/ui/CopyAliasButton";
 import { formatPrice } from "@/lib/books/format-price";
 
 const initialState: CheckoutState = { status: "idle" };
@@ -64,8 +65,12 @@ export function CheckoutView({ onlinePaymentAvailable }: { onlinePaymentAvailabl
               <p className="font-semibold text-primary-900">{t("transfer.instructionsTitle")}</p>
               <dl className="mt-3 flex flex-col gap-2">
                 <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">CBU</dt>
-                  <dd className="font-mono">{bankTransfer.cbu}</dd>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    {t("transfer.alias")}
+                  </dt>
+                  <dd className="mt-1">
+                    <CopyAliasButton alias={bankTransfer.alias} />
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-muted">

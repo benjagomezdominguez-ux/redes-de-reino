@@ -109,6 +109,10 @@
       },
       "transfer": {
         "instructionsTitle": "Dados para transferência",
+        "alias": "Alias para fazer a transferência",
+        "copyAlias": "Copiar alias",
+        "aliasCopied": "Alias copiado",
+        "aliasCopyFallback": "Selecionamos o alias para você — copie com Ctrl+C (ou mantenha pressionado e escolha \"Copiar\" no celular).",
         "amount": "Valor a transferir",
         "reference": "Referência do seu pedido",
         "instructionsBody": "Use essa referência na descrição da transferência. Assim que confirmarmos o pagamento, seu livro vai aparecer em Minha Biblioteca.",

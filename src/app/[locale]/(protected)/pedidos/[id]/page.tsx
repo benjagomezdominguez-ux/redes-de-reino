@@ -5,6 +5,7 @@ import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
 import { Link } from "@/i18n/navigation";
 import { TransferProofForm } from "@/components/ui/TransferProofForm";
+import { CopyAliasButton } from "@/components/ui/CopyAliasButton";
 import { getOrderDetail } from "@/lib/admin/queries";
 import { formatPrice } from "@/lib/books/format-price";
 import { bankTransfer } from "@/lib/site-config";
@@ -114,8 +115,12 @@ export default async function OrderDetailPage({
                     <p className="font-semibold text-primary-900">{tCheckout("transfer.instructionsTitle")}</p>
                     <dl className="mt-3 flex flex-col gap-2">
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted">CBU</dt>
-                        <dd className="font-mono">{bankTransfer.cbu}</dd>
+                        <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+                          {tCheckout("transfer.alias")}
+                        </dt>
+                        <dd className="mt-1">
+                          <CopyAliasButton alias={bankTransfer.alias} />
+                        </dd>
                       </div>
                       <div>
                         <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
