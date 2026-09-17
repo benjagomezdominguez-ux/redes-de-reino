@@ -632,6 +632,12 @@
       "title": "Acesso negado",
       "body": "Você não tem permissão para ver esta página.",
       "cta": "Voltar ao início"
+    },
+    "staleVersion": "Há uma nova versão do aplicativo. Atualizando…",
+    "unexpected": {
+      "title": "Algo deu errado",
+      "body": "Ocorreu um erro inesperado. Tente recarregar a página.",
+      "cta": "Recarregar página"
     }
   },
   "common": {

@@ -632,6 +632,12 @@
       "title": "Acceso denegado",
       "body": "No tenés permisos para ver esta página.",
       "cta": "Volver al inicio"
+    },
+    "staleVersion": "Hay una nueva versión de la aplicación. Actualizando…",
+    "unexpected": {
+      "title": "Algo salió mal",
+      "body": "Ocurrió un error inesperado. Probá recargar la página.",
+      "cta": "Recargar página"
     }
   },
   "common": {

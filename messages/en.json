@@ -632,6 +632,12 @@
       "title": "Access denied",
       "body": "You don't have permission to view this page.",
       "cta": "Back to home"
+    },
+    "staleVersion": "There's a new version of the app. Updating…",
+    "unexpected": {
+      "title": "Something went wrong",
+      "body": "An unexpected error occurred. Try reloading the page.",
+      "cta": "Reload page"
     }
   },
   "common": {
