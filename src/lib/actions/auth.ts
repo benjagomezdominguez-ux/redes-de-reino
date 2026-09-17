@@ -26,6 +26,7 @@ export type AuthFormState = {
     | "passwordMismatch"
     | "required"
     | "accountDisabled"
+    | "rateLimited"
     | "generic";
 };
 
@@ -103,9 +104,18 @@ export async function signUp(
   });
 
   if (error) {
-    const errorKey = error.message.toLowerCase().includes("already")
+    // Supabase's own email-sending rate limit (its default SMTP is
+    // heavily throttled) — surfaced as "email rate limit exceeded" /
+    // status 429. Distinguishing it matters: it looks and feels
+    // identical to a random glitch ("Algo salió mal. Probá de nuevo.")
+    // otherwise, when it's actually a known, temporary, non-retriable-
+    // right-now condition the user should just wait out.
+    const message = error.message.toLowerCase();
+    const errorKey = message.includes("already")
       ? "emailInUse"
-      : "generic";
+      : message.includes("rate limit") || error.status === 429
+        ? "rateLimited"
+        : "generic";
     return { status: "error", errorKey };
   }
 

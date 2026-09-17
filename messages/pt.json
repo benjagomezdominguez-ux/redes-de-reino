@@ -207,7 +207,8 @@
       "passwordMismatch": "As senhas não coincidem.",
       "required": "Preencha todos os campos.",
       "generic": "Algo deu errado. Tente novamente.",
-      "accountDisabled": "Sua conta está desativada. Entre em contato com um administrador."
+      "accountDisabled": "Sua conta está desativada. Entre em contato com um administrador.",
+      "rateLimited": "Muitos emails foram enviados em pouco tempo. Aguarde alguns minutos e tente novamente."
     }
   },
   "account": {

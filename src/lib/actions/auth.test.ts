@@ -195,6 +195,26 @@ describe("signUp", () => {
 
     expect(result).toEqual({ status: "error", errorKey: "emailInUse" });
   });
+
+  it("CRITICAL (regression): a real, live-reproduced Supabase email rate limit error maps to rateLimited, not the generic catch-all that hides it", async () => {
+    signUpMock.mockResolvedValue({
+      error: { message: "email rate limit exceeded", status: 429 },
+      data: {},
+    });
+
+    const result = await signUp(
+      { status: "idle" },
+      buildFormData({
+        email: "a@b.com",
+        password: "correct1",
+        confirmPassword: "correct1",
+        firstName: "Ana",
+        lastName: "Gómez",
+      })
+    );
+
+    expect(result).toEqual({ status: "error", errorKey: "rateLimited" });
+  });
 });
 
 describe("requestPasswordReset", () => {

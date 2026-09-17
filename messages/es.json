@@ -207,7 +207,8 @@
       "passwordMismatch": "Las contraseñas no coinciden.",
       "required": "Completá todos los campos.",
       "generic": "Algo salió mal. Probá de nuevo.",
-      "accountDisabled": "Tu cuenta está desactivada. Contactá a un administrador."
+      "accountDisabled": "Tu cuenta está desactivada. Contactá a un administrador.",
+      "rateLimited": "Se enviaron demasiados emails en poco tiempo. Esperá unos minutos y probá de nuevo."
     }
   },
   "account": {

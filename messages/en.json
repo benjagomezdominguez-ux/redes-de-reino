@@ -207,7 +207,8 @@
       "passwordMismatch": "Passwords don't match.",
       "required": "Please fill in every field.",
       "generic": "Something went wrong. Please try again.",
-      "accountDisabled": "Your account is deactivated. Please contact an administrator."
+      "accountDisabled": "Your account is deactivated. Please contact an administrator.",
+      "rateLimited": "Too many emails were sent in a short time. Wait a few minutes and try again."
     }
   },
   "account": {
