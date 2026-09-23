@@ -24,7 +24,8 @@
   },
   "hero": {
     "logoAlt": "{name} emblem, {location}",
-    "tagline": "A network of people growing in faith, united in community, living with purpose."
+    "tagline": "A network of people growing in faith, united in community, living with purpose.",
+    "scrollCue": "Scroll to discover more"
   },
   "schedule": {
     "eyebrow": "Schedule",

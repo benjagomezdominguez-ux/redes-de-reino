@@ -2,8 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion } from "motion/react";
 import { Link } from "@/i18n/navigation";
 import { ChatNavBadge } from "@/components/chat/ChatNavBadge";
+import { useSafeReducedMotion } from "@/lib/motion/use-safe-reduced-motion";
 
 // Pages where a global "talk to Ariel" affordance is either wrong (auth
 // flows, where there's no account yet to attach a conversation to) or
@@ -29,29 +31,38 @@ function isHidden(pathname: string | null): boolean {
 export function PastorChatFloatingButton() {
   const pathname = usePathname();
   const t = useTranslations("chat.floatingButton");
+  const reduceMotion = useSafeReducedMotion();
 
   if (isHidden(pathname)) return null;
 
   return (
-    <Link
-      href="/chat"
-      aria-label={t("ariaLabel")}
-      className="fixed right-4 z-40 inline-flex items-center gap-2 rounded-full bg-primary-900 py-3 pl-4 pr-5 text-sm font-semibold text-white shadow-lifted transition-transform duration-200 hover:-translate-y-0.5 hover:bg-primary-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary-500 sm:right-6"
+    <motion.div
+      className="fixed right-4 z-40 sm:right-6"
       style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
+      initial={reduceMotion ? undefined : { opacity: 0, scale: 0.8, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      whileTap={reduceMotion ? undefined : { scale: 0.95 }}
     >
-      <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-          <path
-            d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H10l-4.5 4V16h-.5A2.5 2.5 0 0 1 4 13.5v-8Z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <span className="absolute -right-1.5 -top-1.5">
-          <ChatNavBadge />
+      <Link
+        href="/chat"
+        aria-label={t("ariaLabel")}
+        className="inline-flex items-center gap-2 rounded-full bg-primary-900 py-3 pl-4 pr-5 text-sm font-semibold text-white shadow-lifted transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-800 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary-500"
+      >
+        <span className="relative inline-flex h-5 w-5 shrink-0 items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path
+              d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H10l-4.5 4V16h-.5A2.5 2.5 0 0 1 4 13.5v-8Z"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span className="absolute -right-1.5 -top-1.5">
+            <ChatNavBadge />
+          </span>
         </span>
-      </span>
-      <span className="whitespace-nowrap">{t("label")}</span>
-    </Link>
+        <span className="whitespace-nowrap">{t("label")}</span>
+      </Link>
+    </motion.div>
   );
 }

@@ -25,12 +25,12 @@ export async function Gallery() {
   return (
     <section id="galeria" className="flex justify-center px-4 py-6 sm:px-6 sm:py-8">
       {image ? (
-        <div className="w-fit max-w-full overflow-hidden rounded-2xl bg-primary-900 shadow-lifted">
+        <div className="group w-fit max-w-full overflow-hidden rounded-2xl bg-primary-900 shadow-lifted transition-shadow duration-300 hover:shadow-[0_4px_10px_rgb(28_31_43_/_0.06),_0_28px_56px_rgb(28_31_43_/_0.16)]">
           {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop) needs the image's real dimensions, which next/image's fill mode doesn't expose */}
           <img
             src={image.url}
             alt={alt}
-            className="block h-auto max-h-[75vh] w-auto max-w-full rounded-2xl"
+            className="block h-auto max-h-[75vh] w-auto max-w-full rounded-2xl transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         </div>
       ) : (

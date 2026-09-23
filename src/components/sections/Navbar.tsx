@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { AnimatePresence, motion } from "motion/react";
 import { topNavLinks, site, instagramUrl } from "@/lib/site-config";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useCart } from "@/lib/cart/CartContext";
@@ -249,13 +250,13 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
           <CartIcon count={itemCount} />
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-md p-2 text-primary-900"
+            className="inline-flex items-center justify-center rounded-md p-2 text-primary-900 transition-colors active:bg-primary-900/10"
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? t("closeMenu") : t("openMenu")}
             onClick={() => setOpen((v) => !v)}
           >
-            <svg
+            <motion.svg
               width="24"
               height="24"
               viewBox="0 0 24 24"
@@ -264,55 +265,65 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
               strokeWidth="2"
               strokeLinecap="round"
               aria-hidden="true"
+              animate={{ rotate: open ? 90 : 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             >
               {open ? (
                 <path d="M6 6l12 12M18 6L6 18" />
               ) : (
                 <path d="M4 7h16M4 12h16M4 17h16" />
               )}
-            </svg>
+            </motion.svg>
           </button>
         </div>
       </nav>
 
-      {open ? (
-        <div
-          id="mobile-menu"
-          className="border-t border-border/80 bg-background px-6 pb-6 lg:hidden"
-        >
-          <ul className="flex flex-col gap-1 pt-4">
-            {topNavLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={`/${locale}${link.href}`}
-                  onClick={() => setOpen(false)}
-                  className="block rounded-md px-3 py-3 text-base font-medium text-primary-900 hover:bg-primary-900/5"
-                >
-                  {t(link.key)}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-md px-3 py-3 text-base font-medium text-primary-900 hover:bg-primary-900/5"
-              >
-                <InstagramIcon />
-                {t("instagram")}
-              </a>
-            </li>
-          </ul>
-          <div className="mt-2 border-t border-border/80 pt-2">
-            <AccountMenuMobile user={user} />
-          </div>
-          <div className="mt-2 border-t border-border/80 pt-2">
-            <LanguageSwitcher variant="mobile" />
-          </div>
-        </div>
-      ) : null}
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            id="mobile-menu"
+            className="overflow-hidden border-t border-border/80 bg-background lg:hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="px-6 pb-6">
+              <ul className="flex flex-col gap-1 pt-4">
+                {topNavLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={`/${locale}${link.href}`}
+                      onClick={() => setOpen(false)}
+                      className="block rounded-md px-3 py-3 text-base font-medium text-primary-900 transition-colors hover:bg-primary-900/5 active:bg-primary-900/10"
+                    >
+                      {t(link.key)}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-3 py-3 text-base font-medium text-primary-900 transition-colors hover:bg-primary-900/5 active:bg-primary-900/10"
+                  >
+                    <InstagramIcon />
+                    {t("instagram")}
+                  </a>
+                </li>
+              </ul>
+              <div className="mt-2 border-t border-border/80 pt-2">
+                <AccountMenuMobile user={user} />
+              </div>
+              <div className="mt-2 border-t border-border/80 pt-2">
+                <LanguageSwitcher variant="mobile" />
+              </div>
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </header>
   );
 }

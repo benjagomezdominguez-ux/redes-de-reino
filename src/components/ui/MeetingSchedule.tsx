@@ -1,4 +1,5 @@
 import type { Meeting } from "@/lib/site-config";
+import { StaggerGrid } from "@/components/ui/motion/StaggerGrid";
 
 export function MeetingSchedule({
   meetings,
@@ -12,11 +13,11 @@ export function MeetingSchedule({
   pendingLabel: string;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+    <StaggerGrid className="grid grid-cols-1 gap-6 sm:grid-cols-3">
       {meetings.map((meeting, index) => (
         <div
           key={index}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-6 text-center shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
+          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-6 text-center shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
         >
           <span className="text-sm font-semibold uppercase tracking-[0.14em] text-secondary-600">
             {meeting.dayKey ? dayLabels[meeting.dayKey] : pendingLabel}
@@ -32,6 +33,6 @@ export function MeetingSchedule({
           ) : null}
         </div>
       ))}
-    </div>
+    </StaggerGrid>
   );
 }

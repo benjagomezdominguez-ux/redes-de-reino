@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { detectDeviceKind, isStandalone, type DeviceKind } from "@/lib/pwa/device";
 import { hasDeferredInstallPrompt, subscribeToInstallPrompt, triggerInstallPrompt } from "@/lib/pwa/install-prompt";
+import { StaggerGrid } from "@/components/ui/motion/StaggerGrid";
 
 const CARD_ORDER: { kind: DeviceKind; icon: string }[] = [
   { kind: "ios", icon: "📱" },
@@ -82,7 +83,7 @@ function DeviceCard({ kind, icon, isCurrent }: { kind: DeviceKind; icon: string;
 
   return (
     <div
-      className={`flex flex-col gap-4 rounded-2xl border p-6 shadow-soft sm:p-8 ${
+      className={`flex h-full flex-col gap-4 rounded-2xl border p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-8 ${
         isCurrent ? "border-primary-900/40 bg-primary-900/5" : "border-border bg-surface"
       }`}
     >
@@ -147,11 +148,11 @@ export function InstallGuide() {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <StaggerGrid className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {orderedCards.map((card) => (
           <DeviceCard key={card.kind} kind={card.kind} icon={card.icon} isCurrent={card.kind === deviceKind} />
         ))}
-      </div>
+      </StaggerGrid>
     </div>
   );
 }

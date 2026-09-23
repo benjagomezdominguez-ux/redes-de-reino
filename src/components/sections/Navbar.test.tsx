@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 import esMessages from "../../../messages/es.json";
@@ -56,7 +56,10 @@ describe("Navbar", () => {
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Cerrar menú" }));
-    expect(document.getElementById("mobile-menu")).toBeNull();
+    // The mobile menu now animates closed (AnimatePresence exit) instead
+    // of disappearing on the same tick, so its removal from the DOM is
+    // asserted asynchronously rather than immediately after the click.
+    await waitFor(() => expect(document.getElementById("mobile-menu")).toBeNull());
   });
 
   it("shows exactly Inicio, Devocionales, Instalar app, Instagram — Galería/Horarios/Pastores/Libros are gone from both desktop and mobile nav", async () => {

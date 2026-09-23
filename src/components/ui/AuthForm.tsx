@@ -8,7 +8,7 @@ import { signIn, signUp, type AuthFormState } from "@/lib/actions/auth";
 const initialState: AuthFormState = { status: "idle" };
 
 const inputClasses =
-  "w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-muted focus-visible:outline-2 focus-visible:outline-secondary-500";
+  "w-full rounded-lg border border-border bg-surface px-4 py-2.5 text-sm text-text placeholder:text-muted transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-secondary-500 focus-visible:border-secondary-500";
 
 function PasswordField({
   name,
@@ -116,7 +116,7 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex items-center justify-center rounded-full bg-primary-900 px-6 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-800 disabled:opacity-60"
+        className="inline-flex items-center justify-center rounded-full bg-primary-900 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-primary-800 active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         {mode === "login" ? t("loginCta") : t("signupCta")}
       </button>

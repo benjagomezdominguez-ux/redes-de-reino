@@ -17,3 +17,19 @@ class IntersectionObserverStub {
 
 // @ts-expect-error -- minimal test stub, not a spec-complete implementation
 globalThis.IntersectionObserver = IntersectionObserverStub;
+
+// jsdom also has no matchMedia. useSafeReducedMotion (and anything else
+// checking prefers-reduced-motion) needs it to exist; reports "not
+// reduced" by default, same as a real browser with no OS preference set.
+if (!window.matchMedia) {
+  window.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  }) as unknown as MediaQueryList;
+}

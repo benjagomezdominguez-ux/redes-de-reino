@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { BookCard } from "@/components/ui/BookCard";
+import { StaggerGrid } from "@/components/ui/motion/StaggerGrid";
 import { getActiveProducts } from "@/lib/books/queries";
 
 export async function Books() {
@@ -18,11 +19,11 @@ export async function Books() {
             {t("emptyCatalog")}
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <StaggerGrid className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {products.map((product) => (
               <BookCard key={product.id} product={product} />
             ))}
-          </div>
+          </StaggerGrid>
         )}
       </Container>
     </section>

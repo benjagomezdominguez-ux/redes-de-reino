@@ -23,15 +23,15 @@ export async function BookCard({ product }: { product: Product }) {
   const physicalPrice = formatPrice(product.physical_price_cents, product.currency);
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted">
-      <div className="relative aspect-[3/4] w-full bg-surface-alt">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-surface-alt">
         {product.cover_url ? (
           <Image
             src={product.cover_url}
             alt={product.title ?? t("pendingField")}
             fill
             sizes="(min-width: 1024px) 25vw, 50vw"
-            className="object-cover"
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-sm text-muted">

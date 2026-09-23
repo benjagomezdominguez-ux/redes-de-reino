@@ -2,6 +2,7 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/ui/Container";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { StaggerGrid } from "@/components/ui/motion/StaggerGrid";
 import { pastors } from "@/lib/site-config";
 
 export async function Pastors() {
@@ -12,11 +13,11 @@ export async function Pastors() {
       <Container className="flex flex-col gap-12">
         <SectionHeading align="center" eyebrow={t("eyebrow")} title={t("title")} />
 
-        <div className="mx-auto grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-2">
+        <StaggerGrid className="mx-auto grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-2">
           {pastors.map((pastor) => (
             <div
               key={pastor.name}
-              className="flex flex-col items-center gap-4 rounded-2xl bg-surface p-8 text-center shadow-soft transition-transform duration-200 hover:-translate-y-1 hover:shadow-lifted"
+              className="flex flex-col items-center gap-4 rounded-2xl bg-surface p-8 text-center shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               {pastor.photo ? (
                 <Image
@@ -44,7 +45,7 @@ export async function Pastors() {
               </div>
             </div>
           ))}
-        </div>
+        </StaggerGrid>
       </Container>
     </section>
   );

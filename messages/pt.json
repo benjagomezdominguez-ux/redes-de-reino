@@ -24,7 +24,8 @@
   },
   "hero": {
     "logoAlt": "Emblema da {name}, {location}",
-    "tagline": "Uma rede de pessoas crescendo na fé, unidas em comunidade, vivendo com propósito."
+    "tagline": "Uma rede de pessoas crescendo na fé, unidas em comunidade, vivendo com propósito.",
+    "scrollCue": "Deslize para descobrir mais"
   },
   "schedule": {
     "eyebrow": "Horários",
