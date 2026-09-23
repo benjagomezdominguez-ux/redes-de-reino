@@ -188,7 +188,7 @@ export function Navbar({ user = null }: { user?: NavbarUser }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-border/80 bg-background">
       <nav
         aria-label={t("ariaLabel")}
         className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-6 py-3 sm:px-8"
