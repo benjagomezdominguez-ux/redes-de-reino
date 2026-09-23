@@ -11,11 +11,21 @@ import { ServiceWorkerRegistration } from "./ServiceWorkerRegistration";
 // brand-new visitor (no prior controller yet) must never be force-
 // reloaded by this — that would just be an unnecessary flicker on
 // every first-ever visit.
+//
+// Also covers a real gap found while investigating a report that a
+// fix wasn't visible in production for some users: the browser only
+// checks for a new SW version on navigation — a PWA resumed from the
+// app switcher (not relaunched) never navigates at all, so it can
+// silently keep running arbitrarily old JS. registration.update()
+// forces that check on demand instead of waiting for it to happen on
+// its own.
 function mockServiceWorkerContainer({ hasController }: { hasController: boolean }) {
   const listeners: Record<string, Array<() => void>> = {};
+  const updateMock = vi.fn().mockResolvedValue(undefined);
+  const registration = { update: updateMock };
   const container = {
     controller: hasController ? {} : null,
-    register: vi.fn().mockResolvedValue({}),
+    register: vi.fn().mockResolvedValue(registration),
     addEventListener: vi.fn((event: string, handler: () => void) => {
       (listeners[event] ??= []).push(handler);
     }),
@@ -23,6 +33,7 @@ function mockServiceWorkerContainer({ hasController }: { hasController: boolean 
   Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: container });
   return {
     container,
+    updateMock,
     fireControllerChange: () => listeners["controllerchange"]?.forEach((h) => h()),
   };
 }
@@ -60,5 +71,37 @@ describe("ServiceWorkerRegistration — safe update reload", () => {
     await waitFor(() => expect(container.register).toHaveBeenCalledWith("/sw.js"));
 
     expect(container.addEventListener).not.toHaveBeenCalled();
+  });
+
+  it("CRITICAL: proactively checks for an update on mount, not just reactively after one is found", async () => {
+    const { updateMock } = mockServiceWorkerContainer({ hasController: true });
+
+    render(<ServiceWorkerRegistration />);
+
+    await waitFor(() => expect(updateMock).toHaveBeenCalledTimes(1));
+  });
+
+  it("CRITICAL: re-checks for an update whenever the page regains visibility (a PWA resumed from the background never navigates, so nothing else would trigger this)", async () => {
+    const { updateMock } = mockServiceWorkerContainer({ hasController: true });
+
+    render(<ServiceWorkerRegistration />);
+    await waitFor(() => expect(updateMock).toHaveBeenCalledTimes(1));
+
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" });
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    await waitFor(() => expect(updateMock).toHaveBeenCalledTimes(2));
+  });
+
+  it("does not check for an update when the page becomes hidden", async () => {
+    const { updateMock } = mockServiceWorkerContainer({ hasController: true });
+
+    render(<ServiceWorkerRegistration />);
+    await waitFor(() => expect(updateMock).toHaveBeenCalledTimes(1));
+
+    Object.defineProperty(document, "visibilityState", { configurable: true, value: "hidden" });
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    expect(updateMock).toHaveBeenCalledTimes(1);
   });
 });
