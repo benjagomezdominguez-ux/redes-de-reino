@@ -53,8 +53,15 @@ const AVOID_ZONE_HEIGHT = 96;
 // same rest position — and on short viewports that position has the last
 // card sitting right where this button floats, indefinitely, not just in
 // transit. Elements opt in with `data-avoid-fab="true"` (Schedule.tsx,
-// Pastors.tsx); this observes whether any of them currently reach into
-// the button's footprint and hides it for as long as that's true.
+// Pastors.tsx); this checks whether any of them currently reach into the
+// button's own footprint (its known bottom offset, not its live —
+// possibly already-faded-out — rect) and hides it for as long as that's
+// true. Plain getBoundingClientRect() comparisons on scroll/resize,
+// rAF-throttled, rather than IntersectionObserver: a fixed-zone
+// rootMargin is easy to get backwards (shrinking from the wrong edge
+// silently watches the top of the viewport instead of the bottom), and
+// this is cheap enough — at most a couple of marked elements — to just
+// measure directly.
 function useAvoidingMarkedContent(): boolean {
   const [avoiding, setAvoiding] = useState(false);
 
@@ -62,34 +69,28 @@ function useAvoidingMarkedContent(): boolean {
     const targets = Array.from(document.querySelectorAll('[data-avoid-fab="true"]'));
     if (targets.length === 0) return;
 
-    const intersecting = new Set<Element>();
-    let observer: IntersectionObserver | undefined;
-
-    function setup() {
-      observer?.disconnect();
-      intersecting.clear();
-      const bottomMargin = Math.max(window.innerHeight - AVOID_ZONE_HEIGHT, 0);
-      observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) intersecting.add(entry.target);
-            else intersecting.delete(entry.target);
-          }
-          setAvoiding(intersecting.size > 0);
-        },
-        { rootMargin: `0px 0px -${bottomMargin}px 0px`, threshold: 0 },
-      );
-      targets.forEach((target) => observer?.observe(target));
+    let scheduled = false;
+    function check() {
+      scheduled = false;
+      const zoneTop = window.innerHeight - AVOID_ZONE_HEIGHT;
+      const overlapping = targets.some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.bottom > zoneTop && r.top < window.innerHeight;
+      });
+      setAvoiding(overlapping);
+    }
+    function scheduleCheck() {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(check);
     }
 
-    setup();
-    // The button's footprint is a fixed viewport region, so it needs
-    // recomputing whenever the viewport itself resizes (rotation, the
-    // mobile URL bar collapsing/expanding, etc.).
-    window.addEventListener("resize", setup);
+    check();
+    window.addEventListener("scroll", scheduleCheck, { passive: true });
+    window.addEventListener("resize", scheduleCheck);
     return () => {
-      window.removeEventListener("resize", setup);
-      observer?.disconnect();
+      window.removeEventListener("scroll", scheduleCheck);
+      window.removeEventListener("resize", scheduleCheck);
     };
   }, []);
 
