@@ -22,7 +22,7 @@ export async function Schedule() {
     <section id="horarios" className="bg-surface-alt py-20 sm:py-28">
       <Container className="flex flex-col gap-12">
         <div className="flex flex-col gap-4">
-          <SectionHeading eyebrow={t("eyebrow")} title={t("title")} />
+          <SectionHeading align="center" eyebrow={t("eyebrow")} title={t("title")} />
           <p className="mx-auto max-w-2xl text-center text-lg sm:text-xl text-balance text-muted">
             {t("description")}
           </p>
