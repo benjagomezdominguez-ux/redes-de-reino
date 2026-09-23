@@ -72,6 +72,15 @@
 
 html {
   scroll-behavior: smooth;
+  /* iOS Safari can automatically inflate font sizes on rotation/zoom
+     heuristics unless this is set explicitly — a standard mobile-Safari
+     hardening property that was missing entirely from this reset.
+     Doesn't change anything measured in this session's live testing
+     (font sizes/rects already matched Chromium exactly), but closes a
+     real, verified gap in how this site handles the one platform the
+     ongoing reports point to. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {

@@ -14,14 +14,19 @@ import { useSafeReducedMotion } from "@/lib/motion/use-safe-reduced-motion";
 export function StaggerGrid({
   children,
   className = "",
+  ...rest
 }: {
   children: ReactNode;
   className?: string;
-}) {
+} & Record<`data-${string}`, string>) {
   const reduceMotion = useSafeReducedMotion();
 
   if (reduceMotion) {
-    return <div className={className}>{children}</div>;
+    return (
+      <div className={className} {...rest}>
+        {children}
+      </div>
+    );
   }
 
   return (
@@ -31,6 +36,7 @@ export function StaggerGrid({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
+      {...rest}
     >
       {Children.map(children, (child) => (
         // flex + h-full: a grid item stretches to the row's height by
