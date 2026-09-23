@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listAllProducts } from "@/lib/admin/book-queries";
 import { Link } from "@/i18n/navigation";
@@ -52,10 +51,13 @@ export default async function AdminBooksPage({
               {products.map((product) => (
                 <tr key={product.id} className="border-b border-border last:border-0">
                   <td className="px-6 py-4">
-                    <div className="relative h-16 w-12 overflow-hidden rounded bg-surface-alt">
+                    <div className="w-12 overflow-hidden rounded bg-surface-alt">
                       {product.cover_url ? (
-                        <Image src={product.cover_url} alt="" fill className="object-cover" />
-                      ) : null}
+                        // eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop); same pattern as BookCard.tsx/Gallery.tsx
+                        <img src={product.cover_url} alt="" className="block h-auto w-full" />
+                      ) : (
+                        <div className="h-16 w-12" aria-hidden="true" />
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-text">

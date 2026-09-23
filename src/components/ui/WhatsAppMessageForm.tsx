@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { saveMessage, requestMessageImageUploadUrl, attachMessageImage } from "@/lib/actions/admin-whatsapp";
@@ -124,8 +123,9 @@ export function WhatsAppMessageForm({
           <input name="image" type="file" accept="image/jpeg,image/png,image/webp" className={inputClasses} />
         </label>
         {message?.image_url ? (
-          <div className="relative h-32 w-24 overflow-hidden rounded bg-surface-alt">
-            <Image src={message.image_url} alt="" fill className="object-cover" unoptimized />
+          <div className="w-24 overflow-hidden rounded bg-surface-alt">
+            {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop) for an arbitrary admin-uploaded campaign image; same pattern as BookCard.tsx/Gallery.tsx */}
+            <img src={message.image_url} alt="" className="block h-auto w-full" />
           </div>
         ) : null}
       </fieldset>

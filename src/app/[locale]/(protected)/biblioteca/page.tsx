@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
@@ -128,13 +127,13 @@ export default async function LibraryPage({
                   key={`granted-${entitlement.product_id}`}
                   className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6 shadow-soft"
                 >
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-alt">
+                  <div className="w-full overflow-hidden rounded-lg bg-surface-alt">
                     {entitlement.products?.cover_url ? (
-                      <Image
+                      // eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop); same pattern as BookCard.tsx/Gallery.tsx
+                      <img
                         src={entitlement.products.cover_url}
                         alt={entitlement.products.title ?? ""}
-                        fill
-                        className="object-cover"
+                        className="block h-auto w-full"
                       />
                     ) : null}
                   </div>
@@ -159,13 +158,13 @@ export default async function LibraryPage({
                   key={`pending-${entry.product_id}`}
                   className="flex flex-col gap-3 rounded-2xl border border-dashed border-border bg-surface-alt p-6 opacity-80"
                 >
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface">
+                  <div className="w-full overflow-hidden rounded-lg bg-surface">
                     {entry.products?.cover_url ? (
-                      <Image
+                      // eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop); same pattern as BookCard.tsx/Gallery.tsx
+                      <img
                         src={entry.products.cover_url}
                         alt={entry.products.title ?? ""}
-                        fill
-                        className="object-cover grayscale"
+                        className="block h-auto w-full grayscale"
                       />
                     ) : null}
                   </div>
@@ -190,13 +189,13 @@ export default async function LibraryPage({
                   key={`rejected-${entry.product_id}`}
                   className="flex flex-col gap-3 rounded-2xl border border-dashed border-error/30 bg-error/5 p-6 opacity-80"
                 >
-                  <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg bg-surface-alt">
+                  <div className="w-full overflow-hidden rounded-lg bg-surface-alt">
                     {entry.products?.cover_url ? (
-                      <Image
+                      // eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop); same pattern as BookCard.tsx/Gallery.tsx
+                      <img
                         src={entry.products.cover_url}
                         alt={entry.products.title ?? ""}
-                        fill
-                        className="object-cover grayscale"
+                        className="block h-auto w-full grayscale"
                       />
                     ) : null}
                   </div>

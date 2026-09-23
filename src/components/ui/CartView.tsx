@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCart } from "@/lib/cart/CartContext";
@@ -34,9 +33,10 @@ export function CartView() {
             key={`${item.productId}:${item.modality}`}
             className="flex gap-4 rounded-2xl border border-border bg-surface p-4 shadow-soft"
           >
-            <div className="relative h-24 w-18 shrink-0 overflow-hidden rounded-lg bg-surface-alt">
+            <div className="w-18 shrink-0 self-start overflow-hidden rounded-lg bg-surface-alt">
               {item.coverUrl ? (
-                <Image src={item.coverUrl} alt={item.title} fill className="object-cover" />
+                // eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop) needs the cover's real dimensions; same pattern as BookCard.tsx/Gallery.tsx
+                <img src={item.coverUrl} alt={item.title} className="block h-auto w-full" />
               ) : null}
             </div>
             <div className="flex flex-1 flex-col gap-1">
