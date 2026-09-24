@@ -48,12 +48,27 @@ export function StaggerGrid({
       {...props}
     >
       {Children.map(children, (child) => (
-        // flex + h-full: a grid item stretches to the row's height by
-        // default, but that stretch would otherwise stop at this
-        // wrapper — cards that rely on filling their cell (BookCard's
-        // mt-auto-pinned buy button) need the actual card to inherit
-        // that height too, not just the wrapper around it.
-        <motion.div variants={staggerItem} className="flex h-full">
+        // flex + h-full stretches this wrapper to the grid row's full
+        // height (a CSS Grid item's cross-axis default) — but the actual
+        // card inside it is a flex ITEM of this wrapper's row-direction
+        // flex container, and a flex item's *main* axis (width, here)
+        // does NOT stretch by default the way the cross axis (height)
+        // does: with flex-grow:0 and no explicit width, a card sizes to
+        // its own content instead of filling the column. That was a real,
+        // previously-undetected bug — none of Horarios/Pastores/
+        // InstallGuide's card components set `w-full` themselves, so
+        // e.g. a short "Bases" card rendered visibly narrower than a
+        // long "Reunión General" one in the very same 3-column row
+        // (measured live: 182px vs 241px in a 272px column). Libros
+        // happened to look fine only by accident — a cover photo's own
+        // large intrinsic width forced the shrink-to-fit calculation up
+        // to the column's full width anyway.
+        //
+        // [&>*]:w-full forces the direct child (whatever card component
+        // it is) to 100% width here, at the one shared wrapper, rather
+        // than requiring every current and future StaggerGrid consumer
+        // to remember `w-full` on its own card markup.
+        <motion.div variants={staggerItem} className="flex h-full [&>*]:w-full">
           {child}
         </motion.div>
       ))}
