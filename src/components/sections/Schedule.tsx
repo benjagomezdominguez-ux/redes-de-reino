@@ -28,18 +28,13 @@ export async function Schedule() {
           </p>
         </div>
 
-        {/* data-avoid-fab: the floating "Habla con el pastor" button hides
-            itself while this grid occupies its bottom-corner footprint —
-            see PastorChatFloatingButton.tsx. Without it, landing here via
-            the navbar's #horarios anchor link parks the button directly
-            over the last meeting's title/time on every visit. */}
-        <div data-avoid-fab="true">
-          <MeetingSchedule
-            meetings={meetings}
-            dayLabels={dayLabels}
-            pendingLabel={tCommon("pending")}
-          />
-        </div>
+        {/* MeetingSchedule renders a StaggerGrid, which now marks itself
+            data-avoid-fab by default — see StaggerGrid.tsx. */}
+        <MeetingSchedule
+          meetings={meetings}
+          dayLabels={dayLabels}
+          pendingLabel={tCommon("pending")}
+        />
       </Container>
     </section>
   );

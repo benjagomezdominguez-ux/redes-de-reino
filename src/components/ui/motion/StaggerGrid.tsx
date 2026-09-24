@@ -11,6 +11,14 @@ import { useSafeReducedMotion } from "@/lib/motion/use-safe-reduced-motion";
 // enters in sequence on scroll, without touching the cards' own markup.
 // Each top-level child becomes its own animated item; the grid/flex
 // classes that used to sit on the plain wrapper move here unchanged.
+//
+// data-avoid-fab defaults to "true" here (not opt-in per section): every
+// StaggerGrid is, by definition, a grid of cards a visitor scrolls
+// through, which is exactly the content PastorChatFloatingButton.tsx
+// needs to avoid covering. Marking it per-consumer instead once let the
+// Libros grid go unmarked and get missed — the button visibly sat on a
+// book cover there while Horarios/Pastores were already fixed. Callers
+// can still pass their own `data-avoid-fab` to override.
 export function StaggerGrid({
   children,
   className = "",
@@ -20,10 +28,11 @@ export function StaggerGrid({
   className?: string;
 } & Record<`data-${string}`, string>) {
   const reduceMotion = useSafeReducedMotion();
+  const props = { "data-avoid-fab": "true", ...rest };
 
   if (reduceMotion) {
     return (
-      <div className={className} {...rest}>
+      <div className={className} {...props}>
         {children}
       </div>
     );
@@ -36,7 +45,7 @@ export function StaggerGrid({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
-      {...rest}
+      {...props}
     >
       {Children.map(children, (child) => (
         // flex + h-full: a grid item stretches to the row's height by

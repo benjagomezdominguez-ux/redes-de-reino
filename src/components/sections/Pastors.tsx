@@ -13,13 +13,10 @@ export async function Pastors() {
       <Container className="flex flex-col gap-12">
         <SectionHeading align="center" eyebrow={t("eyebrow")} title={t("title")} />
 
-        {/* data-avoid-fab: see PastorChatFloatingButton.tsx — without it,
-            landing here via the navbar's #pastores anchor link parks the
-            button directly over Gabriela's name/role on every visit. */}
-        <StaggerGrid
-          className="mx-auto grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-2"
-          data-avoid-fab="true"
-        >
+        {/* StaggerGrid marks itself data-avoid-fab by default now — see
+            its own comment — so the floating chat button knows to hide
+            itself rather than park over Gabriela's name/role. */}
+        <StaggerGrid className="mx-auto grid max-w-3xl grid-cols-1 gap-8 sm:grid-cols-2">
           {pastors.map((pastor) => (
             <div
               key={pastor.name}

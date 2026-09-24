@@ -52,15 +52,21 @@ const AVOID_ZONE_HEIGHT = 96;
 // (see site-config.ts), so every visitor who taps them lands at the exact
 // same rest position — and on short viewports that position has the last
 // card sitting right where this button floats, indefinitely, not just in
-// transit. Elements opt in with `data-avoid-fab="true"` (Schedule.tsx,
-// Pastors.tsx); this checks whether any of them currently reach into the
-// button's own footprint (its known bottom offset, not its live —
-// possibly already-faded-out — rect) and hides it for as long as that's
-// true. Plain getBoundingClientRect() comparisons on scroll/resize,
-// rAF-throttled, rather than IntersectionObserver: a fixed-zone
-// rootMargin is easy to get backwards (shrinking from the wrong edge
-// silently watches the top of the viewport instead of the bottom), and
-// this is cheap enough — at most a couple of marked elements — to just
+// transit. Elements opt in with `data-avoid-fab="true"` — StaggerGrid
+// marks itself with it by default (see StaggerGrid.tsx), so every card
+// grid on the site (Horarios, Pastores, Libros, the PWA install guide)
+// is covered automatically rather than needing each section to remember
+// to opt in — Libros didn't, the first time this shipped, and the
+// button visibly sat on a book cover there while the other two sections
+// were already fixed. This checks whether any marked element currently
+// reaches into the button's own footprint (its known bottom offset, not
+// its live — possibly already-faded-out — rect) and hides it for as
+// long as that's true. Plain getBoundingClientRect() comparisons on
+// scroll/resize, rAF-throttled, rather than IntersectionObserver: a
+// fixed-zone rootMargin is easy to get backwards (shrinking from the
+// wrong edge silently watches the top of the viewport instead of the
+// bottom — this project's own first attempt at this did exactly that),
+// and this is cheap enough — a handful of marked elements — to just
 // measure directly.
 function useAvoidingMarkedContent(): boolean {
   const [avoiding, setAvoiding] = useState(false);
