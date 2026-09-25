@@ -70,6 +70,22 @@
   --shadow-lifted: 0 4px 10px rgb(28 31 43 / 0.06), 0 20px 40px rgb(28 31 43 / 0.10);
 }
 
+/* Subtle per-row entrance for lists that reveal after an async load (e.g.
+   DevotionalViewersPanel's viewer list) — a plain @keyframes so Tailwind's
+   arbitrary `animate-[fade-in_...]` utility can reference it; disabled via
+   motion-reduce: at each call site rather than here, same split
+   Reveal.tsx already uses for its own transition. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 html {
   scroll-behavior: smooth;
   /* iOS Safari can automatically inflate font sizes on rotation/zoom

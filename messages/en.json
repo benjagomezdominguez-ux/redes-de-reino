@@ -600,11 +600,27 @@
         "created": "Created",
         "published": "Published",
         "updated": "Updated",
+        "views": "Views",
         "actions": "Actions"
       },
       "status": {
         "draft": "Draft",
         "published": "Published"
+      },
+      "views": {
+        "count": "{count, plural, =0 {Nobody has viewed this devotional yet} =1 {1 person viewed this devotional} other {# people viewed this devotional}}",
+        "trigger": "See who viewed it",
+        "title": "Who viewed this devotional",
+        "close": "Close",
+        "searchLabel": "Search person",
+        "searchPlaceholder": "Search person…",
+        "loading": "Loading…",
+        "empty": "This devotional has no views yet.",
+        "noResults": "No one matches your search.",
+        "error": "We could not load the views. Please try again.",
+        "retry": "Retry",
+        "loadMore": "Load more",
+        "viewedTimes": "Viewed {count} times"
       },
       "errors": {
         "generic": "We could not complete the action. Please try again."

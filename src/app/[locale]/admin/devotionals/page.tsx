@@ -1,9 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listAllDevotionals } from "@/lib/admin/devotional-queries";
+import { getDevotionalViewCounts } from "@/lib/admin/devotional-view-queries";
 import { requireChatAdmin } from "@/lib/supabase/require-auth";
 import { Link } from "@/i18n/navigation";
 import { DevotionalStatusButton } from "@/components/ui/DevotionalStatusButton";
 import { DevotionalDeleteButton } from "@/components/ui/DevotionalDeleteButton";
+import { DevotionalViewersPanel } from "@/components/ui/DevotionalViewersPanel";
 import { getDevotionalExcerpt } from "@/components/ui/DevotionalContent";
 
 // Devotionals are administered exclusively by Ariel Gómez (see the
@@ -21,6 +23,11 @@ export default async function AdminDevotionalsPage({
   const t = await getTranslations("admin.devotionals");
 
   const devotionals = await listAllDevotionals();
+  // One query for the whole page's counts (never one COUNT per row) — see
+  // getDevotionalViewCounts()'s own comment. Loaded here, at the list
+  // page, unconditionally; the full per-viewer list behind "Ver quiénes
+  // lo vieron" is what stays lazy (see DevotionalViewersPanel).
+  const viewCounts = await getDevotionalViewCounts(devotionals.map((d) => d.id));
 
   return (
     <div className="flex flex-col gap-4">
@@ -40,7 +47,7 @@ export default async function AdminDevotionalsPage({
         </p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-soft">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[1080px] text-left text-sm">
             <thead className="border-b border-border text-xs font-semibold uppercase tracking-wide text-muted">
               <tr>
                 <th className="px-6 py-4">{t("columns.title")}</th>
@@ -49,6 +56,7 @@ export default async function AdminDevotionalsPage({
                 <th className="px-6 py-4">{t("columns.created")}</th>
                 <th className="px-6 py-4">{t("columns.published")}</th>
                 <th className="px-6 py-4">{t("columns.updated")}</th>
+                <th className="px-6 py-4">{t("columns.views")}</th>
                 <th className="px-6 py-4">{t("columns.actions")}</th>
               </tr>
             </thead>
@@ -81,6 +89,13 @@ export default async function AdminDevotionalsPage({
                   </td>
                   <td className="px-6 py-4 text-muted">
                     {new Date(devotional.updated_at).toLocaleDateString(locale)}
+                  </td>
+                  <td className="px-6 py-4">
+                    <DevotionalViewersPanel
+                      devotionalId={devotional.id}
+                      devotionalTitle={devotional.title}
+                      initialCount={viewCounts.get(devotional.id) ?? 0}
+                    />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap items-center gap-2">

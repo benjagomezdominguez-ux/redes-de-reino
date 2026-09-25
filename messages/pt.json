@@ -600,11 +600,27 @@
         "created": "Criado",
         "published": "Publicado",
         "updated": "Modificado",
+        "views": "Visualizações",
         "actions": "Ações"
       },
       "status": {
         "draft": "Rascunho",
         "published": "Publicado"
+      },
+      "views": {
+        "count": "{count, plural, =0 {Ninguém viu este devocional ainda} =1 {1 pessoa viu este devocional} other {# pessoas viram este devocional}}",
+        "trigger": "Ver quem viu",
+        "title": "Quem viu este devocional",
+        "close": "Fechar",
+        "searchLabel": "Buscar pessoa",
+        "searchPlaceholder": "Buscar pessoa…",
+        "loading": "Carregando…",
+        "empty": "Este devocional ainda não tem visualizações.",
+        "noResults": "Ninguém corresponde à busca.",
+        "error": "Não foi possível carregar as visualizações. Tente novamente.",
+        "retry": "Tentar novamente",
+        "loadMore": "Carregar mais",
+        "viewedTimes": "Visto {count} vezes"
       },
       "errors": {
         "generic": "Não foi possível concluir a ação. Tente novamente."

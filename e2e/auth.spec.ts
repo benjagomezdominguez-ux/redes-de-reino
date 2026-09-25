@@ -19,6 +19,8 @@ const PROTECTED_PATHS = [
   "/es/admin/orders",
   "/es/admin/books",
   "/es/admin/books/new",
+  "/es/admin/devotionals",
+  "/es/admin/devotionals/new",
   "/es/admin/whatsapp",
   "/es/admin/whatsapp/groups",
   "/es/admin/whatsapp/groups/new",

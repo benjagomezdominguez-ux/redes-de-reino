@@ -4,8 +4,10 @@ import { NavbarWithAuth } from "@/components/sections/NavbarWithAuth";
 import { Footer } from "@/components/sections/Footer";
 import { Container } from "@/components/ui/Container";
 import { DevotionalContent } from "@/components/ui/DevotionalContent";
+import { RecordDevotionalView } from "@/components/ui/RecordDevotionalView";
 import { Link } from "@/i18n/navigation";
 import { getPublishedDevotionalById } from "@/lib/devotionals/queries";
+import { getAuthProfile } from "@/lib/supabase/get-profile";
 
 export default async function DevotionalReadPage({
   params,
@@ -16,6 +18,13 @@ export default async function DevotionalReadPage({
 
   const devotional = await getPublishedDevotionalById(id);
   if (!devotional) notFound();
+
+  // Devotionals are public — this page never gates on auth (see
+  // getPublishedDevotionalById's own RLS-backed policy). Anonymous
+  // visitors read exactly as before; RecordDevotionalView only mounts
+  // for a real signed-in profile, and never blocks anything either way —
+  // see that component's own comment.
+  const profile = await getAuthProfile();
 
   return (
     <>
@@ -46,6 +55,7 @@ export default async function DevotionalReadPage({
           </article>
         </Container>
       </main>
+      {profile ? <RecordDevotionalView devotionalId={devotional.id} /> : null}
       <Footer />
     </>
   );
