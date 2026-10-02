@@ -217,7 +217,8 @@
       "required": "Preencha todos os campos.",
       "generic": "Algo deu errado. Tente novamente.",
       "accountDisabled": "Sua conta está desativada. Entre em contato com um administrador.",
-      "rateLimited": "Muitos emails foram enviados em pouco tempo. Aguarde alguns minutos e tente novamente."
+      "rateLimited": "Muitos emails foram enviados em pouco tempo. Aguarde alguns minutos e tente novamente.",
+      "confirmationNotSent": "Não conseguimos confirmar que o email foi enviado. Tente novamente em alguns minutos."
     }
   },
   "account": {

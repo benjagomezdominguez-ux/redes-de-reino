@@ -142,7 +142,10 @@ describe("signUp", () => {
   });
 
   it("passes first/last name as user metadata and an /auth/callback redirect, never a role", async () => {
-    signUpMock.mockResolvedValue({ error: null, data: { session: null } });
+    signUpMock.mockResolvedValue({
+      error: null,
+      data: { session: null, user: { id: "user-1", confirmation_sent_at: "2026-01-01T00:00:00Z" } },
+    });
 
     await signUp(
       { status: "idle" },
@@ -164,7 +167,10 @@ describe("signUp", () => {
   });
 
   it("returns checkEmail (with the submitted email, for a later resend) when signup doesn't return an active session (email confirmation required)", async () => {
-    signUpMock.mockResolvedValue({ error: null, data: { session: null } });
+    signUpMock.mockResolvedValue({
+      error: null,
+      data: { session: null, user: { id: "user-1", confirmation_sent_at: "2026-01-01T00:00:00Z" } },
+    });
 
     const result = await signUp(
       { status: "idle" },
@@ -216,6 +222,46 @@ describe("signUp", () => {
     );
 
     expect(result).toEqual({ status: "error", errorKey: "rateLimited" });
+  });
+
+  it("CRITICAL: never shows checkEmail when Supabase returns error:null but never actually dispatched the email (confirmation_sent_at empty) — error:null alone is not proof of a sent email", async () => {
+    signUpMock.mockResolvedValue({
+      error: null,
+      data: { session: null, user: { id: "user-1", confirmation_sent_at: null } },
+    });
+
+    const result = await signUp(
+      { status: "idle" },
+      buildFormData({
+        email: "a@b.com",
+        password: "correct1",
+        confirmPassword: "correct1",
+        firstName: "Ana",
+        lastName: "Gómez",
+      })
+    );
+
+    expect(result).toEqual({ status: "error", errorKey: "confirmationNotSent" });
+  });
+
+  it("does show checkEmail when confirmation_sent_at is genuinely set — the defensive check doesn't reject a real success", async () => {
+    signUpMock.mockResolvedValue({
+      error: null,
+      data: { session: null, user: { id: "user-1", confirmation_sent_at: "2026-01-01T00:00:00Z" } },
+    });
+
+    const result = await signUp(
+      { status: "idle" },
+      buildFormData({
+        email: "a@b.com",
+        password: "correct1",
+        confirmPassword: "correct1",
+        firstName: "Ana",
+        lastName: "Gómez",
+      })
+    );
+
+    expect(result).toEqual({ status: "checkEmail", email: "a@b.com" });
   });
 });
 

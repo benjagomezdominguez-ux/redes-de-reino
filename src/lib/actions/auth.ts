@@ -27,6 +27,7 @@ export type AuthFormState = {
     | "required"
     | "accountDisabled"
     | "rateLimited"
+    | "confirmationNotSent"
     | "generic";
   // Only set when status === "checkEmail" — the address a resend should
   // target. The server is the source of truth for this (the value it
@@ -128,6 +129,25 @@ export async function signUp(
   // signUp never returns an active session — the user has to click the
   // link in their inbox before signInWithPassword will work.
   if (!data.session) {
+    // error === null only means Supabase's API accepted the request —
+    // it is NOT proof the confirmation email actually got dispatched.
+    // GoTrue (Supabase Auth) calls its mailer inline, before responding,
+    // and sets user.confirmation_sent_at at that same moment — every
+    // real failure this project has reproduced (including a rate-limit
+    // hit live against production) came back as a real `error` instead,
+    // never as a silent error:null with this field left empty. But that
+    // correlation, observed across a finite number of real tests, isn't
+    // a guarantee, and showing "revisá tu correo" is exactly the one
+    // place a wrong guess here would be invisible to the user until
+    // they give up waiting on an email that was never actually queued.
+    // Trust the one additional, independent signal Supabase itself
+    // provides rather than `error === null` alone.
+    if (!data.user?.confirmation_sent_at) {
+      console.error("signUp() succeeded but confirmation_sent_at is empty — email may not have been dispatched", {
+        userId: data.user?.id,
+      });
+      return { status: "error", errorKey: "confirmationNotSent" };
+    }
     return { status: "checkEmail", email: parsed.data.email };
   }
 
