@@ -74,6 +74,42 @@ max_frequency = "1m0s"
 otp_length = 8
 otp_expiry = 3600
 
+# EXTERNAL ACTION NEEDED (can't be completed from inside this repo —
+# documented here rather than silently worked around):
+#
+# No custom SMTP provider has ever been configured for this project.
+# Every auth email (signup confirmation, password recovery, etc.) goes
+# through Supabase's own default/shared mailer, which is explicitly
+# meant for development only — confirmed live against the real project
+# (2026-10-02): rate_limit_email_sent = 2 (i.e. 2 emails per hour,
+# project-wide, for every visitor combined), and a real signUp() call
+# through the public API failed immediately with 429
+# "over_email_send_rate_limit". The app already handles that error
+# correctly (see signUp()'s "rateLimited" branch in
+# src/lib/actions/auth.ts, regression-tested) — this isn't a code bug,
+# it's a real capacity ceiling the code can't raise on its own.
+#
+# To fix: get real SMTP credentials from a transactional email provider
+# (Resend, Postmark, SendGrid, AWS SES, etc. — needs an account on that
+# provider and a sending domain/address verified there, neither of which
+# can be done from this repo) and either:
+#   1. enter them directly in the Supabase dashboard — Authentication →
+#      Emails → SMTP Settings — which takes effect immediately, no
+#      deploy needed, or
+#   2. fill in the block below (never put the raw password directly in
+#      this file — `pass = "env(SUPABASE_AUTH_SMTP_PASS)"` reads it from
+#      an env var the CLI already supports for secrets), flip `enabled`
+#      to `true`, and run `npx supabase config push`.
+#
+# [auth.email.smtp]
+# enabled = true
+# host = "smtp.yourprovider.com"
+# port = 587
+# user = "your-smtp-username"
+# pass = "env(SUPABASE_AUTH_SMTP_PASS)"
+# admin_email = "no-reply@redesdereino.example"  # must be a verified sender for the chosen provider
+# sender_name = "Redes de Reino"
+
 [auth.sms]
 enable_signup = false
 enable_confirmations = false

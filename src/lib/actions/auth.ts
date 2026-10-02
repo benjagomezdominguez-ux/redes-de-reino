@@ -28,6 +28,11 @@ export type AuthFormState = {
     | "accountDisabled"
     | "rateLimited"
     | "generic";
+  // Only set when status === "checkEmail" — the address a resend should
+  // target. The server is the source of truth for this (the value it
+  // just successfully signed up), not whatever the client's form input
+  // currently holds, which could have been edited after submit.
+  email?: string;
 };
 
 export async function signIn(
@@ -123,7 +128,7 @@ export async function signUp(
   // signUp never returns an active session — the user has to click the
   // link in their inbox before signInWithPassword will work.
   if (!data.session) {
-    return { status: "checkEmail" };
+    return { status: "checkEmail", email: parsed.data.email };
   }
 
   const next = safeRedirectPath(formData.get("next")?.toString());
@@ -163,6 +168,54 @@ export async function requestPasswordReset(
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(`/${locale}/reset-password`)}`,
   });
+
+  return { status: "success" };
+}
+
+export type ResendConfirmationState = {
+  status: "idle" | "success" | "error";
+  errorKey?: "rateLimited" | "generic";
+};
+
+// Lets someone stuck on the post-signup "revisá tu correo" screen ask
+// Supabase to send that confirmation email again — the project had no
+// recovery path at all for a mis-sent, delayed, or spam-filtered first
+// email before this. Same emailRedirectTo construction as signUp()
+// itself (real request origin, not a hardcoded one), so a resent link
+// lands exactly where the original one would have.
+//
+// Unlike requestPasswordReset(), this doesn't need to mask "does this
+// email exist" — the only caller that can reach it already knows the
+// address exists and is mid-signup (it's the exact value signUp() just
+// echoed back in AuthFormState.email, not an arbitrary address a visitor
+// typed in). Supabase's own real-world rate limit (its default mailer
+// is heavily throttled — see auth.ts's signUp() comment) is the actual
+// constraint here, surfaced the same way signUp() already surfaces it.
+export async function resendConfirmationEmail(
+  _prevState: ResendConfirmationState,
+  formData: FormData
+): Promise<ResendConfirmationState> {
+  const parsed = emailSchema.safeParse({ email: formData.get("email") });
+  if (!parsed.success) {
+    return { status: "error", errorKey: "generic" };
+  }
+
+  const locale = await getLocale();
+  const origin = await getRequestOrigin();
+  const supabase = await getSupabaseSessionClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: {
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(`/${locale}`)}`,
+    },
+  });
+
+  if (error) {
+    const message = error.message.toLowerCase();
+    const errorKey = message.includes("rate limit") || error.status === 429 ? "rateLimited" : "generic";
+    return { status: "error", errorKey };
+  }
 
   return { status: "success" };
 }

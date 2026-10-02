@@ -4,6 +4,7 @@ import { useActionState, useId, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { signIn, signUp, type AuthFormState } from "@/lib/actions/auth";
+import { ResendConfirmationButton } from "@/components/ui/ResendConfirmationButton";
 
 const initialState: AuthFormState = { status: "idle" };
 
@@ -56,9 +57,12 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
 
   if (state.status === "checkEmail") {
     return (
-      <p role="status" className="text-center text-sm text-text">
-        {t("checkEmail")}
-      </p>
+      <div className="flex flex-col items-center gap-5">
+        <p role="status" className="text-center text-sm text-text">
+          {t("checkEmail")}
+        </p>
+        {state.email ? <ResendConfirmationButton email={state.email} /> : null}
+      </div>
     );
   }
 

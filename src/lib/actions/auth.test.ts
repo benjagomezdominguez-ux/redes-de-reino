@@ -5,6 +5,7 @@ const signOutMock = vi.fn();
 const signUpMock = vi.fn();
 const resetPasswordForEmailMock = vi.fn();
 const updateUserMock = vi.fn();
+const resendMock = vi.fn();
 const redirectMock = vi.fn();
 // Profile status looked up right after a successful password check —
 // defaults to "active" so every pre-existing test (which never mocks
@@ -19,6 +20,7 @@ vi.mock("@/lib/supabase/session", () => ({
       signUp: signUpMock,
       resetPasswordForEmail: resetPasswordForEmailMock,
       updateUser: updateUserMock,
+      resend: resendMock,
     },
     from: () => ({
       select: () => ({
@@ -42,7 +44,7 @@ vi.mock("@/lib/security/request-origin", () => ({
   getRequestOrigin: async () => "http://localhost:3000",
 }));
 
-const { signIn, signUp, requestPasswordReset, updatePassword } = await import("./auth");
+const { signIn, signUp, requestPasswordReset, updatePassword, resendConfirmationEmail } = await import("./auth");
 
 function buildFormData(fields: Record<string, string>) {
   const formData = new FormData();
@@ -161,7 +163,7 @@ describe("signUp", () => {
     expect(JSON.stringify(args)).not.toMatch(/role/i);
   });
 
-  it("returns checkEmail when signup doesn't return an active session (email confirmation required)", async () => {
+  it("returns checkEmail (with the submitted email, for a later resend) when signup doesn't return an active session (email confirmation required)", async () => {
     signUpMock.mockResolvedValue({ error: null, data: { session: null } });
 
     const result = await signUp(
@@ -175,7 +177,7 @@ describe("signUp", () => {
       })
     );
 
-    expect(result).toEqual({ status: "checkEmail" });
+    expect(result).toEqual({ status: "checkEmail", email: "a@b.com" });
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
@@ -249,6 +251,48 @@ describe("requestPasswordReset", () => {
 
     expect(result).toEqual({ status: "error", errorKey: "generic" });
     expect(resetPasswordForEmailMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("resendConfirmationEmail", () => {
+  beforeEach(() => {
+    resendMock.mockReset();
+  });
+
+  it("calls Supabase's resend() with type 'signup', the given email, and an /auth/callback redirect", async () => {
+    resendMock.mockResolvedValue({ error: null });
+
+    const result = await resendConfirmationEmail({ status: "idle" }, buildFormData({ email: "a@b.com" }));
+
+    expect(resendMock).toHaveBeenCalledTimes(1);
+    const [args] = resendMock.mock.calls[0];
+    expect(args.type).toBe("signup");
+    expect(args.email).toBe("a@b.com");
+    expect(args.options.emailRedirectTo).toContain("/auth/callback");
+    expect(result).toEqual({ status: "success" });
+  });
+
+  it("maps a real Supabase rate-limit error to rateLimited, same as signUp()", async () => {
+    resendMock.mockResolvedValue({ error: { message: "email rate limit exceeded", status: 429 } });
+
+    const result = await resendConfirmationEmail({ status: "idle" }, buildFormData({ email: "a@b.com" }));
+
+    expect(result).toEqual({ status: "error", errorKey: "rateLimited" });
+  });
+
+  it("maps any other Supabase error to generic", async () => {
+    resendMock.mockResolvedValue({ error: { message: "Email already confirmed", status: 400 } });
+
+    const result = await resendConfirmationEmail({ status: "idle" }, buildFormData({ email: "a@b.com" }));
+
+    expect(result).toEqual({ status: "error", errorKey: "generic" });
+  });
+
+  it("only a malformed email produces a validation response, never calling Supabase", async () => {
+    const result = await resendConfirmationEmail({ status: "idle" }, buildFormData({ email: "not-an-email" }));
+
+    expect(result).toEqual({ status: "error", errorKey: "generic" });
+    expect(resendMock).not.toHaveBeenCalled();
   });
 });
 
