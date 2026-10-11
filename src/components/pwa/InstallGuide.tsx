@@ -114,6 +114,7 @@ function DeviceCard({ kind, icon, isCurrent }: { kind: DeviceKind; icon: string;
       </ol>
 
       {kind === "ios" ? <p className="text-sm text-muted">{t("ios.note")}</p> : null}
+      {kind === "android" ? <p className="text-sm text-muted">{t("android.note")}</p> : null}
       {kind === "desktop" ? <p className="text-sm text-muted">{t("desktop.note")}</p> : null}
       {/* Only on the card that matches the device actually browsing right
           now — showing it on every non-iOS card too would mean the same

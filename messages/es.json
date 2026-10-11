@@ -779,13 +779,14 @@
     "android": {
       "title": "Cómo instalar Redes de Reino en Android",
       "steps": [
-        "Abrí Redes de Reino en Google Chrome.",
+        "Abrí redes-de-reino.vercel.app en Google Chrome, con la app de Chrome actualizada a su última versión.",
         "Tocá el menú de los tres puntos ⋮.",
-        "Buscá \"Instalar aplicación\" o \"Añadir a pantalla de inicio\".",
+        "Buscá \"Instalar aplicación\" o \"Añadir a pantalla de inicio\" (el texto exacto varía según la versión de Chrome).",
         "Tocá la opción correspondiente.",
         "Confirmá la instalación.",
         "Buscá Redes de Reino entre tus aplicaciones."
-      ]
+      ],
+      "note": "Redes de Reino es una página web (no un archivo .apk para descargar e instalar aparte) — instalarla desde el navegador, como en estos pasos, es siempre la forma correcta y segura. Si en algún momento Android muestra una advertencia de seguridad al instalarla, detené la instalación, no la ignores ni desactives las protecciones de tu teléfono, y escribinos por el chat de la web para que te ayudemos."
     },
     "desktop": {
       "title": "Cómo instalar Redes de Reino en una computadora",

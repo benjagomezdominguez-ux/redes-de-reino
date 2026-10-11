@@ -779,13 +779,14 @@
     "android": {
       "title": "How to install Redes de Reino on Android",
       "steps": [
-        "Open Redes de Reino in Google Chrome.",
+        "Open redes-de-reino.vercel.app in Google Chrome, with the Chrome app updated to its latest version.",
         "Tap the three-dot menu ⋮.",
-        "Look for \"Install app\" or \"Add to Home screen\".",
+        "Look for \"Install app\" or \"Add to Home screen\" (the exact wording varies by Chrome version).",
         "Tap that option.",
         "Confirm the install.",
         "Look for Redes de Reino among your apps."
-      ]
+      ],
+      "note": "Redes de Reino is a website (not a separate .apk file to download and install) — installing it from the browser, as in these steps, is always the correct, safe way to do it. If Android ever shows a security warning while installing it, stop the install, don't ignore it or turn off your phone's protections, and message us through the site's chat so we can help."
     },
     "desktop": {
       "title": "How to install Redes de Reino on a computer",
