@@ -14,7 +14,8 @@
     "ariaLabel": "Navegação principal",
     "devocionales": "Devocionais",
     "instalar": "Instalar app",
-    "instagram": "Instagram"
+    "instagram": "Instagram",
+    "cursos": "Cursos"
   },
   "languageSwitcher": {
     "label": "Idioma",
@@ -229,6 +230,7 @@
     "notSet": "—",
     "ordersLink": "Meus Pedidos",
     "libraryLink": "Minha Biblioteca",
+    "coursesLink": "Meus Cursos",
     "installLink": "📱 Instalar como app"
   },
   "admin": {
@@ -242,7 +244,8 @@
       "whatsapp": "WhatsApp",
       "chat": "Chat",
       "gallery": "Galeria",
-      "devotionals": "Devocionais"
+      "devotionals": "Devocionais",
+      "courses": "Cursos"
     },
     "dashboard": {
       "registeredUsers": "Usuários registrados",
@@ -645,6 +648,112 @@
           "generic": "Não foi possível salvar o devocional. Tente novamente."
         }
       }
+    },
+    "courses": {
+      "count": "{count, plural, =1 {1 curso} other {# cursos}}",
+      "addNew": "Adicionar curso",
+      "empty": "Você ainda não cadastrou nenhum curso.",
+      "backToList": "Voltar para cursos",
+      "columns": {
+        "cover": "Capa",
+        "title": "Título",
+        "status": "Status",
+        "enrolled": "Inscritos",
+        "meetings": "Encontros",
+        "actions": "Ações"
+      },
+      "status": {
+        "draft": "Rascunho",
+        "published": "Publicado",
+        "closed": "Encerrado",
+        "archived": "Arquivado"
+      },
+      "publish": "Publicar",
+      "close": "Encerrar",
+      "archive": "Arquivar",
+      "unarchive": "Voltar a rascunho",
+      "reopen": "Reabrir",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "deleteConfirm": "Excluir este curso? Esta ação não pode ser desfeita.",
+      "deleteBlocked": "Este curso tem inscrições ou presenças registradas — arquive-o em vez de excluí-lo, para não perder esse histórico.",
+      "form": {
+        "title": "Título",
+        "description": "Descrição",
+        "cover": "Capa (JPG, PNG ou WEBP)",
+        "coverCurrent": "Já tem uma capa carregada — envie outra para substituí-la.",
+        "save": "Salvar",
+        "saving": "Salvando…",
+        "saved": "Salvo com sucesso.",
+        "errors": {
+          "generic": "Não conseguimos salvar o curso. Tente novamente.",
+          "required": "Preencha os campos obrigatórios.",
+          "invalidFile": "O curso foi salvo, mas a capa não pôde ser enviada — tente novamente em Editar."
+        }
+      },
+      "enrollmentToggle": {
+        "label": "Inscrições",
+        "open": "Abertas",
+        "closed": "Fechadas"
+      },
+      "attendanceToggle": {
+        "label": "Presença do curso",
+        "enabled": "Habilitada",
+        "disabled": "Desabilitada"
+      },
+      "meetings": {
+        "title": "Encontros",
+        "empty": "Ainda não há encontros cadastrados.",
+        "addNew": "Adicionar encontro",
+        "titleLabel": "Título",
+        "dateLabel": "Data e hora (opcional)",
+        "save": "Salvar encontro",
+        "cancel": "Cancelar",
+        "editCta": "Editar",
+        "saving": "Salvando…",
+        "delete": "Excluir",
+        "deleteConfirm": "Excluir este encontro? A presença registrada nele também será apagada.",
+        "attendanceEnabled": "Presença habilitada",
+        "attendanceDisabled": "Presença desabilitada",
+        "errors": {
+          "generic": "Não conseguimos salvar o encontro.",
+          "required": "Digite um título."
+        }
+      },
+      "password": {
+        "title": "Senha de presença",
+        "hasPassword": "Já existe uma senha configurada para este curso.",
+        "noPassword": "Você ainda não configurou uma senha — a presença não pode ser registrada até que isso seja feito.",
+        "label": "Nova senha",
+        "placeholder": "Mínimo de 4 caracteres",
+        "save": "Salvar senha",
+        "saving": "Salvando…",
+        "saved": "Senha atualizada.",
+        "note": "Esta senha é independente da senha de login de qualquer usuário. Compartilhe apenas com as pessoas presentes no encontro.",
+        "errors": {
+          "generic": "Não conseguimos salvar a senha.",
+          "tooShort": "A senha deve ter pelo menos 4 caracteres."
+        }
+      },
+      "participants": {
+        "trigger": "Ver participantes",
+        "title": "Participantes deste curso",
+        "count": "{count, plural, =0 {Ninguém inscrito ainda} =1 {1 pessoa inscrita} other {# pessoas inscritas}}",
+        "searchLabel": "Buscar participante",
+        "searchPlaceholder": "Buscar participante…",
+        "loading": "Carregando…",
+        "empty": "Ainda não há ninguém inscrito neste curso.",
+        "noResults": "Nenhuma pessoa corresponde à busca.",
+        "error": "Não conseguimos carregar os participantes. Tente novamente.",
+        "retry": "Tentar novamente",
+        "loadMore": "Carregar mais",
+        "close": "Fechar",
+        "cancelled": "Inscrição cancelada",
+        "attendanceCount": "{attended} de {total} encontros",
+        "markPresent": "Marcar presente",
+        "markAbsent": "Marcar ausente",
+        "correctionNote": "Correção manual — registrada com seu usuário e a data."
+      }
     }
   },
   "gallery": {
@@ -811,5 +920,62 @@
     "empty": "Ainda não há devocionais publicados. Volte em breve.",
     "read": "Ler",
     "backToLibrary": "Voltar aos Devocionais"
+  },
+  "courses": {
+    "eyebrow": "Formação",
+    "title": "Cursos",
+    "intro": "Participe dos nossos cursos e oficinas.",
+    "empty": "Ainda não há cursos publicados.",
+    "statusBadge": {
+      "published": "Inscrições abertas",
+      "closed": "Encerrado"
+    },
+    "enrolledCount": "{count, plural, =0 {Ninguém inscrito ainda} =1 {1 pessoa inscrita} other {# pessoas inscritas}}",
+    "viewCourse": "Ver curso",
+    "backToList": "Voltar para cursos",
+    "meetingsTitle": "Encontros",
+    "noMeetings": "Ainda não há encontros cadastrados para este curso.",
+    "loginRequired": "Você precisa entrar para se inscrever.",
+    "loginRequiredAttendance": "Você precisa entrar para registrar sua presença.",
+    "loginCta": "Entrar",
+    "enroll": {
+      "cta": "Inscrever-me",
+      "pending": "Inscrevendo…",
+      "success": "Pronto! Você já está inscrito neste curso.",
+      "error": "Não conseguimos concluir a inscrição. Tente novamente.",
+      "closed": "As inscrições para este curso estão encerradas.",
+      "alreadyEnrolled": "Você já está inscrito neste curso.",
+      "cancelCta": "Cancelar inscrição",
+      "cancelPending": "Cancelando…",
+      "cancelSuccess": "Sua inscrição foi cancelada.",
+      "cancelConfirm": "Tem certeza de que quer cancelar sua inscrição neste curso?",
+      "cancelConfirmButton": "Sim, cancelar",
+      "back": "Voltar"
+    },
+    "attendance": {
+      "cta": "Registrar presença",
+      "pending": "Registrando…",
+      "passwordLabel": "Senha de presença",
+      "passwordPlaceholder": "A senha que o Ariel te deu",
+      "submit": "Confirmar presença",
+      "cancel": "Cancelar",
+      "alreadyRecorded": "Você já registrou sua presença neste encontro.",
+      "recorded": "Presença registrada!",
+      "closed": "A presença não está habilitada para este encontro.",
+      "notEnrolled": "Você precisa estar inscrito no curso para registrar presença.",
+      "wrongPassword": "A senha não está correta.",
+      "locked": "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+      "error": "Não conseguimos registrar sua presença. Tente novamente.",
+      "invalid": "Digite a senha."
+    },
+    "myCourses": {
+      "title": "Meus cursos",
+      "empty": "Você ainda não se inscreveu em nenhum curso.",
+      "browseLink": "Ver cursos disponíveis",
+      "attendanceSummary": "{attended} de {total} encontros",
+      "noMeetingsYet": "Este curso ainda não tem encontros cadastrados.",
+      "cancelled": "Inscrição cancelada",
+      "viewDetail": "Ver curso"
+    }
   }
 }

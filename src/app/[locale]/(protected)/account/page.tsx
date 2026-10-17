@@ -67,6 +67,14 @@ export default async function AccountPage({
               </span>
             </Link>
             <Link
+              href="/mis-cursos"
+              className="flex-1 rounded-2xl border border-border bg-surface p-6 text-center shadow-soft transition-transform hover:-translate-y-0.5 hover:shadow-lifted"
+            >
+              <span className="font-display text-lg font-medium text-primary-900">
+                {t("coursesLink")}
+              </span>
+            </Link>
+            <Link
               href="/instalar"
               className="flex-1 rounded-2xl border border-border bg-surface p-6 text-center shadow-soft transition-transform hover:-translate-y-0.5 hover:shadow-lifted"
             >

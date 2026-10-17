@@ -25,12 +25,13 @@ export const navLinks = [
   // `/${locale}${href}` in Navbar.tsx works identically either way, so
   // no navigation-rendering changes were needed to add it here.
   { href: "/devocionales", key: "devocionales" },
+  { href: "/cursos", key: "cursos" },
   { href: "/instalar", key: "instalar" },
 ] as const;
 
 // Top/header nav shows only this subset — a filtered view of navLinks,
 // not a second data source, so both stay in sync automatically.
-const topNavKeys = new Set(["inicio", "devocionales", "instalar"]);
+const topNavKeys = new Set(["inicio", "devocionales", "cursos", "instalar"]);
 export const topNavLinks = navLinks.filter((link) => topNavKeys.has(link.key));
 
 // The official Instagram profile — external, so it's rendered separately

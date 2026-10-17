@@ -14,7 +14,8 @@
     "ariaLabel": "Main navigation",
     "devocionales": "Devotionals",
     "instalar": "Install app",
-    "instagram": "Instagram"
+    "instagram": "Instagram",
+    "cursos": "Courses"
   },
   "languageSwitcher": {
     "label": "Language",
@@ -229,6 +230,7 @@
     "notSet": "—",
     "ordersLink": "My Orders",
     "libraryLink": "My Library",
+    "coursesLink": "My Courses",
     "installLink": "📱 Install as an app"
   },
   "admin": {
@@ -242,7 +244,8 @@
       "whatsapp": "WhatsApp",
       "chat": "Chat",
       "gallery": "Gallery",
-      "devotionals": "Devotionals"
+      "devotionals": "Devotionals",
+      "courses": "Courses"
     },
     "dashboard": {
       "registeredUsers": "Registered users",
@@ -645,6 +648,112 @@
           "generic": "We could not save the devotional. Please try again."
         }
       }
+    },
+    "courses": {
+      "count": "{count, plural, =1 {1 course} other {# courses}}",
+      "addNew": "Add course",
+      "empty": "No courses added yet.",
+      "backToList": "Back to courses",
+      "columns": {
+        "cover": "Cover",
+        "title": "Title",
+        "status": "Status",
+        "enrolled": "Enrolled",
+        "meetings": "Sessions",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Draft",
+        "published": "Published",
+        "closed": "Closed",
+        "archived": "Archived"
+      },
+      "publish": "Publish",
+      "close": "Close",
+      "archive": "Archive",
+      "unarchive": "Back to draft",
+      "reopen": "Reopen",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this course? This can't be undone.",
+      "deleteBlocked": "This course has enrollments or recorded attendance — archive it instead of deleting it, to keep that history.",
+      "form": {
+        "title": "Title",
+        "description": "Description",
+        "cover": "Cover (JPG, PNG or WEBP)",
+        "coverCurrent": "Already has a cover uploaded — upload another to replace it.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Saved successfully.",
+        "errors": {
+          "generic": "We couldn't save the course. Please try again.",
+          "required": "Please fill in the required fields.",
+          "invalidFile": "The course was saved, but the cover couldn't be uploaded — try again from Edit."
+        }
+      },
+      "enrollmentToggle": {
+        "label": "Enrollment",
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "attendanceToggle": {
+        "label": "Course attendance",
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "meetings": {
+        "title": "Sessions",
+        "empty": "No sessions added yet.",
+        "addNew": "Add session",
+        "titleLabel": "Title",
+        "dateLabel": "Date and time (optional)",
+        "save": "Save session",
+        "cancel": "Cancel",
+        "editCta": "Edit",
+        "saving": "Saving…",
+        "delete": "Delete",
+        "deleteConfirm": "Delete this session? Its recorded attendance will be deleted too.",
+        "attendanceEnabled": "Attendance enabled",
+        "attendanceDisabled": "Attendance disabled",
+        "errors": {
+          "generic": "We couldn't save the session.",
+          "required": "Enter a title."
+        }
+      },
+      "password": {
+        "title": "Attendance password",
+        "hasPassword": "A password is already set for this course.",
+        "noPassword": "You haven't set a password yet — attendance can't be recorded until you do.",
+        "label": "New password",
+        "placeholder": "At least 4 characters",
+        "save": "Save password",
+        "saving": "Saving…",
+        "saved": "Password updated.",
+        "note": "This password is separate from anyone's login password. Share it only with the people present at the session.",
+        "errors": {
+          "generic": "We couldn't save the password.",
+          "tooShort": "The password must be at least 4 characters."
+        }
+      },
+      "participants": {
+        "trigger": "See participants",
+        "title": "Participants in this course",
+        "count": "{count, plural, =0 {No one enrolled yet} =1 {1 person enrolled} other {# people enrolled}}",
+        "searchLabel": "Search participant",
+        "searchPlaceholder": "Search participant…",
+        "loading": "Loading…",
+        "empty": "No one is enrolled in this course yet.",
+        "noResults": "No one matches your search.",
+        "error": "We couldn't load the participants. Please try again.",
+        "retry": "Retry",
+        "loadMore": "Load more",
+        "close": "Close",
+        "cancelled": "Enrollment cancelled",
+        "attendanceCount": "{attended} of {total} sessions",
+        "markPresent": "Mark present",
+        "markAbsent": "Mark absent",
+        "correctionNote": "Manual correction — recorded with your user and the date."
+      }
     }
   },
   "gallery": {
@@ -811,5 +920,62 @@
     "empty": "No devotionals published yet. Check back soon.",
     "read": "Read",
     "backToLibrary": "Back to Devotionals"
+  },
+  "courses": {
+    "eyebrow": "Learning",
+    "title": "Courses",
+    "intro": "Join our courses and workshops.",
+    "empty": "No courses published yet.",
+    "statusBadge": {
+      "published": "Enrollment open",
+      "closed": "Finished"
+    },
+    "enrolledCount": "{count, plural, =0 {No one enrolled yet} =1 {1 person enrolled} other {# people enrolled}}",
+    "viewCourse": "View course",
+    "backToList": "Back to courses",
+    "meetingsTitle": "Sessions",
+    "noMeetings": "No sessions have been added to this course yet.",
+    "loginRequired": "You need to sign in to enroll.",
+    "loginRequiredAttendance": "You need to sign in to record your attendance.",
+    "loginCta": "Sign in",
+    "enroll": {
+      "cta": "Enroll",
+      "pending": "Enrolling…",
+      "success": "You're enrolled in this course!",
+      "error": "We couldn't complete your enrollment. Please try again.",
+      "closed": "Enrollment for this course is closed.",
+      "alreadyEnrolled": "You're already enrolled in this course.",
+      "cancelCta": "Cancel enrollment",
+      "cancelPending": "Cancelling…",
+      "cancelSuccess": "Your enrollment was cancelled.",
+      "cancelConfirm": "Are you sure you want to cancel your enrollment in this course?",
+      "cancelConfirmButton": "Yes, cancel",
+      "back": "Back"
+    },
+    "attendance": {
+      "cta": "Record attendance",
+      "pending": "Recording…",
+      "passwordLabel": "Attendance password",
+      "passwordPlaceholder": "The password Ariel gave you",
+      "submit": "Confirm attendance",
+      "cancel": "Cancel",
+      "alreadyRecorded": "You already recorded your attendance for this session.",
+      "recorded": "Attendance recorded!",
+      "closed": "Attendance isn't open for this session.",
+      "notEnrolled": "You need to be enrolled in the course to record attendance.",
+      "wrongPassword": "That password isn't correct.",
+      "locked": "Too many attempts. Wait a few minutes and try again.",
+      "error": "We couldn't record your attendance. Please try again.",
+      "invalid": "Enter the password."
+    },
+    "myCourses": {
+      "title": "My courses",
+      "empty": "You haven't enrolled in any course yet.",
+      "browseLink": "Browse available courses",
+      "attendanceSummary": "{attended} of {total} sessions",
+      "noMeetingsYet": "This course doesn't have any sessions yet.",
+      "cancelled": "Enrollment cancelled",
+      "viewDetail": "View course"
+    }
   }
 }

@@ -46,6 +46,12 @@ export default async function AdminLayout({
                 {t("nav.books")}
               </Link>
               <Link
+                href="/admin/courses"
+                className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
+              >
+                {t("nav.courses")}
+              </Link>
+              <Link
                 href="/admin/gallery"
                 className="rounded-full border border-border px-4 py-2 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-900/5"
               >
