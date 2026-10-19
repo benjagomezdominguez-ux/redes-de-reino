@@ -750,6 +750,7 @@
         "close": "Cerrar",
         "cancelled": "Inscripción cancelada",
         "attendanceCount": "{attended} de {total} encuentros",
+        "noMeetingsYet": "Sin encuentros registrados",
         "markPresent": "Marcar presente",
         "markAbsent": "Marcar ausente",
         "correctionNote": "Corrección manual — queda registrada con tu usuario y la fecha."

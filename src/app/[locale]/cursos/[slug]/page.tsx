@@ -42,9 +42,14 @@ export default async function CourseDetailPage({
           </Link>
 
           {course.cover_url ? (
-            <div className="w-full overflow-hidden rounded-2xl bg-surface-alt">
-              {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic sizing (no fixed box, no object-fit crop), same pattern as BookCard.tsx */}
-              <img src={course.cover_url} alt={course.title} className="block h-auto w-full" />
+            // Same fixed-aspect, object-cover treatment as CourseCard —
+            // see its own comment. Without this, a near-square or
+            // portrait cover (real example: ~1197×1252) rendered at full
+            // mobile width pushed the course's own title and description
+            // below the fold before a visitor could read them.
+            <div className="aspect-[16/9] w-full overflow-hidden rounded-2xl bg-surface-alt">
+              {/* eslint-disable-next-line @next/next/no-img-element -- object-cover crop inside a fixed-aspect container, not intrinsic sizing */}
+              <img src={course.cover_url} alt={course.title} className="h-full w-full object-cover object-center" />
             </div>
           ) : null}
 

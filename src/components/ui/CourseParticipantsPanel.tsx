@@ -278,7 +278,15 @@ function ParticipantRow({
           </span>
         </div>
         <span className="shrink-0 rounded-full bg-secondary-500/15 px-2.5 py-1 text-[11px] font-medium text-secondary-700">
-          {t("attendanceCount", { attended: participant.attendanceCount, total: meetings.length })}
+          {/* "0 de 0 encuentros" reads as broken/confusing — a course
+              with no meetings configured yet is a different, honest
+              state from "nobody has attended any of its meetings",
+              and this must say so plainly rather than conflating the
+              two (same distinction /mis-cursos already makes for the
+              student's own view). */}
+          {meetings.length === 0
+            ? t("noMeetingsYet")
+            : t("attendanceCount", { attended: participant.attendanceCount, total: meetings.length })}
         </span>
       </div>
 

@@ -750,6 +750,7 @@
         "close": "Close",
         "cancelled": "Enrollment cancelled",
         "attendanceCount": "{attended} of {total} sessions",
+        "noMeetingsYet": "No sessions yet",
         "markPresent": "Mark present",
         "markAbsent": "Mark absent",
         "correctionNote": "Manual correction — recorded with your user and the date."
